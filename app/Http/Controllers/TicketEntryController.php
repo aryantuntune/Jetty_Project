@@ -249,9 +249,9 @@ class TicketEntryController extends Controller
     public function find(Request $request)
     {
         $data = $request->validate([
-            'q'         => 'required|string',
-            'branch_id' => 'nullable|integer',
-            'on'        => 'nullable|date',
+            'q'         => '',
+            'branch_id' => '',
+            'on'        => '',
         ]);
 
         $on = $data['on'] ?? now()->toDateString();
