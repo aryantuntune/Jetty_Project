@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use App\Models\Branch;
-use App\Models\Ferryboat;
+use App\Models\FerryBoat;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 
@@ -27,7 +27,7 @@ class AdministratorController extends Controller
     public function create()
     {
         $branches = Branch::all();
-        $ferryboats = Ferryboat::all();
+        $ferryboats = FerryBoat::all();
 
         return view('admin.create', compact('branches', 'ferryboats'));
     }
@@ -68,7 +68,7 @@ class AdministratorController extends Controller
         abort_if($admin->role_id != 2, 404);
 
         $branches = Branch::all();
-        $ferryboats = Ferryboat::all();
+        $ferryboats = FerryBoat::all();
 
         return view('admin.edit', compact('admin', 'branches', 'ferryboats'));
     }
