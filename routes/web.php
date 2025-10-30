@@ -150,8 +150,11 @@ Route::middleware(['auth'])->group(function () {
 Route::get('/clear-config', function () {
     Artisan::call('config:clear');
     Artisan::call('cache:clear');
-    return 'Config and cache cleared';
+    Artisan::call('route:clear');
+    Artisan::call('view:clear');
+    return 'All caches cleared successfully.';
 });
+
 
 
 
