@@ -8,6 +8,7 @@ use App\Http\Controllers\FerryBoatController;
 use App\Http\Controllers\FerryScheduleController;
 use App\Http\Controllers\GuestCategoryController;
 use App\Http\Controllers\GuestController;
+use App\Http\Controllers\HomeController;
 use App\Http\Controllers\ItemCategoryController;
 use App\Http\Controllers\ItemRateController;
 use App\Http\Controllers\ItemsFromRatesController;
@@ -18,6 +19,7 @@ use App\Http\Controllers\TicketEntryController;
 use App\Http\Controllers\TicketReportController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
+
 
 
 
@@ -143,6 +145,11 @@ Route::middleware(['auth'])->group(function () {
 
 
 
+Route::get('/clear-config', function () {
+    Artisan::call('config:clear');
+    Artisan::call('cache:clear');
+    return 'Config and cache cleared';
+});
 
 
 
