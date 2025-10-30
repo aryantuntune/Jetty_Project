@@ -43,7 +43,7 @@ class ItemsFromRatesController extends Controller
         $q->where('ir.branch_id', $user->branch_id);
     }
 
-    $items = $q->orderBy('ir.id')->paginate(20)->withQueryString();
+    $items = $q->orderBy('ir.item_id')->paginate(20)->withQueryString();
 
     return view('items.from_rates_index', compact('items', 'branches'));
 }
