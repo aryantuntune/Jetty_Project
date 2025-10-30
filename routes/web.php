@@ -19,6 +19,8 @@ use App\Http\Controllers\TicketEntryController;
 use App\Http\Controllers\TicketReportController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Artisan;
+
 
 
 
