@@ -418,6 +418,7 @@ document.getElementById('ticketForm').addEventListener('submit', function (e) {
 
 (function() {
   const apiUrl = "{{ route('ajax.item-rates.find') }}";
+  console.log("API URL:", "{{ route('ajax.item-rates.find') }}");
   const branchId = document.getElementById('branch_id')?.value || '';
   const tbody = document.querySelector('table.grid tbody');
 
