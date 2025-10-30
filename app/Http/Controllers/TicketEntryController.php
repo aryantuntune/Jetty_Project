@@ -157,7 +157,8 @@ class TicketEntryController extends Controller
         // dd($request->ferry_type);
         $now = Carbon::now('Asia/Kolkata');
         $data = $request->validate([
-            'payment_mode'      => 'required|string',
+           'payment_mode' => 'required|string|in:Cash,Credit,Guest Pass,GPay',
+
             'customer_name'         => 'nullable|string|max:120',           // ⬅️ add
             'customer_mobile'       => 'nullable|string|max:20|regex:/^\+?\d{10,15}$/', // ⬅️ add
             'ferry_boat_id'     => 'required|integer',

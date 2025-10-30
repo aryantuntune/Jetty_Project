@@ -88,14 +88,14 @@
         </select>
        </div>
 
-        <div class="label">Payment Mode :</div>
+        <!-- <div class="label">Payment Mode :</div>
         <div>
           <select name="payment_mode" class="ctrl" required>
             @foreach($paymentModes as $pm)
               <option value="{{ $pm }}" @selected(old('payment_mode')==$pm)>{{ $pm }}</option>
             @endforeach
           </select>
-        </div>
+        </div> -->
 
         <div class="label">Customer Name :</div>
 <div>
@@ -251,6 +251,43 @@
       <div class="sum-box" id="netBox">0.00</div>
     </div>
   </div>
+  <!-- ---open modal for save button start-- -->
+<!-- Payment Modal -->
+<div id="paymentModal" class="modal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;
+background:rgba(0,0,0,.4);align-items:center;justify-content:center;z-index:9999;">
+  <div style="background:#fff;padding:20px 24px;border-radius:8px;max-width:400px;width:90%;">
+    <h5 style="margin-bottom:16px;">Confirm Payment</h5>
+    <div style="margin-bottom:10px;">
+      <label><b>Net Total:</b></label>
+      <input type="text" id="modalNetTotal" class="ctrl" readonly>
+    </div>
+    <div style="margin-bottom:10px;">
+      <label><b>Payment Mode:</b></label>
+      <select id="modalPaymentMode" class="ctrl">
+        <option value="Cash">Cash</option>
+        <option value="Credit">Credit</option>
+        <option value="Guest Pass">Guest Pass</option>
+        <option value="GPay">GPay</option>
+      </select>
+    </div>
+    <div style="margin-bottom:10px;">
+      <label><b>Given Amount:</b></label>
+      <input type="number" id="modalGivenAmount" class="ctrl" placeholder="Enter given amount">
+    </div>
+    <div style="margin-bottom:10px;">
+      <label><b>Change to Return:</b></label>
+      <input type="text" id="modalReturnChange" class="ctrl" readonly>
+    </div>
+    <div style="display:flex;justify-content:end;gap:10px;">
+      <button type="button" id="modalCancel" class="btn-light">Cancel</button>
+      <button type="button" id="modalConfirm" class="btn-save">Store</button>
+    </div>
+  </div>
+</div>
+
+
+    <!-- ---open modal for save button end-- -->
+
 
   {{-- FOOTER --}}
  <div class="footer">
@@ -258,7 +295,7 @@
     <input type="checkbox" id="printAfterSave">
     Print after save
   </label>
-  <button class="btn-save" type="submit">Save Ticket</button>
+<button class="btn-save" type="button" id="openPaymentModal">Save Ticket</button>
 </div>
 </div>
 </form>
@@ -609,9 +646,87 @@ tbodyEl.addEventListener('click', (e) => {
     }
   });
 
-  setInterval(() => {
-    window.location.reload();
-  }, 60000);
+
+ // --- Payment Modal logic ---
+const openPaymentModal = document.getElementById('openPaymentModal');
+const paymentModal = document.getElementById('paymentModal');
+const modalPaymentMode = document.getElementById('modalPaymentMode');
+const modalGivenAmount = document.getElementById('modalGivenAmount');
+const modalNetTotal = document.getElementById('modalNetTotal');
+const modalReturnChange = document.getElementById('modalReturnChange');
+const modalConfirm = document.getElementById('modalConfirm');
+const modalCancel = document.getElementById('modalCancel');
+const netBox = document.getElementById('netBox');
+
+openPaymentModal.addEventListener('click', () => {
+  modalNetTotal.value = netBox.textContent;
+  paymentModal.style.display = 'flex';
+});
+
+modalCancel.addEventListener('click', () => {
+  paymentModal.style.display = 'none';
+});
+
+// Auto calculate return change
+modalGivenAmount.addEventListener('input', () => {
+  const given = parseFloat(modalGivenAmount.value) || 0;
+  const net = parseFloat(modalNetTotal.value) || 0;
+  modalReturnChange.value = (given - net).toFixed(2);
+});
+
+// ✅ When confirming modal
+modalConfirm.addEventListener('click', () => {
+  const form = document.getElementById('ticketForm');
+  const formData = new FormData(form);
+
+  // Add missing modal fields
+  formData.append('payment_mode', modalPaymentMode.value);
+  formData.append('given_amount', modalGivenAmount.value);
+
+  // Include checkbox state for print
+  const shouldPrint = document.getElementById('printAfterSave')?.checked === true;
+  formData.append('print', shouldPrint ? 1 : 0);
+
+  // Hide modal
+  paymentModal.style.display = 'none';
+
+  // Send request
+  axios.post(form.action, formData)
+    .then(res => {
+      if (res.data.ok) {
+        Swal.fire({
+          icon: 'success',
+          title: 'Ticket Confirmed',
+          text: 'Ticket stored successfully!',
+          confirmButtonColor: '#49aa3d'
+        });
+
+        // Optional print
+        if (shouldPrint && res.data.ticket_id) {
+          window.open(`{{ url('/tickets') }}/${res.data.ticket_id}/print`, '_blank');
+        }
+
+        form.reset();
+      }
+    })
+    .catch(err => {
+      if (err.response && err.response.data.errors) {
+        let errors = Object.values(err.response.data.errors).flat().join("<br>");
+        Swal.fire({
+          icon: 'error',
+          title: 'Validation Error',
+          html: errors,
+          confirmButtonColor: '#b3262e'
+        });
+      }
+    });
+});
+
+
+
+  // setInterval(() => {
+  //   window.location.reload();
+  // }, 60000);
 </script>
 
 
