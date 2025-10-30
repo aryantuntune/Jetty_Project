@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use App\Models\Branch;
-use App\Models\Ferryboat;
+use App\Models\FerryBoat;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 
@@ -27,7 +27,7 @@ class OperatorController extends Controller
     public function create()
     {
         $branches = Branch::all();
-        $ferryboats = Ferryboat::all();
+        $ferryboats = FerryBoat::all();
 
         return view('operator.create', compact('branches', 'ferryboats'));
     }
@@ -67,7 +67,7 @@ class OperatorController extends Controller
         abort_if($operator->role_id != 4, 404);
 
         $branches = Branch::all();
-        $ferryboats = Ferryboat::all();
+        $ferryboats = FerryBoat::all();
 
         return view('operator.edit', compact('operator', 'branches', 'ferryboats'));
     }

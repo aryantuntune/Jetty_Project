@@ -64,7 +64,7 @@ protected $guarded = [];
 
 public function ferryboat()
 {
-    return $this->belongsTo(Ferryboat::class);
+    return $this->belongsTo(FerryBoat::class);
 }
 
 }
