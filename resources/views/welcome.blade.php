@@ -60,7 +60,7 @@
   <nav class="navbar navbar-expand-lg fixed-top">
     <div class="container">
       <a class="navbar-brand d-flex align-items-center gap-2" href="{{ url('/ticket-entry') }}">
-        <img src="http://carferry.in/wp-content/uploads/2021/03/LOGO-White-224x150-1.png" alt="Logo">
+        <img src="https://carferry.in/wp-content/uploads/2021/03/LOGO-White-224x150-1.png" alt="Logo">
      
       </a>
 
