@@ -95,4 +95,27 @@ class GuestController extends Controller
         $guest->delete();
         return redirect()->route('guests.index')->with('success', 'Guest deleted successfully!');
     }
+
+
+    public function searchById(Request $request)
+{
+    $guest = Guest::where('id', $request->id)->first();
+    return response()->json($guest);
+}
+
+public function searchByName(Request $request)
+{
+    $guests = Guest::where('name', 'like', '%' . $request->name . '%')->get(['id', 'name']);
+    return response()->json($guests);
+}
+
+public function storebyticket(Request $request)
+{
+    $validated = $request->validate([
+        'name' => 'required|string|max:255',
+    ]);
+    $guest = Guest::create($validated);
+    return response()->json($guest);
+}
+
 }

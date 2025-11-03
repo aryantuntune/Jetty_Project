@@ -1,8 +1,21 @@
 @extends('layouts.app')
 
 @section('content')
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<!-- Bootstrap 5 JS (no jQuery required) -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
+        crossorigin="anonymous"></script>
+  
 <style>
   .btn-light{background:#fff;border:1px solid rgba(0,0,0,.15);border-radius:4px;padding:8px 12px;font-size:13px;}
+
+ #guestModal {
+        z-index: 1100 !important;
+    }
+    .modal-backdrop.show {
+        z-index: 1090 !important;
+    }
 
 
   :root{
@@ -48,6 +61,9 @@
 <form id="ticketForm" method="post" action="{{ route('ticket-entry.store') }}">
   @csrf
  
+<input type="hidden" name="guest_id" id="guest_id_hidden">
+<input type="hidden" name="payment_mode" id="payment_mode" value="">
+
 
 <div class="irs-window">
   <div class="irs-title">Ticket Entry</div>
@@ -263,8 +279,7 @@ background:rgba(0,0,0,.4);align-items:center;justify-content:center;z-index:9999
     </div>
     <div style="margin-bottom:10px;">
       <label><b>Payment Mode:</b></label>
-      <select id="modalPaymentMode" class="ctrl">
-        <option value="Cash">Cash</option>
+<select id="paymentMode" class="form-select" onchange="handlePaymentModeChange(this.value)">        <option value="Cash">Cash</option>
         <option value="Credit">Credit</option>
         <option value="Guest Pass">Guest Pass</option>
         <option value="GPay">GPay</option>
@@ -281,6 +296,38 @@ background:rgba(0,0,0,.4);align-items:center;justify-content:center;z-index:9999
     <div style="display:flex;justify-content:end;gap:10px;">
       <button type="button" id="modalCancel" class="btn-light">Cancel</button>
       <button type="button" id="modalConfirm" class="btn-save">Store</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- Guest Modal -->
+<div class="modal fade" id="guestModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header bg-primary text-white">
+        <h5 class="modal-title">Guest Details</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div class="mb-3">
+          <label>Search by Guest ID</label>
+          <input type="text" id="guestId" class="form-control" placeholder="Enter Guest ID">
+        </div>
+        <div class="text-center mb-2">OR</div>
+        <div class="mb-3">
+          <label>Search by Guest Name</label>
+          <input type="text" id="guestName" class="form-control" placeholder="Enter Guest Name">
+          <ul id="guestList" class="list-group mt-1" style="display:none; max-height:150px; overflow-y:auto;"></ul>
+        </div>
+        <div class="text-end">
+          <button id="addGuestBtn" class="btn btn-sm btn-outline-primary" style="display:none;">Add New Guest</button>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button class="btn btn-success" onclick="selectGuest()">Continue</button>
+      </div>
     </div>
   </div>
 </div>
@@ -650,7 +697,11 @@ tbodyEl.addEventListener('click', (e) => {
  // --- Payment Modal logic ---
 const openPaymentModal = document.getElementById('openPaymentModal');
 const paymentModal = document.getElementById('paymentModal');
-const modalPaymentMode = document.getElementById('modalPaymentMode');
+// WRONG
+// const modalPaymentMode = document.getElementById('modalPaymentMode');
+
+// ✅ FIX
+const modalPaymentMode = document.getElementById('paymentMode');
 const modalGivenAmount = document.getElementById('modalGivenAmount');
 const modalNetTotal = document.getElementById('modalNetTotal');
 const modalReturnChange = document.getElementById('modalReturnChange');
@@ -674,7 +725,146 @@ modalGivenAmount.addEventListener('input', () => {
   modalReturnChange.value = (given - net).toFixed(2);
 });
 
-// ✅ When confirming modal
+const guestModalEl = document.getElementById('guestModal');
+const guestModal = new bootstrap.Modal(guestModalEl);
+
+const paymentModalEl = document.getElementById('paymentModal');
+
+
+
+
+
+// ✅ Fix: PaymentModal is NOT a Bootstrap modal → we convert it
+function showPaymentModal() {
+    paymentModalEl.style.display = 'flex';
+}
+
+function hidePaymentModal() {
+    paymentModalEl.style.display = 'none';
+}
+
+function handlePaymentModeChange(value) {
+    const paymentModeInput = document.getElementById('payment_mode');
+
+    // ✅ Create hidden input if it doesn't exist yet
+    if (!paymentModeInput) {
+        const hidden = document.createElement('input');
+        hidden.type = 'hidden';
+        hidden.name = 'payment_mode';
+        hidden.id = 'payment_mode';
+        document.getElementById('ticketForm').appendChild(hidden);
+    }
+
+    const input = document.getElementById('payment_mode');
+
+    if (value === 'Guest Pass') {
+        // ✅ Send as "Cash" to controller
+        input.value = 'Cash';
+
+        // Hide the payment modal
+        hidePaymentModal();
+
+        // Show guest modal after short delay
+        setTimeout(() => {
+            guestModal.show();
+        }, 200);
+    } else {
+        // Normal behavior
+        input.value = value;
+    }
+}
+
+
+$(document).ready(function() {
+    // Search Guest by ID
+    $('#guestId').on('keyup', function() {
+        let guestId = $(this).val().trim();
+        if (guestId.length > 0) {
+            $.ajax({
+                url: '/ajax/search-guest-by-id',
+                method: 'GET',
+                data: { id: guestId },
+                success: function(response) {
+                    if (response) {
+                        $('#guestName').val(response.name);
+                        $('#addGuestBtn').hide();
+                    } else {
+                        $('#guestName').val('');
+                        $('#addGuestBtn').show();
+                    }
+                }
+            });
+        }
+    });
+
+    // Search Guest by Name (autocomplete)
+    $('#guestName').on('keyup', function() {
+        let name = $(this).val().trim();
+        if (name.length > 1) {
+            $.ajax({
+                url: '/ajax/search-guest-by-name',
+                method: 'GET',
+                data: { name },
+                success: function(response) {
+                    let list = $('#guestList');
+                    list.empty().show();
+                    if (response.length > 0) {
+                        response.forEach(g => {
+                            list.append(`<li class="list-group-item list-group-item-action" onclick="selectGuestFromList('${g.id}', '${g.name}')">${g.name}</li>`);
+                        });
+                        $('#addGuestBtn').hide();
+                    } else {
+                        list.hide();
+                        $('#addGuestBtn').show();
+                    }
+                }
+            });
+        } else {
+            $('#guestList').hide();
+        }
+    });
+});
+
+function selectGuestFromList(id, name) {
+    $('#guestId').val(id);
+    $('#guestName').val(name);
+    $('#guestList').hide();
+}
+
+  function selectGuest() {
+    const id = $('#guestId').val().trim();
+    const name = $('#guestName').val().trim();
+
+    if (!id && !name) {
+        Swal.fire({
+            icon: 'warning',
+            title: 'Missing Guest Details',
+            text: 'Please enter Guest ID or Name.',
+        });
+        return;
+    }
+
+    // Assign guest ID to hidden field in form
+    $('#guest_id_hidden').val(id || name);
+
+    // Hide guest modal
+    const guestModalEl = document.getElementById('guestModal');
+    const modalInstance = bootstrap.Modal.getInstance(guestModalEl);
+    modalInstance.hide();
+
+    // ✅ Confirm back to payment modal to finalize
+    setTimeout(() => {
+        $('#payment_mode').val('Cash');
+        $('#ticketForm').submit(); // Directly submit ticket form
+    }, 300);
+}
+
+
+
+
+
+
+//✅ When confirming modal
 modalConfirm.addEventListener('click', () => {
   const form = document.getElementById('ticketForm');
   const formData = new FormData(form);
@@ -691,7 +881,7 @@ modalConfirm.addEventListener('click', () => {
   paymentModal.style.display = 'none';
 
   // Send request
-  axios.post(form.action, formData)
+ axios.post(form.action, formData)
     .then(res => {
       if (res.data.ok) {
         Swal.fire({
@@ -720,7 +910,10 @@ modalConfirm.addEventListener('click', () => {
         });
       }
     });
+    
 });
+
+
 
 
 

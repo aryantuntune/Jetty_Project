@@ -34,6 +34,7 @@ class TicketReportController extends Controller
 
         // Fetch tickets
         $tickets = Ticket::with('branch', 'ferryBoat')
+            ->where('guest_id',null)
             ->when($branchId, fn($q) => $q->where('branch_id', $branchId))
             ->when($paymentMode, fn($q) => $q->where('payment_mode', $paymentMode))
             ->when($ferryType, fn($q) => $q->where('ferry_type', $ferryType))
@@ -87,6 +88,7 @@ public function vehicleWiseIndex(Request $request)
 
     // Base filter over tickets (vehicle filters via whereHas on lines)
     $filter = Ticket::query()
+        ->where('guest_id',null)
         ->when($branchId,    fn($q) => $q->where('branch_id', $branchId))
         ->when($paymentMode, fn($q) => $q->where('payment_mode', $paymentMode))
         ->when($ferryType,   fn($q) => $q->where('ferry_type', $ferryType))

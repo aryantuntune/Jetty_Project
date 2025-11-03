@@ -140,6 +140,10 @@ Route::middleware(['auth'])->group(function () {
 
 
 
+// web.php
+Route::get('/ajax/search-guest-by-id', [GuestController::class, 'searchById']);
+Route::get('/ajax/search-guest-by-name', [GuestController::class, 'searchByName']);
+Route::post('/ajax/add-guest', [GuestController::class, 'storebyticket']);
 
 
 

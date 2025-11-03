@@ -23,6 +23,7 @@ class Ticket extends Model
         'ferry_type',
         'customer_name',
         'customer_mobile',
+        'guest_id'
 
     ];
 
