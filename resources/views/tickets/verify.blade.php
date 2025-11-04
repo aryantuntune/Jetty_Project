@@ -18,10 +18,8 @@
         <p><b>Branch:</b> {{ $ticket->branch->branch_name ?? '-' }}</p>
 
         @php
-          use Carbon\Carbon;
-          // Safely parse date fields — works even if they're plain strings
-          $createdAt = $ticket->created_at ? Carbon::parse($ticket->created_at)->timezone('Asia/Kolkata') : null;
-          $verifiedAt = $ticket->verified_at ? Carbon::parse($ticket->verified_at)->timezone('Asia/Kolkata') : null;
+          $createdAt = $ticket->created_at ? \Carbon\Carbon::parse($ticket->created_at)->timezone('Asia/Kolkata') : null;
+          $verifiedAt = $ticket->verified_at ? \Carbon\Carbon::parse($ticket->verified_at)->timezone('Asia/Kolkata') : null;
         @endphp
 
         <p><b>Date:</b> {{ $createdAt ? $createdAt->format('d-m-Y H:i') : '-' }}</p>
