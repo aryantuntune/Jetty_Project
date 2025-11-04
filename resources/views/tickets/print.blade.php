@@ -9,11 +9,12 @@
     --font-size: 11px;
     --line-height: 1.25;
     --grid-gap: 2px;
-    /* 58mm column widths */
-    --col-qty: 22%;
-    --col-rate: 26%;
-    --col-levy: 22%;
-    --col-amount: 30%;
+    /* column widths for 58mm */
+    --col-desc: 42%;
+    --col-qty: 15%;
+    --col-rate: 15%;
+    --col-levy: 13%;
+    --col-amount: 15%;
   }
 
   @page { size: var(--paper-width) auto; margin: 0; }
@@ -26,7 +27,13 @@
     line-height: var(--line-height);
     color: #000;
   }
-  .rcpt { width: var(--paper-width); max-width: 100%; margin: 0 auto; padding: 2mm 2.2mm; }
+
+  .rcpt {
+    width: var(--paper-width);
+    max-width: 100%;
+    margin: 0 auto;
+    padding: 2mm 2.2mm;
+  }
 
   .center { text-align:center; }
   .right  { text-align:right;  }
@@ -34,39 +41,52 @@
   .muted  { color:#222; }
   .line   { border-top:1px dashed #000; margin: 3px 0; }
 
-  /* Header & title */
   .h-title { font-weight:700; text-align:center; }
   .h-sub   { text-align:center; }
 
-  /* Description (must wrap) */
-  .item-title{
+  /* Grid header and items */
+  .head-grid,
+  .item-grid {
+    display: grid;
+    grid-template-columns: var(--col-desc) var(--col-qty) var(--col-rate) var(--col-levy) var(--col-amount);
+    column-gap: var(--grid-gap);
+    align-items: start;
+  }
+
+  .head-grid {
+    font-weight: bold;
+    border-bottom: 1px dashed #000;
+    padding-bottom: 2px;
+    margin-top: 3px;
+    margin-bottom: 3px;
+  }
+
+  .head-grid > div,
+  .item-grid > div {
+    text-align: right;
+  }
+
+  .head-grid > div:first-child,
+  .item-grid > div:first-child {
+    text-align: left;
+  }
+
+  /* Description styling */
+  .item-title {
     white-space: normal;
-    overflow-wrap: anywhere; /* most reliable for tiny widths */
+    overflow-wrap: anywhere;
     word-break: break-word;
+    margin-bottom: 1px;
   }
 
-  .item { page-break-inside: avoid; padding: 2px 0; }
-
-  /* === GRID LINES === */
-  /* Header row: Description + 4 numeric columns */
-  .head-grid{
+  /* Totals */
+  .totals {
+    margin-top: 4px;
     display: grid;
-    grid-template-columns: 1fr var(--col-qty) var(--col-rate) var(--col-levy) var(--col-amount);
+    grid-template-columns: 1fr auto;
     column-gap: var(--grid-gap);
-    align-items: end;
-    margin-bottom: 2px;
   }
 
-  /* Item numeric meta: 4 numeric columns, exactly same widths as header (minus Description) */
-  .item-meta{
-    display: grid;
-    grid-template-columns: var(--col-qty) var(--col-rate) var(--col-levy) var(--col-amount);
-    column-gap: var(--grid-gap);
-    margin-top: 1px;
-  }
-  .item-meta > div{ text-align:right; }
-
-  .totals { margin-top: 4px; display: grid; grid-template-columns: 1fr auto; column-gap: var(--grid-gap); }
   .totals .label { font-weight:700; }
   .totals .value { text-align:right; font-weight:700; }
 
@@ -82,14 +102,16 @@
     :root {
       --paper-width: 80mm;
       --font-size: 12px;
-      /* Slightly relax column mix for wider rolls */
-      --col-qty: 18%;
-      --col-rate: 24%;
-      --col-levy: 18%;
-      --col-amount: 40%;
+      --col-desc: 50%;
+      --col-qty: 12%;
+      --col-rate: 12%;
+      --col-levy: 12%;
+      --col-amount: 14%;
     }
   ' : '' }}
 </style>
+
+
 
 </head>
 <body onload="window.print()" style="{{ request('w') == '80' ? '--paper-width:80mm' : '--paper-width:58mm' }}">
@@ -133,31 +155,32 @@ if (!function_exists('wrap_2_words')) {
 
     <!-- Header row for the numeric columns -->
  <div class="head-grid bold">
-  <div>Description</div>
+  <div>Desp</div>
   <div class="right">Qty</div>
   <div class="right">Rate</div>
   <div class="right">Levy</div>
   <div class="right">Amount</div>
 </div>
 
-    @foreach($ticket->lines as $ln)
-     <div class="item">
-    <div class="item-title">
-      {{ $ln->item_name }}
-      @if(!empty($ln->vehicle_no) || !empty($ln->vehicle_name))
-        <div class="muted">
-         {!! wrap_2_words(trim(($ln->vehicle_name ?: '').' '.($ln->vehicle_no ?: ''))) !!}
-        </div>
-      @endif
-    </div>
-    <div class="item-meta">
+   @foreach($ticket->lines as $ln)
+  <div class="item no-break">
+    <div class="item-grid">
+      <div>
+        {{ $ln->item_name }}
+        @if(!empty($ln->vehicle_no) || !empty($ln->vehicle_name))
+          <div class="muted">
+            {!! wrap_2_words(trim(($ln->vehicle_name ?: '').' '.($ln->vehicle_no ?: ''))) !!}
+          </div>
+        @endif
+      </div>
       <div>{{ number_format($ln->qty, 2) }}</div>
       <div>{{ number_format($ln->rate, 2) }}</div>
       <div>{{ number_format($ln->levy, 2) }}</div>
       <div>{{ number_format($ln->amount, 2) }}</div>
     </div>
   </div>
-    @endforeach
+@endforeach
+
 
     <div class="line"></div>
 
@@ -185,6 +208,21 @@ if (!function_exists('wrap_2_words')) {
       <div class="col right">
         CREATED BY: {{ strtoupper(optional($ticket->user)->name ?? '-') }}
       </div>
+
+      @php
+use Picqer\Barcode\BarcodeGeneratorPNG;
+$generator = new BarcodeGeneratorPNG();
+$barcode = base64_encode($generator->getBarcode($ticket->id, $generator::TYPE_CODE_128));
+@endphp
+
+<div class="center" style="margin-top:6px;">
+    {!! QrCode::size(100)
+        ->margin(1)
+        ->generate(url('/verify?code=' . $ticket->id)) !!}
+    <div style="font-size:10px;">SCAN TO VERIFY TICKET #{{ $ticket->id }}</div>
+</div>
+
+
     </div>
   </div>
 </body>

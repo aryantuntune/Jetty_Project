@@ -17,9 +17,11 @@ use App\Http\Controllers\OperatorController;
 use App\Http\Controllers\SpecialChargeController;
 use App\Http\Controllers\TicketEntryController;
 use App\Http\Controllers\TicketReportController;
+use App\Http\Controllers\TicketVerifyController;
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
-use Illuminate\Support\Facades\Artisan;
+
 
 
 
@@ -145,7 +147,8 @@ Route::get('/ajax/search-guest-by-id', [GuestController::class, 'searchById']);
 Route::get('/ajax/search-guest-by-name', [GuestController::class, 'searchByName']);
 Route::post('/ajax/add-guest', [GuestController::class, 'storebyticket']);
 
-
+Route::get('/verify', [TicketVerifyController::class, 'index'])->name('verify.index');
+Route::post('/verify', [TicketVerifyController::class, 'verify'])->name('verify.ticket');
 
 });
 
