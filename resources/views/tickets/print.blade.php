@@ -1,9 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  @php
-use SimpleSoftwareIO\QrCode\Facades\QrCode;
-@endphp
+
 
   <meta charset="utf-8">
   <title>Ticket #{{ $ticket->id }}</title>
