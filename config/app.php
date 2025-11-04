@@ -120,6 +120,7 @@ return [
     | Supported drivers: "file", "cache"
     |
     */
+'QrCode' => SimpleSoftwareIO\QrCode\Facades\QrCode::class,
 
     'maintenance' => [
         'driver' => env('APP_MAINTENANCE_DRIVER', 'file'),

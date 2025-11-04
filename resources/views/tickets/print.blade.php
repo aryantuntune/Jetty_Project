@@ -1,6 +1,10 @@
 <!DOCTYPE html>
 <html>
 <head>
+  @php
+use SimpleSoftwareIO\QrCode\Facades\QrCode;
+@endphp
+
   <meta charset="utf-8">
   <title>Ticket #{{ $ticket->id }}</title>
  <style>
@@ -218,6 +222,7 @@ if (!function_exists('wrap_2_words')) {
         ->generate(url('/verify?code=' . $ticket->id)) !!}
     <div style="font-size:10px;">SCAN TO VERIFY TICKET #{{ $ticket->id }}</div>
 </div>
+
 
 
     </div>
