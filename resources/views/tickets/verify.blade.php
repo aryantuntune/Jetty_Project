@@ -16,18 +16,26 @@
       <div class="card-body">
         <h5>Ticket #{{ $ticket->id }}</h5>
         <p><b>Branch:</b> {{ $ticket->branch->branch_name ?? '-' }}</p>
-        <p><b>Date:</b> {{ optional($ticket->created_at)->timezone('Asia/Kolkata')->format('d-m-Y H:i') }}</p>
+
+        @php
+          use Carbon\Carbon;
+          // Safely parse date fields — works even if they're plain strings
+          $createdAt = $ticket->created_at ? Carbon::parse($ticket->created_at)->timezone('Asia/Kolkata') : null;
+          $verifiedAt = $ticket->verified_at ? Carbon::parse($ticket->verified_at)->timezone('Asia/Kolkata') : null;
+        @endphp
+
+        <p><b>Date:</b> {{ $createdAt ? $createdAt->format('d-m-Y H:i') : '-' }}</p>
         <p><b>Total:</b> ₹{{ number_format($ticket->total_amount, 2) }}</p>
         <p><b>Created By:</b> {{ $ticket->user->name ?? '-' }}</p>
         <p><b>Status:</b>
-          @if($ticket->verified_at)
-            ✅ Verified ({{ $ticket->verified_at->format('d-m-Y H:i') }})
+          @if($verifiedAt)
+            ✅ Verified ({{ $verifiedAt->format('d-m-Y H:i') }})
           @else
             ❌ Not Verified
           @endif
         </p>
 
-        @if(!$ticket->verified_at)
+        @if(!$verifiedAt)
           <form method="post" action="{{ route('verify.ticket') }}">
             @csrf
             <input type="hidden" name="ticket_id" value="{{ $ticket->id }}">
