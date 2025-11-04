@@ -210,10 +210,7 @@ if (!function_exists('wrap_2_words')) {
       </div>
 
       @php
-use Picqer\Barcode\BarcodeGeneratorPNG;
-$generator = new BarcodeGeneratorPNG();
-$barcode = base64_encode($generator->getBarcode($ticket->id, $generator::TYPE_CODE_128));
-@endphp
+
 
 <div class="center" style="margin-top:6px;">
     {!! QrCode::size(100)
