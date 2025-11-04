@@ -23,10 +23,16 @@ class Ticket extends Model
         'ferry_type',
         'customer_name',
         'customer_mobile',
-        'guest_id'
-
+        'guest_id',
+        'verified_at',
     ];
 
+     protected $dates = [
+        'created_at',
+        'updated_at',
+        'verified_at',
+    ];
+    
     protected $casts = [
         'ferry_time' => 'datetime',
     ];
