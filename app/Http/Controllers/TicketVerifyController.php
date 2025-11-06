@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Ticket;
-use Illuminate\Contracts\Encryption\DecryptException;
 
 class TicketVerifyController extends Controller
 {
@@ -12,19 +11,9 @@ class TicketVerifyController extends Controller
     {
         $ticket = null;
 
-        // If a ticket code is provided (encrypted)
+        // If a ticket_id is scanned and sent as ?code=123
         if ($request->has('code')) {
-            try {
-                // decrypt the code to get the real id
-                $id = decrypt($request->code);
-                // optionally ensure it's an integer
-                $id = (int) $id;
-                $ticket = Ticket::with('branch', 'user')->find($id);
-            } catch (DecryptException $e) {
-                // invalid/ tampered code, ignore or show an error message
-                return redirect()->route('verify.index')
-                                 ->with('error', 'Invalid or expired ticket code.');
-            }
+            $ticket = Ticket::with('branch', 'user')->find($request->code);
         }
 
         return view('tickets.verify', compact('ticket'));
@@ -32,15 +21,7 @@ class TicketVerifyController extends Controller
 
     public function verify(Request $request)
     {
-        // ticket_id will be encrypted; decrypt it first
-        try {
-            $id = decrypt($request->ticket_id);
-            $id = (int) $id;
-        } catch (DecryptException $e) {
-            return back()->with('error', 'Invalid ticket identifier.');
-        }
-
-        $ticket = Ticket::findOrFail($id);
+        $ticket = Ticket::findOrFail($request->ticket_id);
         $ticket->verified_at = now();
         $ticket->save();
 
