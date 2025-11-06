@@ -116,7 +116,7 @@
 
 
 </head>
-<body onload="window.print()" style="{{ request('w') == '80' ? '--paper-width:80mm' : '--paper-width:58mm' }}">
+<body style="{{ request('w') == '80' ? '--paper-width:80mm' : '--paper-width:58mm' }}">
 
   <div class="rcpt no-break">
     <div class="h-title">SUVARNADURGA SHIPPING & MARINE SERVICES PVT. LTD.</div>
@@ -161,7 +161,7 @@ if (!function_exists('wrap_2_words')) {
   <div class="right">Qty</div>
   <div class="right">Rate</div>
   <div class="right">Levy</div>
-  <div class="right">Amount</div>
+  <div class="right">Amt</div>
 </div>
 
    @foreach($ticket->lines as $ln)
@@ -211,7 +211,7 @@ if (!function_exists('wrap_2_words')) {
         CREATED BY: {{ strtoupper(optional($ticket->user)->name ?? '-') }}
       </div>
 
-      @php
+      
 
 
 <div class="center" style="margin-top:6px;">
@@ -225,5 +225,20 @@ if (!function_exists('wrap_2_words')) {
 
     </div>
   </div>
+
+  
 </body>
 </html>
+<script>
+window.onload = function() {
+ 
+  window.print();
+
+ 
+  window.onafterprint = function() {
+    window.close();
+  };
+
+  setTimeout(() => window.close(), 3000);
+};
+</script>

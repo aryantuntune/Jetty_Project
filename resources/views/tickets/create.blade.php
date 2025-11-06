@@ -438,13 +438,33 @@ document.getElementById('ticketForm').addEventListener('submit', function (e) {
             if (res.data.ok) {
 
               // open printable page if requested
-        if (shouldPrint && res.data.ticket_id) {
-          window.open(`{{ url('/tickets') }}/${res.data.ticket_id}/print`, '_blank');
-        }
+        // if (shouldPrint && res.data.ticket_id) {
+        //   window.open(`{{ url('/tickets') }}/${res.data.ticket_id}/print`, '_blank');
+        // }
 
 //         if (shouldPrint && res.data.ticket_id) {
 //   window.open(`{{ url('/tickets') }}/${res.data.ticket_id}/print?w=80`, '_blank');
 // }
+if (shouldPrint && res.data.ticket_id) {
+  // Fetch the print view HTML silently, then print directly
+  fetch(`{{ url('/tickets') }}/${res.data.ticket_id}/print`)
+    .then(res => res.text())
+    .then(html => {
+      const printWindow = window.open('', '', 'width=400,height=600');
+      printWindow.document.write(html);
+      printWindow.document.close();
+      printWindow.focus();
+
+      // Automatically trigger print without preview
+      printWindow.print();
+
+      // Close the print window after a short delay
+      setTimeout(() => {
+        printWindow.close();
+      }, 1000);
+    });
+}
+
 
 
 
@@ -863,56 +883,63 @@ function selectGuestFromList(id, name) {
 
 
 
+document.getElementById('modalConfirm').addEventListener('click', function () {
+  const paymentMode = document.getElementById('paymentMode').value;
+  const givenAmount = parseFloat(document.getElementById('modalGivenAmount').value) || 0;
+  const netTotal = parseFloat(document.getElementById('modalNetTotal').value) || 0;
 
-//✅ When confirming modal
-modalConfirm.addEventListener('click', () => {
+  // Save payment mode in hidden field
+  document.getElementById('payment_mode').value = paymentMode;
+
+  // hide modal
+  document.getElementById('paymentModal').style.display = 'none';
+
+  // proceed to submit the form via JS
   const form = document.getElementById('ticketForm');
   const formData = new FormData(form);
-
-  // Add missing modal fields
-  formData.append('payment_mode', modalPaymentMode.value);
-  formData.append('given_amount', modalGivenAmount.value);
-
-  // Include checkbox state for print
   const shouldPrint = document.getElementById('printAfterSave')?.checked === true;
   formData.append('print', shouldPrint ? 1 : 0);
 
-  // Hide modal
-  paymentModal.style.display = 'none';
-
-  // Send request
- axios.post(form.action, formData)
+  axios.post(form.action, formData)
     .then(res => {
       if (res.data.ok) {
-        Swal.fire({
-          icon: 'success',
-          title: 'Ticket Confirmed',
-          text: 'Ticket stored successfully!',
-          confirmButtonColor: '#49aa3d'
-        });
-
-        // Optional print
         if (shouldPrint && res.data.ticket_id) {
           window.open(`{{ url('/tickets') }}/${res.data.ticket_id}/print`, '_blank');
         }
 
-        form.reset();
+        Swal.fire({
+          icon: 'success',
+          title: 'Ticket Confirmed',
+          text: 'Saved successfully!',
+          confirmButtonColor: '#49aa3d'
+        }).then(() => {
+          // ✅ Reset form and totals AFTER the dialog OK
+          form.reset();
+          document.getElementById('totalBox').textContent = '0.00';
+          document.getElementById('netBox').textContent = '0.00';
+          document.getElementById('ticketLinesBody').innerHTML = `
+            <tr>
+              <td><input class="ctrl" name="lines[0][item_id]" placeholder=""></td>
+              <td><input class="ctrl" name="lines[0][item_name]" placeholder="" readonly></td>
+              <td><input class="ctrl num" name="lines[0][qty]" type="number" step="1" min="0"></td>
+              <td><input class="ctrl num" name="lines[0][rate]" type="number" step="0.01" min="0"></td>
+              <td><input class="ctrl num" name="lines[0][levy]" type="number" step="0.01" min="0"></td>
+              <td><input class="ctrl num" name="lines[0][amount]" type="number" step="0.01" min="0" readonly></td>
+              <td><input class="ctrl" name="lines[0][vehicle_name]"></td>
+              <td><input class="ctrl" name="lines[0][vehicle_no]"></td>
+              <td><button type="button" class="btn-ghost btn-remove">✖</button></td>
+            </tr>`;
+        });
       }
     })
     .catch(err => {
-      if (err.response && err.response.data.errors) {
-        let errors = Object.values(err.response.data.errors).flat().join("<br>");
-        Swal.fire({
-          icon: 'error',
-          title: 'Validation Error',
-          html: errors,
-          confirmButtonColor: '#b3262e'
-        });
-      }
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: 'Something went wrong while saving the ticket.'
+      });
     });
-    
 });
-
 
 
 

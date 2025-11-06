@@ -5,6 +5,13 @@
 
   <h4 class="mb-3">🎫 Ticket Verification</h4>
 
+  @if(session('error'))
+    <div class="alert alert-danger">{{ session('error') }}</div>
+  @endif
+  @if(session('success'))
+    <div class="alert alert-success">{{ session('success') }}</div>
+  @endif
+
   <form method="get" action="{{ route('verify.index') }}" class="mb-4">
     <label>Scan or Enter Ticket Code:</label>
     <input type="text" name="code" class="form-control" placeholder="Scan QR code or type manually" autofocus required>
@@ -36,7 +43,8 @@
         @if(!$verifiedAt)
           <form method="post" action="{{ route('verify.ticket') }}">
             @csrf
-            <input type="hidden" name="ticket_id" value="{{ $ticket->id }}">
+            <!-- send encrypted id instead of plain id -->
+            <input type="hidden" name="ticket_id" value="{{ encrypt($ticket->id) }}">
             <button class="btn btn-success">Mark as Verified</button>
           </form>
         @endif
@@ -46,3 +54,4 @@
 
 </div>
 @endsection
+    
