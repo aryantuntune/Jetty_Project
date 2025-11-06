@@ -175,35 +175,13 @@ if (!function_exists('wrap_2_words')) {
           </div>
         @endif
       </div>
-     <div>{{ ftrim_local($ln->qty) }}</div>
-<div>{{ ftrim_local($ln->rate) }}</div>
-<div>{{ ftrim_local($ln->levy) }}</div>
-<div>{{ ftrim_local($ln->amount) }}</div>
-
-    @php
-if (!function_exists('wrap_2_words')) {
-    function wrap_2_words(string $text): string {
-        $tokens = preg_split('/\s+/', trim($text));
-        if (!$tokens) return e($text);
-
-        $pairs  = array_chunk($tokens, 2);
-        $lines  = array_map(fn($p) => e(implode(' ', $p)), $pairs);
-
-        return implode('<br>', $lines);
-    }
-}
-
-if (!function_exists('ftrim_local')) {
-    function ftrim_local($num) {
-        if (fmod($num, 1) == 0) {
-            return (int)$num;
-        }
-        return rtrim(rtrim(number_format($num, 2, '.', ''), '0'), '.');
-    }
-}
-@endphp
+     <div>{{ fmod($ln->qty,1)==0 ? (int)$ln->qty : rtrim(rtrim(number_format($ln->qty,2,'.',''),'0'),'.') }}</div>
+<div>{{ fmod($ln->rate,1)==0 ? (int)$ln->rate : rtrim(rtrim(number_format($ln->rate,2,'.',''),'0'),'.') }}</div>
+<div>{{ fmod($ln->levy,1)==0 ? (int)$ln->levy : rtrim(rtrim(number_format($ln->levy,2,'.',''),'0'),'.') }}</div>
+<div>{{ fmod($ln->amount,1)==0 ? (int)$ln->amount : rtrim(rtrim(number_format($ln->amount,2,'.',''),'0'),'.') }}</div>
 
 
+      
 
     </div>
   </div>
@@ -214,8 +192,7 @@ if (!function_exists('ftrim_local')) {
 
     <div class="row totals">
       <div class="col label">NET TOTAL WITH GOVT. TAX. :</div>
-   <div class="col value">{{ ftrim_local($ticket->total_amount) }}</div>
-
+      <div class="col value">{{ number_format($ticket->total_amount, 2) }}</div>
     </div>
 
     <div class="line"></div>
