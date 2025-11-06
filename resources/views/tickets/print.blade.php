@@ -175,10 +175,24 @@ if (!function_exists('wrap_2_words')) {
           </div>
         @endif
       </div>
-      <div>{{ number_format($ln->qty, 2) }}</div>
-      <div>{{ number_format($ln->rate, 2) }}</div>
-      <div>{{ number_format($ln->levy, 2) }}</div>
-      <div>{{ number_format($ln->amount, 2) }}</div>
+      <div>{{ ftrim($ln->qty) }}</div>
+      <div>{{ ftrim($ln->rate) }}</div>
+      <div>{{ ftrim($ln->levy) }}</div>
+      <div>{{ ftrim($ln->amount) }}</div>
+
+      @php
+if (!function_exists('ftrim')) {
+    function ftrim($num) {
+        // Format number: remove .00 or trailing zeros
+        if (fmod($num, 1) == 0) {
+            return (int)$num; // whole number, no decimals
+        }
+        return rtrim(rtrim(number_format($num, 2, '.', ''), '0'), '.');
+    }
+}
+@endphp
+
+
     </div>
   </div>
 @endforeach
