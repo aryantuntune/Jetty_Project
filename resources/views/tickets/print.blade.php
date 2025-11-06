@@ -175,22 +175,34 @@ if (!function_exists('wrap_2_words')) {
           </div>
         @endif
       </div>
-      <div>{{ ftrim($ln->qty) }}</div>
-      <div>{{ ftrim($ln->rate) }}</div>
-      <div>{{ ftrim($ln->levy) }}</div>
-      <div>{{ ftrim($ln->amount) }}</div>
+     <div>{{ ftrim_local($ln->qty) }}</div>
+<div>{{ ftrim_local($ln->rate) }}</div>
+<div>{{ ftrim_local($ln->levy) }}</div>
+<div>{{ ftrim_local($ln->amount) }}</div>
 
-      @php
-if (!function_exists('ftrim')) {
-    function ftrim($num) {
-        // Format number: remove .00 or trailing zeros
+    @php
+if (!function_exists('wrap_2_words')) {
+    function wrap_2_words(string $text): string {
+        $tokens = preg_split('/\s+/', trim($text));
+        if (!$tokens) return e($text);
+
+        $pairs  = array_chunk($tokens, 2);
+        $lines  = array_map(fn($p) => e(implode(' ', $p)), $pairs);
+
+        return implode('<br>', $lines);
+    }
+}
+
+if (!function_exists('ftrim_local')) {
+    function ftrim_local($num) {
         if (fmod($num, 1) == 0) {
-            return (int)$num; // whole number, no decimals
+            return (int)$num;
         }
         return rtrim(rtrim(number_format($num, 2, '.', ''), '0'), '.');
     }
 }
 @endphp
+
 
 
     </div>
@@ -202,7 +214,8 @@ if (!function_exists('ftrim')) {
 
     <div class="row totals">
       <div class="col label">NET TOTAL WITH GOVT. TAX. :</div>
-      <div class="col value">{{ number_format($ticket->total_amount, 2) }}</div>
+   <div class="col value">{{ ftrim_local($ticket->total_amount) }}</div>
+
     </div>
 
     <div class="line"></div>
