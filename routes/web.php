@@ -146,6 +146,11 @@ Route::middleware(['auth'])->group(function () {
 Route::get('/ajax/search-guest-by-id', [GuestController::class, 'searchById']);
 Route::get('/ajax/search-guest-by-name', [GuestController::class, 'searchByName']);
 Route::post('/ajax/add-guest', [GuestController::class, 'storebyticket']);
+Route::get('/ajax/guest/find', [GuestController::class, 'find'])->name('ajax.guest.find');
+
+
+
+
 
 Route::get('/verify', [TicketVerifyController::class, 'index'])->name('verify.index');
 Route::post('/verify', [TicketVerifyController::class, 'verify'])->name('verify.ticket');

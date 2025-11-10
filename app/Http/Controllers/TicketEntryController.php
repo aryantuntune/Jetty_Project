@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Branch;
 use App\Models\FerryBoat;
 use App\Models\FerrySchedule;
+use App\Models\Guest;
 use App\Models\ItemRate;
 use App\Models\SpecialCharge;
 use App\Models\Ticket;
@@ -152,7 +153,118 @@ class TicketEntryController extends Controller
 
 
     // Optional: just a stub to receive the form
-   public function store(Request $request)
+//    public function store(Request $request)
+// {
+//     $now = Carbon::now('Asia/Kolkata');
+
+//     $data = $request->validate([
+//         'payment_mode' => 'required|string|in:Cash,Credit,Guest Pass,GPay',
+//         'customer_name' => 'nullable|string|max:120',
+//         'customer_mobile' => 'nullable|string|max:20|regex:/^\+?\d{10,15}$/',
+//         'ferry_boat_id' => 'required|integer',
+//         'ferry_time' => '',
+//         'discount_pct' => 'nullable|numeric|min:0',
+//         'discount_rs' => 'nullable|numeric|min:0',
+//         'lines' => 'required|array|min:1',
+//         'lines.*.item_id' => 'nullable|string',
+//         'lines.*.item_name' => 'required|string',
+//         'lines.*.qty' => 'required|numeric|min:0',
+//         'lines.*.rate' => 'required|numeric|min:0',
+//         'lines.*.levy' => 'required|numeric|min:0',
+//         'lines.*.amount' => 'required|numeric|min:0',
+//         'lines.*.vehicle_name' => 'nullable|string',
+//         'lines.*.vehicle_no' => 'nullable|string',
+//         'ferry_type' => ''
+//     ]);
+
+//     $user = $request->user();
+//     $branchId = in_array($user->role_id, [1, 2])
+//         ? $request->input('branch_id')
+//         : $user->branch_id;
+
+//     // Calculate total
+//     $total = collect($data['lines'])->sum('amount');
+//     if (!empty($data['discount_rs'])) {
+//         $total -= $data['discount_rs'];
+//     } elseif (!empty($data['discount_pct'])) {
+//         $total -= ($total * $data['discount_pct'] / 100);
+//     }
+
+//     // Apply Special Charge (if applicable)
+//     if (($request->ferry_type ?? '') === 'SPECIAL') {
+//         $specialChargeRecord = SpecialCharge::where('branch_id', $branchId)->first();
+//         $specialCharge = $specialChargeRecord ? $specialChargeRecord->special_charge : 0;
+
+//         $numLines = count($data['lines']);
+//         if ($numLines > 0) {
+//             $perLineCharge = round($specialCharge / $numLines, 2);
+//             $remaining = $specialCharge - ($perLineCharge * $numLines);
+
+//             foreach ($data['lines'] as $index => &$ln) {
+//                 $ln['amount'] += $perLineCharge;
+//                 if ($index === 0 && $remaining !== 0) {
+//                     $ln['amount'] += $remaining;
+//                 }
+//             }
+//             unset($ln);
+//             $total = collect($data['lines'])->sum('amount');
+//         }
+//     }
+
+//     $guestId = $request->guest_id;
+
+//     // ✅ Prevent accidental duplicate within 10 seconds (same user + boat + total)
+//     $duplicate = \App\Models\Ticket::where('branch_id', $branchId)
+//         ->where('ferry_boat_id', $data['ferry_boat_id'])
+//         ->where('user_id', $user->id)
+//         ->where('total_amount', $total)
+//         ->whereBetween('created_at', [now()->subSeconds(10), now()->addSeconds(10)])
+//         ->exists();
+
+//    if ($duplicate) {
+//     if ($request->input('guest_id') != null) {
+//         return redirect()->route('ticket-entry.create')
+//                          ->with('error', 'Duplicate ticket prevented.');
+//     }
+
+//     return response()->json([
+//         'ok' => false,
+//         'message' => 'Duplicate ticket prevented (already saved recently).'
+//     ]);
+// }
+
+
+//     // ✅ Create ticket header
+//     $ticket = \App\Models\Ticket::create([
+//         'branch_id'     => $branchId,
+//         'ferry_boat_id' => $data['ferry_boat_id'],
+//         'payment_mode'  => $data['payment_mode'],
+//         'customer_name'  => $data['customer_name'] ?? null,
+//         'customer_mobile' => $data['customer_mobile'] ?? null,
+//         'ferry_time'    => $data['ferry_time'] ?? $now,
+//         'discount_pct'  => $data['discount_pct'] ?? null,
+//         'discount_rs'   => $data['discount_rs'] ?? null,
+//         'total_amount'  => $total,
+//         'user_id'       => $user->id,
+//         'ferry_type'    => $request->ferry_type ?? 'SPECIAL',
+//         'guest_id'      => $guestId,
+//     ]);
+
+//     // Insert lines
+//     foreach ($data['lines'] as $ln) {
+//         $ln['user_id'] = $user->id;
+//         $ticket->lines()->create($ln);
+//     }
+
+//     return response()->json([
+//         'ok'        => true,
+//         'message'   => 'Ticket saved successfully.',
+//         'ticket_id' => $ticket->id,
+//         'total'     => $ticket->total_amount,
+//     ]);
+// }
+
+public function store(Request $request)
 {
     $now = Carbon::now('Asia/Kolkata');
 
@@ -161,7 +273,7 @@ class TicketEntryController extends Controller
         'customer_name' => 'nullable|string|max:120',
         'customer_mobile' => 'nullable|string|max:20|regex:/^\+?\d{10,15}$/',
         'ferry_boat_id' => 'required|integer',
-        'ferry_time' => '',
+        'ferry_time' => 'nullable',
         'discount_pct' => 'nullable|numeric|min:0',
         'discount_rs' => 'nullable|numeric|min:0',
         'lines' => 'required|array|min:1',
@@ -173,7 +285,9 @@ class TicketEntryController extends Controller
         'lines.*.amount' => 'required|numeric|min:0',
         'lines.*.vehicle_name' => 'nullable|string',
         'lines.*.vehicle_no' => 'nullable|string',
-        'ferry_type' => ''
+        'ferry_type' => 'nullable|string',
+        'guest_id' => 'nullable|integer',
+        'guest_name' => 'nullable|string|max:255',
     ]);
 
     $user = $request->user();
@@ -181,7 +295,46 @@ class TicketEntryController extends Controller
         ? $request->input('branch_id')
         : $user->branch_id;
 
-    // Calculate total
+    /* ----------------------------------------------------
+     * ✅ Guest Validation (critical for "Guest Pass" mode)
+     * ---------------------------------------------------- */
+    $guest = null;
+
+    if ($data['payment_mode'] === 'Guest Pass') {
+        // Must have either guest_id or guest_name
+        if (empty($data['guest_id']) && empty($data['guest_name'])) {
+            return response()->json([
+                'ok' => false,
+                'message' => 'Guest Pass requires valid Guest ID or Name.'
+            ], 422);
+        }
+
+        // If ID provided → must exist
+        if (!empty($data['guest_id'])) {
+            $guest = Guest::find($data['guest_id']);
+            if (!$guest) {
+                return response()->json([
+                    'ok' => false,
+                    'message' => 'Invalid Guest ID. Please check and try again.'
+                ], 422);
+            }
+        }
+
+        // If only Name provided → must exist in DB
+        if (!$guest && !empty($data['guest_name'])) {
+            $guest = Guest::where('name', 'like', '%' . $data['guest_name'] . '%')->first();
+            if (!$guest) {
+                return response()->json([
+                    'ok' => false,
+                    'message' => 'Invalid Guest Name. Please check and try again.'
+                ], 422);
+            }
+        }
+    }
+
+    /* ----------------------------------------------------
+     * ✅ Calculate total
+     * ---------------------------------------------------- */
     $total = collect($data['lines'])->sum('amount');
     if (!empty($data['discount_rs'])) {
         $total -= $data['discount_rs'];
@@ -189,15 +342,16 @@ class TicketEntryController extends Controller
         $total -= ($total * $data['discount_pct'] / 100);
     }
 
-    // Apply Special Charge (if applicable)
+    /* ----------------------------------------------------
+     * ✅ Apply Special Charge (if applicable)
+     * ---------------------------------------------------- */
     if (($request->ferry_type ?? '') === 'SPECIAL') {
         $specialChargeRecord = SpecialCharge::where('branch_id', $branchId)->first();
-        $specialCharge = $specialChargeRecord ? $specialChargeRecord->special_charge : 0;
+        $specialCharge = $specialChargeRecord?->special_charge ?? 0;
 
-        $numLines = count($data['lines']);
-        if ($numLines > 0) {
-            $perLineCharge = round($specialCharge / $numLines, 2);
-            $remaining = $specialCharge - ($perLineCharge * $numLines);
+        if ($specialCharge > 0 && count($data['lines']) > 0) {
+            $perLineCharge = round($specialCharge / count($data['lines']), 2);
+            $remaining = $specialCharge - ($perLineCharge * count($data['lines']));
 
             foreach ($data['lines'] as $index => &$ln) {
                 $ln['amount'] += $perLineCharge;
@@ -210,17 +364,17 @@ class TicketEntryController extends Controller
         }
     }
 
-    $guestId = $request->guest_id;
-
-    // ✅ Prevent accidental duplicate within 10 seconds (same user + boat + total)
-    $duplicate = \App\Models\Ticket::where('branch_id', $branchId)
+    /* ----------------------------------------------------
+     * ✅ Prevent accidental duplicate within 10 seconds
+     * ---------------------------------------------------- */
+    $duplicate = Ticket::where('branch_id', $branchId)
         ->where('ferry_boat_id', $data['ferry_boat_id'])
         ->where('user_id', $user->id)
         ->where('total_amount', $total)
         ->whereBetween('created_at', [now()->subSeconds(10), now()->addSeconds(10)])
         ->exists();
 
-   if ($duplicate) {
+     if ($duplicate) {
     if ($request->input('guest_id') != null) {
         return redirect()->route('ticket-entry.create')
                          ->with('error', 'Duplicate ticket prevented.');
@@ -232,24 +386,24 @@ class TicketEntryController extends Controller
     ]);
 }
 
-
-    // ✅ Create ticket header
-    $ticket = \App\Models\Ticket::create([
+    /* ----------------------------------------------------
+     * ✅ Create Ticket
+     * ---------------------------------------------------- */
+    $ticket = Ticket::create([
         'branch_id'     => $branchId,
         'ferry_boat_id' => $data['ferry_boat_id'],
         'payment_mode'  => $data['payment_mode'],
-        'customer_name'  => $data['customer_name'] ?? null,
+        'customer_name' => $data['customer_name'] ?? null,
         'customer_mobile' => $data['customer_mobile'] ?? null,
         'ferry_time'    => $data['ferry_time'] ?? $now,
         'discount_pct'  => $data['discount_pct'] ?? null,
         'discount_rs'   => $data['discount_rs'] ?? null,
         'total_amount'  => $total,
         'user_id'       => $user->id,
-        'ferry_type'    => $request->ferry_type ?? 'SPECIAL',
-        'guest_id'      => $guestId,
+        'ferry_type'    => $data['ferry_type'] ?? 'SPECIAL',
+        'guest_id'      => $guest?->id,
     ]);
 
-    // Insert lines
     foreach ($data['lines'] as $ln) {
         $ln['user_id'] = $user->id;
         $ticket->lines()->create($ln);

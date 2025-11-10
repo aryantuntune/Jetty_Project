@@ -280,7 +280,7 @@ background:rgba(0,0,0,.4);align-items:center;justify-content:center;z-index:9999
     <div style="margin-bottom:10px;">
       <label><b>Payment Mode:</b></label>
 <select id="paymentMode" class="form-select" onchange="handlePaymentModeChange(this.value)">        <option value="Cash">Cash</option>
-        <option value="Credit">Credit</option>
+        <!-- <option value="Credit">Credit</option> -->
         <option value="Guest Pass">Guest Pass</option>
         <option value="GPay">GPay</option>
       </select>
@@ -321,12 +321,13 @@ background:rgba(0,0,0,.4);align-items:center;justify-content:center;z-index:9999
           <ul id="guestList" class="list-group mt-1" style="display:none; max-height:150px; overflow-y:auto;"></ul>
         </div>
         <div class="text-end">
-          <button id="addGuestBtn" class="btn btn-sm btn-outline-primary" style="display:none;">Add New Guest</button>
+            <!-- <button id="addGuestBtn" class="btn btn-sm btn-outline-primary" style="display:none;">Add New Guest</button> -->
         </div>
       </div>
       <div class="modal-footer">
-        <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-        <button class="btn btn-success" onclick="selectGuest()">Continue</button>
+ <button id="continueBtn" class="btn btn-success" onclick="selectGuest()" style="display:none;">
+    Continue
+  </button>        
       </div>
     </div>
   </div>
@@ -777,6 +778,9 @@ function handlePaymentModeChange(value) {
 
     const input = document.getElementById('payment_mode');
 
+
+
+
     if (value === 'Guest Pass') {
         // ✅ Send as "Cash" to controller
         input.value = 'Cash';
@@ -793,94 +797,167 @@ function handlePaymentModeChange(value) {
         input.value = value;
     }
 }
+$(document).ready(function () {
+    let guestValid = false;
+    let typingTimer;
+    const typingDelay = 600;
 
+    function showFrontAlert(icon, title, text) {
+        Swal.fire({
+            icon, title, text,
+            backdrop: true,
+            allowOutsideClick: false,
+            didOpen: () => $('.swal2-container').css('z-index', 20000)
+        });
+    }
 
-$(document).ready(function() {
-    // Search Guest by ID
-    $('#guestId').on('keyup', function() {
-        let guestId = $(this).val().trim();
-        if (guestId.length > 0) {
+    function debounce(callback) {
+        clearTimeout(typingTimer);
+        typingTimer = setTimeout(callback, typingDelay);
+    }
+
+    // 🔍 Search by ID
+    $('#guestId').on('keyup', function () {
+        const guestId = $(this).val().trim();
+        if (guestId.length === 0) {
+            guestValid = false;
+            $('#continueBtn').hide();
+            return;
+        }
+
+        debounce(function () {
             $.ajax({
                 url: '/ajax/search-guest-by-id',
                 method: 'GET',
                 data: { id: guestId },
-                success: function(response) {
-                    if (response) {
-                        $('#guestName').val(response.name);
+                success: function (res) {
+                    if (res.ok) {
+                        $('#guestName').val(res.guest.name);
                         $('#addGuestBtn').hide();
+                        guestValid = true;
+                        $('#continueBtn').show();
                     } else {
                         $('#guestName').val('');
                         $('#addGuestBtn').show();
+                        guestValid = false;
+                        $('#continueBtn').hide();
+                        showFrontAlert('error', 'Invalid Guest ID', res.message);
                     }
+                },
+                error: function () {
+                    $('#guestName').val('');
+                    $('#addGuestBtn').show();
+                    guestValid = false;
+                    $('#continueBtn').hide();
+                    showFrontAlert('error', 'Invalid Guest ID', 'Guest not found.');
                 }
             });
-        }
+        });
     });
 
-    // Search Guest by Name (autocomplete)
-    $('#guestName').on('keyup', function() {
-        let name = $(this).val().trim();
-        if (name.length > 1) {
+    // 🔍 Search by Name
+    $('#guestName').on('keyup', function () {
+        const name = $(this).val().trim();
+        if (name.length < 2) {
+            $('#guestList').hide();
+            $('#continueBtn').hide();
+            guestValid = false;
+            return;
+        }
+
+        debounce(function () {
             $.ajax({
                 url: '/ajax/search-guest-by-name',
                 method: 'GET',
                 data: { name },
-                success: function(response) {
-                    let list = $('#guestList');
-                    list.empty().show();
-                    if (response.length > 0) {
-                        response.forEach(g => {
-                            list.append(`<li class="list-group-item list-group-item-action" onclick="selectGuestFromList('${g.id}', '${g.name}')">${g.name}</li>`);
+                success: function (res) {
+                    const list = $('#guestList');
+                    list.empty();
+
+                    if (res.ok && res.guests.length > 0) {
+                        res.guests.forEach(g => {
+                            list.append(`
+                                <li class="list-group-item list-group-item-action"
+                                    onclick="selectGuestFromList('${g.id}', '${g.name}')">${g.name}</li>
+                            `);
                         });
+                        list.show();
                         $('#addGuestBtn').hide();
+                        guestValid = true;
+                        $('#continueBtn').show();
                     } else {
                         list.hide();
                         $('#addGuestBtn').show();
+                        guestValid = false;
+                        $('#continueBtn').hide();
+                        showFrontAlert('error', 'Guest Not Found', res.message || 'No guests found.');
                     }
+                },
+                error: function () {
+                    $('#guestList').hide();
+                    $('#addGuestBtn').show();
+                    guestValid = false;
+                    $('#continueBtn').hide();
+                    showFrontAlert('error', 'Guest Not Found', 'Invalid input.');
                 }
             });
-        } else {
-            $('#guestList').hide();
+        });
+    });
+
+    // ✅ When user selects from name list
+    window.selectGuestFromList = function (id, name) {
+        $('#guestId').val(id);
+        $('#guestName').val(name);
+        $('#guestList').hide();
+        $('#addGuestBtn').hide();
+        guestValid = true;
+        $('#continueBtn').show();
+    };
+
+    // ✅ Continue button
+    window.selectGuest = async function () {
+        if (!guestValid) {
+            showFrontAlert('error', 'Invalid Guest', 'Please enter valid Guest ID or Name.');
+            return;
         }
+
+        const guestId = $('#guestId').val().trim();
+        const res = await $.get('/ajax/search-guest-by-id', { id: guestId });
+
+        if (!res.ok) {
+            showFrontAlert('error', 'Invalid Guest', 'Please correct the Guest ID or Name.');
+            guestValid = false;
+            $('#continueBtn').hide();
+            return;
+        }
+
+        $('#guest_id_hidden').val(res.guest.id);
+        const guestModalEl = document.getElementById('guestModal');
+        const modalInstance = bootstrap.Modal.getInstance(guestModalEl);
+        modalInstance.hide();
+
+        Swal.fire({
+            icon: 'success',
+            title: 'Guest Verified',
+            text: `${res.guest.name} verified successfully.`,
+            timer: 1000,
+            showConfirmButton: false,
+        });
+    };
+
+    // ✅ Prevent continuing when invalid guest during ticket save
+    $('#modalConfirm').on('click', function (e) {
+        const paymentMode = $('#paymentMode').val();
+
+        if (paymentMode === 'Guest Pass' && !guestValid) {
+            e.preventDefault();
+            showFrontAlert('error', 'Invalid Guest', 'You cannot continue without a valid guest.');
+            return;
+        }
+
+        $('#ticketForm').submit();
     });
 });
-
-function selectGuestFromList(id, name) {
-    $('#guestId').val(id);
-    $('#guestName').val(name);
-    $('#guestList').hide();
-}
-
-  function selectGuest() {
-    const id = $('#guestId').val().trim();
-    const name = $('#guestName').val().trim();
-
-    if (!id && !name) {
-        Swal.fire({
-            icon: 'warning',
-            title: 'Missing Guest Details',
-            text: 'Please enter Guest ID or Name.',
-        });
-        return;
-    }
-
-    // Assign guest ID to hidden field in form
-    $('#guest_id_hidden').val(id || name);
-
-    // Hide guest modal
-    const guestModalEl = document.getElementById('guestModal');
-    const modalInstance = bootstrap.Modal.getInstance(guestModalEl);
-    modalInstance.hide();
-
-    // ✅ Confirm back to payment modal to finalize
-    setTimeout(() => {
-        $('#payment_mode').val('Cash');
-        $('#ticketForm').submit(); // Directly submit ticket form
-    }, 300);
-}
-
-
-
 
 
 document.getElementById('modalConfirm').addEventListener('click', function () {
@@ -894,11 +971,17 @@ document.getElementById('modalConfirm').addEventListener('click', function () {
   // hide modal
   document.getElementById('paymentModal').style.display = 'none';
 
+    if (paymentMode === 'Guest Pass' && !guestValid) {
+            showFrontAlert('error', 'Invalid Guest', 'You cannot continue without a valid guest.');
+            return; // 🚫 stop submission
+        }
   // proceed to submit the form via JS
   const form = document.getElementById('ticketForm');
   const formData = new FormData(form);
   const shouldPrint = document.getElementById('printAfterSave')?.checked === true;
   formData.append('print', shouldPrint ? 1 : 0);
+
+  
 
   axios.post(form.action, formData)
     .then(res => {

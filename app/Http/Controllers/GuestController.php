@@ -97,17 +97,46 @@ class GuestController extends Controller
     }
 
 
-    public function searchById(Request $request)
+  public function searchById(Request $request)
 {
-    $guest = Guest::where('id', $request->id)->first();
-    return response()->json($guest);
+    $guest = Guest::find($request->id);
+
+    if (!$guest) {
+        return response()->json(['ok' => false, 'message' => 'Invalid Guest ID.'], 404);
+    }
+
+    return response()->json(['ok' => true, 'guest' => $guest]);
 }
 
 public function searchByName(Request $request)
 {
-    $guests = Guest::where('name', 'like', '%' . $request->name . '%')->get(['id', 'name']);
-    return response()->json($guests);
+    $guests = Guest::where('name', 'like', '%' . $request->name . '%')
+                   ->get(['id', 'name']);
+
+    if ($guests->isEmpty()) {
+        return response()->json(['ok' => false, 'message' => 'No guests found.'], 404);
+    }
+
+    return response()->json(['ok' => true, 'guests' => $guests]);
 }
+
+public function find(Request $request)
+{
+    $guest = null;
+
+    if ($request->filled('id')) {
+        $guest = \App\Models\Guest::where('guest_id', $request->id)->first();
+    } elseif ($request->filled('name')) {
+        $guest = \App\Models\Guest::where('guest_name', 'like', $request->name)->first();
+    }
+
+    if ($guest) {
+        return response()->json(['ok' => true, 'guest' => $guest]);
+    }
+    return response()->json(['ok' => false]);
+}
+
+
 
 public function storebyticket(Request $request)
 {
