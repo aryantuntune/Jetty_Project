@@ -280,7 +280,7 @@ background:rgba(0,0,0,.4);align-items:center;justify-content:center;z-index:9999
     <div style="margin-bottom:10px;">
       <label><b>Payment Mode:</b></label>
 <select id="paymentMode" class="form-select" onchange="handlePaymentModeChange(this.value)">        <option value="Cash">Cash</option>
-        <option value="Credit">Credit</option>
+        <!-- <option value="Credit">Credit</option> -->
         <option value="Guest Pass">Guest Pass</option>
         <option value="GPay">GPay</option>
       </select>
@@ -325,7 +325,7 @@ background:rgba(0,0,0,.4);align-items:center;justify-content:center;z-index:9999
         </div>
       </div>
       <div class="modal-footer">
-        <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <!-- <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button> -->
         <button class="btn btn-success" onclick="selectGuest()">Continue</button>
       </div>
     </div>
