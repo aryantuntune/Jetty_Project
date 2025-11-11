@@ -266,6 +266,7 @@ class TicketEntryController extends Controller
 
 public function store(Request $request)
 {
+    //  dd($request->all());
     $now = Carbon::now('Asia/Kolkata');
 
     $data = $request->validate([
@@ -277,7 +278,6 @@ public function store(Request $request)
         'discount_pct' => 'nullable|numeric|min:0',
         'discount_rs' => 'nullable|numeric|min:0',
         'lines' => 'required|array|min:1',
-        'lines.*.item_id' => 'nullable|string',
         'lines.*.item_name' => 'required|string',
         'lines.*.qty' => 'required|numeric|min:0',
         'lines.*.rate' => 'required|numeric|min:0',
@@ -286,8 +286,8 @@ public function store(Request $request)
         'lines.*.vehicle_name' => 'nullable|string',
         'lines.*.vehicle_no' => 'nullable|string',
         'ferry_type' => 'nullable|string',
-        'guest_id' => 'nullable|integer',
-        'guest_name' => 'nullable|string|max:255',
+        'guest_id' => 'nullable',
+        
     ]);
 
     $user = $request->user();
@@ -295,46 +295,29 @@ public function store(Request $request)
         ? $request->input('branch_id')
         : $user->branch_id;
 
-    /* ----------------------------------------------------
-     * ✅ Guest Validation (critical for "Guest Pass" mode)
-     * ---------------------------------------------------- */
+    // ✅ Guest validation for Guest Pass
     $guest = null;
 
     if ($data['payment_mode'] === 'Guest Pass') {
-        // Must have either guest_id or guest_name
-        if (empty($data['guest_id']) && empty($data['guest_name'])) {
+        if (empty($data['guest_id'])) {
             return response()->json([
                 'ok' => false,
-                'message' => 'Guest Pass requires valid Guest ID or Name.'
+                'message' => 'Guest Pass requires valid Guest ID.'
             ], 422);
         }
 
-        // If ID provided → must exist
-        if (!empty($data['guest_id'])) {
-            $guest = Guest::find($data['guest_id']);
-            if (!$guest) {
-                return response()->json([
-                    'ok' => false,
-                    'message' => 'Invalid Guest ID. Please check and try again.'
-                ], 422);
-            }
-        }
-
-        // If only Name provided → must exist in DB
-        if (!$guest && !empty($data['guest_name'])) {
-            $guest = Guest::where('name', 'like', '%' . $data['guest_name'] . '%')->first();
-            if (!$guest) {
-                return response()->json([
-                    'ok' => false,
-                    'message' => 'Invalid Guest Name. Please check and try again.'
-                ], 422);
-            }
+        $guest = Guest::find($data['guest_id']);
+        if (!$guest) {
+            return response()->json([
+                'ok' => false,
+                'message' => 'Invalid Guest ID. Please check and try again.'
+            ], 422);
         }
     }
 
-    /* ----------------------------------------------------
-     * ✅ Calculate total
-     * ---------------------------------------------------- */
+    $guestIdToStore = $guest?->id ?? $data['guest_id'] ?? null;
+// dd($guestIdToStore);
+    // ✅ Calculate total
     $total = collect($data['lines'])->sum('amount');
     if (!empty($data['discount_rs'])) {
         $total -= $data['discount_rs'];
@@ -342,53 +325,27 @@ public function store(Request $request)
         $total -= ($total * $data['discount_pct'] / 100);
     }
 
-    /* ----------------------------------------------------
-     * ✅ Apply Special Charge (if applicable)
-     * ---------------------------------------------------- */
-    if (($request->ferry_type ?? '') === 'SPECIAL') {
-        $specialChargeRecord = SpecialCharge::where('branch_id', $branchId)->first();
-        $specialCharge = $specialChargeRecord?->special_charge ?? 0;
+    // ✅ Prevent duplicates
+//     $duplicate = Ticket::where('branch_id', $branchId)
+//         ->where('ferry_boat_id', $data['ferry_boat_id'])
+//         ->where('user_id', $user->id)
+//         ->where('total_amount', $total)
+//         ->whereBetween('created_at', [now()->subSeconds(10), now()->addSeconds(10)])
+//         ->exists();
 
-        if ($specialCharge > 0 && count($data['lines']) > 0) {
-            $perLineCharge = round($specialCharge / count($data['lines']), 2);
-            $remaining = $specialCharge - ($perLineCharge * count($data['lines']));
+//    if ($duplicate) {
+//     if ($request->input('guest_id') != null) {
+//         return redirect()->route('ticket-entry.create')
+//                          ->with('error', 'Duplicate ticket prevented.');
+//     }
 
-            foreach ($data['lines'] as $index => &$ln) {
-                $ln['amount'] += $perLineCharge;
-                if ($index === 0 && $remaining !== 0) {
-                    $ln['amount'] += $remaining;
-                }
-            }
-            unset($ln);
-            $total = collect($data['lines'])->sum('amount');
-        }
-    }
+//     return response()->json([
+//         'ok' => false,
+//         'message' => 'Duplicate ticket prevented (already saved recently).'
+//     ]);
+// }
 
-    /* ----------------------------------------------------
-     * ✅ Prevent accidental duplicate within 10 seconds
-     * ---------------------------------------------------- */
-    $duplicate = Ticket::where('branch_id', $branchId)
-        ->where('ferry_boat_id', $data['ferry_boat_id'])
-        ->where('user_id', $user->id)
-        ->where('total_amount', $total)
-        ->whereBetween('created_at', [now()->subSeconds(10), now()->addSeconds(10)])
-        ->exists();
-
-     if ($duplicate) {
-    if ($request->input('guest_id') != null) {
-        return redirect()->route('ticket-entry.create')
-                         ->with('error', 'Duplicate ticket prevented.');
-    }
-
-    return response()->json([
-        'ok' => false,
-        'message' => 'Duplicate ticket prevented (already saved recently).'
-    ]);
-}
-
-    /* ----------------------------------------------------
-     * ✅ Create Ticket
-     * ---------------------------------------------------- */
+    // ✅ Create ticket
     $ticket = Ticket::create([
         'branch_id'     => $branchId,
         'ferry_boat_id' => $data['ferry_boat_id'],
@@ -401,7 +358,7 @@ public function store(Request $request)
         'total_amount'  => $total,
         'user_id'       => $user->id,
         'ferry_type'    => $data['ferry_type'] ?? 'SPECIAL',
-        'guest_id'      => $guest?->id,
+        'guest_id'      => $guestIdToStore, 
     ]);
 
     foreach ($data['lines'] as $ln) {

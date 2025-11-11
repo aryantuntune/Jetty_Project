@@ -420,6 +420,17 @@ document.getElementById('branchSelect')?.addEventListener('change', function() {
    ferryTimeInput.value = '';
 });
 
+
+
+
+
+
+
+
+
+
+
+
 document.getElementById('ticketForm').addEventListener('submit', function (e) {
     e.preventDefault(); // stop normal submit
 
@@ -797,6 +808,7 @@ function handlePaymentModeChange(value) {
         input.value = value;
     }
 }
+
 $(document).ready(function () {
     let guestValid = false;
     let typingTimer;
@@ -914,116 +926,126 @@ $(document).ready(function () {
         $('#continueBtn').show();
     };
 
-    // ✅ Continue button
+    // ✅ Continue button (Guest modal)
     window.selectGuest = async function () {
-        if (!guestValid) {
-            showFrontAlert('error', 'Invalid Guest', 'Please enter valid Guest ID or Name.');
-            return;
-        }
-
         const guestId = $('#guestId').val().trim();
-        const res = await $.get('/ajax/search-guest-by-id', { id: guestId });
 
-        if (!res.ok) {
-            showFrontAlert('error', 'Invalid Guest', 'Please correct the Guest ID or Name.');
-            guestValid = false;
-            $('#continueBtn').hide();
+        if (!guestId) {
+            Swal.fire('Error', 'Please enter Guest ID.', 'error');
             return;
         }
 
-        $('#guest_id_hidden').val(res.guest.id);
-        const guestModalEl = document.getElementById('guestModal');
-        const modalInstance = bootstrap.Modal.getInstance(guestModalEl);
-        modalInstance.hide();
+        try {
+            const res = await $.get('/ajax/search-guest-by-id', { id: guestId });
 
-        Swal.fire({
-            icon: 'success',
-            title: 'Guest Verified',
-            text: `${res.guest.name} verified successfully.`,
-            timer: 1000,
-            showConfirmButton: false,
-        });
+            if (res.ok && res.guest) {
+                $('#guest_id_hidden').val(res.guest.id);
+                console.log('✅ Guest ID set immediately:', $('#guest_id_hidden').val());
+
+                await new Promise(resolve => setTimeout(resolve, 100));
+
+                // Close modal
+                const guestModalEl = document.getElementById('guestModal');
+                bootstrap.Modal.getInstance(guestModalEl).hide();
+
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Guest Verified',
+                    text: `${res.guest.name} verified successfully.`,
+                    timer: 1000,
+                    showConfirmButton: false,
+                });
+
+                // ✅ Mark as valid
+                guestValid = true;
+                window.guestValid = true;
+            } else {
+                Swal.fire('Error', 'Invalid Guest ID', 'error');
+                guestValid = false;
+                window.guestValid = false;
+            }
+        } catch (err) {
+            Swal.fire('Error', 'Server error while checking guest.', 'error');
+            guestValid = false;
+            window.guestValid = false;
+        }
     };
 
-    // ✅ Prevent continuing when invalid guest during ticket save
-    $('#modalConfirm').on('click', function (e) {
+    // ✅ Single Modal Confirm Button
+    $('#modalConfirm').off('click').on('click', async function (e) {
+        e.preventDefault();
+
         const paymentMode = $('#paymentMode').val();
+        const guestId = $('#guest_id_hidden').val();
 
-        if (paymentMode === 'Guest Pass' && !guestValid) {
-            e.preventDefault();
-            showFrontAlert('error', 'Invalid Guest', 'You cannot continue without a valid guest.');
-            return;
+        // Store selected payment mode in hidden field
+        $('#payment_mode').val(paymentMode);
+
+        if (paymentMode === 'Guest Pass') {
+            if (!guestId) {
+                Swal.fire('Error', 'Please verify guest before continuing.', 'error');
+                return;
+            }
+            if (!guestValid) {
+                Swal.fire('Error', 'Guest not valid.', 'error');
+                return;
+            }
         }
 
-        $('#ticketForm').submit();
+        // Small delay to ensure DOM is synced
+        await new Promise(resolve => setTimeout(resolve, 100));
+
+        // Hide modal
+        $('#paymentModal').hide();
+
+        console.log('🚀 Submitting with guest_id:', $('#guest_id_hidden').val(), 'payment_mode:', $('#payment_mode').val());
+
+        const form = document.getElementById('ticketForm');
+        const formData = new FormData(form);
+        const shouldPrint = document.getElementById('printAfterSave')?.checked === true;
+        formData.append('print', shouldPrint ? 1 : 0);
+
+        axios.post(form.action, formData)
+            .then(res => {
+                if (res.data.ok) {
+                    if (shouldPrint && res.data.ticket_id) {
+                        window.open(`{{ url('/tickets') }}/${res.data.ticket_id}/print`, '_blank');
+                    }
+
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Ticket Confirmed',
+                        text: 'Saved successfully!',
+                        confirmButtonColor: '#49aa3d'
+                    }).then(() => {
+                        // ✅ Reset form and totals AFTER success
+                        form.reset();
+                        document.getElementById('totalBox').textContent = '0.00';
+                        document.getElementById('netBox').textContent = '0.00';
+                        document.getElementById('ticketLinesBody').innerHTML = `
+                            <tr>
+                              <td><input class="ctrl" name="lines[0][item_id]" placeholder=""></td>
+                              <td><input class="ctrl" name="lines[0][item_name]" readonly></td>
+                              <td><input class="ctrl num" name="lines[0][qty]" type="number" step="1" min="0"></td>
+                              <td><input class="ctrl num" name="lines[0][rate]" type="number" step="0.01" min="0"></td>
+                              <td><input class="ctrl num" name="lines[0][levy]" type="number" step="0.01" min="0"></td>
+                              <td><input class="ctrl num" name="lines[0][amount]" type="number" step="0.01" min="0" readonly></td>
+                              <td><input class="ctrl" name="lines[0][vehicle_name]"></td>
+                              <td><input class="ctrl" name="lines[0][vehicle_no]"></td>
+                              <td><button type="button" class="btn-ghost btn-remove">✖</button></td>
+                            </tr>`;
+                    });
+                }
+            })
+            .catch(err => {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Something went wrong while saving the ticket.'
+                });
+            });
     });
 });
-
-
-document.getElementById('modalConfirm').addEventListener('click', function () {
-  const paymentMode = document.getElementById('paymentMode').value;
-  const givenAmount = parseFloat(document.getElementById('modalGivenAmount').value) || 0;
-  const netTotal = parseFloat(document.getElementById('modalNetTotal').value) || 0;
-
-  // Save payment mode in hidden field
-  document.getElementById('payment_mode').value = paymentMode;
-
-  // hide modal
-  document.getElementById('paymentModal').style.display = 'none';
-
-    if (paymentMode === 'Guest Pass' && !guestValid) {
-            showFrontAlert('error', 'Invalid Guest', 'You cannot continue without a valid guest.');
-            return; // 🚫 stop submission
-        }
-  // proceed to submit the form via JS
-  const form = document.getElementById('ticketForm');
-  const formData = new FormData(form);
-  const shouldPrint = document.getElementById('printAfterSave')?.checked === true;
-  formData.append('print', shouldPrint ? 1 : 0);
-
-  
-
-  axios.post(form.action, formData)
-    .then(res => {
-      if (res.data.ok) {
-        if (shouldPrint && res.data.ticket_id) {
-          window.open(`{{ url('/tickets') }}/${res.data.ticket_id}/print`, '_blank');
-        }
-
-        Swal.fire({
-          icon: 'success',
-          title: 'Ticket Confirmed',
-          text: 'Saved successfully!',
-          confirmButtonColor: '#49aa3d'
-        }).then(() => {
-          // ✅ Reset form and totals AFTER the dialog OK
-          form.reset();
-          document.getElementById('totalBox').textContent = '0.00';
-          document.getElementById('netBox').textContent = '0.00';
-          document.getElementById('ticketLinesBody').innerHTML = `
-            <tr>
-              <td><input class="ctrl" name="lines[0][item_id]" placeholder=""></td>
-              <td><input class="ctrl" name="lines[0][item_name]" placeholder="" readonly></td>
-              <td><input class="ctrl num" name="lines[0][qty]" type="number" step="1" min="0"></td>
-              <td><input class="ctrl num" name="lines[0][rate]" type="number" step="0.01" min="0"></td>
-              <td><input class="ctrl num" name="lines[0][levy]" type="number" step="0.01" min="0"></td>
-              <td><input class="ctrl num" name="lines[0][amount]" type="number" step="0.01" min="0" readonly></td>
-              <td><input class="ctrl" name="lines[0][vehicle_name]"></td>
-              <td><input class="ctrl" name="lines[0][vehicle_no]"></td>
-              <td><button type="button" class="btn-ghost btn-remove">✖</button></td>
-            </tr>`;
-        });
-      }
-    })
-    .catch(err => {
-      Swal.fire({
-        icon: 'error',
-        title: 'Error',
-        text: 'Something went wrong while saving the ticket.'
-      });
-    });
-});
-
 
 
 
