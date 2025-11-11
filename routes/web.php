@@ -164,7 +164,9 @@ Route::get('/clear-config', function () {
 
 
 
-
+// Route::get('/manifest.json', function () {
+//     return view('laravelpwa::manifest');
+// })->name('laravelpwa.manifest');
 
 
 // Route for showing booking form page

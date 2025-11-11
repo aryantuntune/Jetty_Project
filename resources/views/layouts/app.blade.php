@@ -2,6 +2,8 @@
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 
 <head>
+    @laravelPWA
+
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
@@ -147,6 +149,63 @@
             @yield('content')
         </main>
     </div>
+    
+{{-- Install App button (shown only when page becomes installable) --}}
+<button id="installPWA" class="btn btn-outline-primary" title="Install App" style="display:none;">
+    Install App
+</button>
+
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" defer></script>
+
+<script>
+(function () {
+  const btn = document.getElementById('installPWA');
+
+  // Guard: button exists
+  if (!btn) return;
+
+  // Hide on iOS (no beforeinstallprompt there)
+  const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+  if (isIOS) {
+    btn.style.display = 'none';
+    return;
+  }
+
+  // Hide if already installed (standalone)
+  const isStandalone = window.matchMedia('(display-mode: standalone)').matches
+                       || window.navigator.standalone === true;
+  if (isStandalone) {
+    btn.style.display = 'none';
+    return;
+  }
+
+  let deferredPrompt = null;
+
+  window.addEventListener('beforeinstallprompt', (e) => {
+    // Fires only when manifest + SW + secure context are OK
+    e.preventDefault();
+    deferredPrompt = e;
+    btn.style.display = 'inline-block';
+  });
+
+  btn.addEventListener('click', async () => {
+    if (!deferredPrompt) return;
+    deferredPrompt.prompt();
+    try {
+      await deferredPrompt.userChoice; // { outcome, platform }
+    } finally {
+      deferredPrompt = null;
+      btn.style.display = 'none';
+    }
+  });
+
+  window.addEventListener('appinstalled', () => {
+    btn.style.display = 'none';
+    console.log('PWA installed');
+  });
+})();
+</script>
 </body>
 
 
