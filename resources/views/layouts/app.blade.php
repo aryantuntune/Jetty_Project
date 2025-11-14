@@ -110,6 +110,7 @@
                                 <li><a class="dropdown-item" href="{{ route('admin.index') }}">Administrator</a></li>
                                 <li><a class="dropdown-item" href="{{ route('manager.index') }}">Manager</a></li>
                                 <li><a class="dropdown-item" href="{{ route('operator.index') }}">Operator</a></li>
+                                 <li><a class="dropdown-item" href="{{ route('checker.index') }}">Checker</a></li>
                                 <li><hr class="dropdown-divider"></li>
                                 <li><a class="dropdown-item" href="#">User Access</a></li>
                             </ul>

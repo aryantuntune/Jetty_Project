@@ -1,5 +1,6 @@
 <?php
 
+use \App\Http\Controllers\CheckerController;
 use App\Http\Controllers\AdministratorController;
 use App\Http\Controllers\BookingController;
 use App\Http\Controllers\BranchController;
@@ -21,6 +22,7 @@ use App\Http\Controllers\TicketVerifyController;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
+
 
 
 
@@ -149,6 +151,11 @@ Route::post('/ajax/add-guest', [GuestController::class, 'storebyticket']);
 
 Route::get('/verify', [TicketVerifyController::class, 'index'])->name('verify.index');
 Route::post('/verify', [TicketVerifyController::class, 'verify'])->name('verify.ticket');
+
+Route::middleware(['auth', 'role:1,2'])->group(function () {
+    Route::resource('checker', CheckerController::class);
+});
+
 
 });
 
