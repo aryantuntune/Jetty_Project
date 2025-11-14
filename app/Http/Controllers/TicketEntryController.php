@@ -190,25 +190,25 @@ class TicketEntryController extends Controller
     }
 
     // Apply Special Charge (if applicable)
-    if (($request->ferry_type ?? '') === 'SPECIAL') {
-        $specialChargeRecord = SpecialCharge::where('branch_id', $branchId)->first();
-        $specialCharge = $specialChargeRecord ? $specialChargeRecord->special_charge : 0;
+    // if (($request->ferry_type ?? '') === 'SPECIAL') {
+    //     $specialChargeRecord = SpecialCharge::where('branch_id', $branchId)->first();
+    //     $specialCharge = $specialChargeRecord ? $specialChargeRecord->special_charge : 0;
 
-        $numLines = count($data['lines']);
-        if ($numLines > 0) {
-            $perLineCharge = round($specialCharge / $numLines, 2);
-            $remaining = $specialCharge - ($perLineCharge * $numLines);
+    //     $numLines = count($data['lines']);
+    //     if ($numLines > 0) {
+    //         $perLineCharge = round($specialCharge / $numLines, 2);
+    //         $remaining = $specialCharge - ($perLineCharge * $numLines);
 
-            foreach ($data['lines'] as $index => &$ln) {
-                $ln['amount'] += $perLineCharge;
-                if ($index === 0 && $remaining !== 0) {
-                    $ln['amount'] += $remaining;
-                }
-            }
-            unset($ln);
-            $total = collect($data['lines'])->sum('amount');
-        }
-    }
+    //         foreach ($data['lines'] as $index => &$ln) {
+    //             $ln['amount'] += $perLineCharge;
+    //             if ($index === 0 && $remaining !== 0) {
+    //                 $ln['amount'] += $remaining;
+    //             }
+    //         }
+    //         unset($ln);
+    //         $total = collect($data['lines'])->sum('amount');
+    //     }
+    // }
 
     $guestId = $request->guest_id;
 

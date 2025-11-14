@@ -192,7 +192,7 @@
         </div>
          @else
         {{-- Hide Ferry Time (Special case) --}}
-        <input type="hidden" name="ferry_type" value="SPECIAL">
+        <input type="hidden" name="ferry_type" value="REGULAR">
     @endif
 
     {{-- @if($beforeFirstFerry)
@@ -869,7 +869,9 @@ function selectGuestFromList(id, name) {
 
     // Hide guest modal
     const guestModalEl = document.getElementById('guestModal');
+
     const modalInstance = bootstrap.Modal.getInstance(guestModalEl);
+    
     modalInstance.hide();
 
     // ✅ Confirm back to payment modal to finalize
