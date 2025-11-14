@@ -42,20 +42,17 @@ class LoginController extends Controller
 
     protected function authenticated(Request $request, $user)
 {
-    // Current session ID
-    $currentSession = session()->getId();
+   // Always override previous session id
+    $newSessionId = session()->getId();
 
-    // If user already has a session and it's different => block login
-    if ($user->session_id && $user->session_id !== $currentSession) {
-        Auth::logout();
-
-        return redirect('/login')->withErrors([
-            'email' => 'This account is already logged in on another device.'
-        ]);
+    // If there is an old session, destroy it
+    if ($user->session_id && $user->session_id !== $newSessionId) {
+        // Remove old session from session table (optional)
+        \DB::table('sessions')->where('id', $user->session_id)->delete();
     }
 
-    // Store new session ID
-    $user->session_id = $currentSession;
+    // Save new session ID
+    $user->session_id = $newSessionId;
     $user->save();
 }
 
