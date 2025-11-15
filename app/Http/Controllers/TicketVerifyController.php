@@ -24,8 +24,9 @@ class TicketVerifyController extends Controller
         $ticket->verified_at = now();
         $ticket->save();
 
-        return redirect()
-            ->route('verify.index', ['code' => $ticket->id])
-            ->with('success', 'Ticket verified successfully!');
+        return redirect()->route('verify.index', [
+        'code' => $ticket->id,
+        '_t'   => time()  // <--- force fresh reload
+    ]);
     }
 }

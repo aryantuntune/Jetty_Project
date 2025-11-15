@@ -1,5 +1,11 @@
 @extends('layouts.app')
 
+@php
+  header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
+  header("Pragma: no-cache");
+@endphp
+  
+
 @section('content')
 <div class="container mt-4">
 
