@@ -18,12 +18,14 @@ class TicketVerifyController extends Controller
         return view('tickets.verify', compact('ticket'));
     }
 
-    public function verify(Request $request)
+   public function verify(Request $request)
     {
         $ticket = Ticket::findOrFail($request->ticket_id);
         $ticket->verified_at = now();
         $ticket->save();
 
-        return back()->with('success', 'Ticket verified successfully!');
+        return redirect()
+            ->route('verify.index', ['code' => $ticket->id])
+            ->with('success', 'Ticket verified successfully!');
     }
 }
