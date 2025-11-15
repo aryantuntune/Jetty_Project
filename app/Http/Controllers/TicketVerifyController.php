@@ -11,9 +11,8 @@ class TicketVerifyController extends Controller
     {
         $ticket = null;
 
-        // If a ticket_id is scanned and sent as ?code=123
         if ($request->has('code')) {
-            $ticket = Ticket::with('branch', 'user')->find($request->code);
+            $ticket = Ticket::with(['branch', 'user', 'lines'])->find($request->code);
         }
 
         return view('tickets.verify', compact('ticket'));
