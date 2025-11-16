@@ -3,7 +3,7 @@
 @section('content')
 <div class="container mt-4">
 
-  <h4 class="mb-3">🎫 Ticket Verification</h4>
+  <h4 class="mb-3"> Ticket Verification</h4>
 
   <form method="get" action="{{ route('verify.index') }}" class="mb-4">
     <label>Scan or Enter Ticket Code:</label>
