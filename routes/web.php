@@ -56,7 +56,7 @@ Auth::routes();
 
 // Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
 
-Route::middleware(['auth'])->group(function () {
+Route::middleware(['role:1,2,3,4'])->group(function () {
     // Route::get('/admin', [App\Http\Controllers\AdminController::class, 'index'])->name('admin.dashboard');
 
     // List all categories
@@ -149,8 +149,8 @@ Route::get('/ajax/search-guest-by-id', [GuestController::class, 'searchById']);
 Route::get('/ajax/search-guest-by-name', [GuestController::class, 'searchByName']);
 Route::post('/ajax/add-guest', [GuestController::class, 'storebyticket']);
 
-Route::get('/verify', [TicketVerifyController::class, 'index'])->name('verify.index');
-Route::post('/verify', [TicketVerifyController::class, 'verify'])->name('verify.ticket');
+Route::get('/verify', [TicketVerifyController::class, 'index'])->name('verify.index')->middleware(['auth','role:1,2,5']);
+Route::post('/verify', [TicketVerifyController::class, 'verify'])->name('verify.ticket')->middleware(['auth','role:1,2,5']);
 
 Route::middleware(['auth', 'role:1,2'])->group(function () {
     Route::resource('checker', CheckerController::class);

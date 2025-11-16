@@ -64,9 +64,9 @@
                         <li class="nav-item dropdown">
                             <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">Masters</a>
                             <ul class="dropdown-menu">
-<li>
-  <a class="dropdown-item" href="{{ route('items.from_rates.index') }}">Items</a>
-</li>
+                                <li>
+                                  <a class="dropdown-item" href="{{ route('items.from_rates.index') }}">Items</a>
+                                </li>
                                 <li><a class="dropdown-item" href="{{ route('item_categories.index') }}">Item Categories</a></li>
                                 <li>
                                 <a class="dropdown-item" href="{{ route('item-rates.index') }}">Item Rate Slabs</a>
