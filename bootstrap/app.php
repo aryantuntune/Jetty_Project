@@ -18,6 +18,7 @@ return Application::configure(basePath: dirname(__DIR__))
         // Register route middleware aliases here
         $middleware->alias([
             'role' => \App\Http\Middleware\Role::class,
+             'blockRole5' => \App\Http\Middleware\BlockRole5::class,
             // keep other aliases if you have them
         ]);
     })

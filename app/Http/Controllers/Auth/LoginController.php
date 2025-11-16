@@ -54,6 +54,10 @@ class LoginController extends Controller
     // Save new session ID
     $user->session_id = $newSessionId;
     $user->save();
+
+     if ($user->role_id == 5) {
+        return redirect()->route('verify.index');
+    }
 }
 
 public function logout(Request $request) 

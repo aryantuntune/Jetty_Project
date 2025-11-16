@@ -21,6 +21,13 @@ class Role
             return $next($request);
         }
 
+        if ($roles == 'only5') {                 // custom rule
+            if (auth()->user()->role_id != 5) {
+                abort(403);
+            }
+        } 
+
+
         abort(403, 'You do not have permission to access this resource.');
     }
 }
