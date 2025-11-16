@@ -56,7 +56,7 @@ Auth::routes();
 
 // Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
 
-Route::middleware(['role:1,2,3,4'])->group(function () {
+Route::middleware(['auth'])->group(function () {
     // Route::get('/admin', [App\Http\Controllers\AdminController::class, 'index'])->name('admin.dashboard');
 
     // List all categories
