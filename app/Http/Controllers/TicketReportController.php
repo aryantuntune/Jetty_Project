@@ -15,52 +15,68 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 class TicketReportController extends Controller
 {
     public function index(Request $request)
-    {
-        $user = Auth::user();
+{
+    $user = Auth::user();
 
-        // Filter options
+    // Branch filtering based on role
+    if (in_array($user->role_id, [1, 2])) {
+        // Admin / Manager → show all branches
         $branches = Branch::all();
-        $ferryBoats = FerryBoat::all();
-        $paymentModes = ['CASH MEMO', 'CREDIT MEMO', 'GUEST PASS', 'GPay'];
-        $ferryTypes = ['REGULAR', 'SPECIAL']; // Replace with your actual ferry types
-
-        // Query filters
-        $branchId = $request->query('branch_id');
-        $paymentMode = $request->query('payment_mode');
-        $ferryType = $request->query('ferry_type');
-        $ferryBoatId = $request->query('ferry_boat_id');
-        $dateFrom = $request->query('date_from');
-        $dateTo = $request->query('date_to');
-
-        // Fetch tickets
-        $tickets = Ticket::with('branch', 'ferryBoat')
-            ->where('guest_id',null)
-            ->when($branchId, fn($q) => $q->where('branch_id', $branchId))
-            ->when($paymentMode, fn($q) => $q->where('payment_mode', $paymentMode))
-            ->when($ferryType, fn($q) => $q->where('ferry_type', $ferryType))
-            ->when($ferryBoatId, fn($q) => $q->where('ferry_boat_id', $ferryBoatId))
-            ->when($dateFrom, fn($q) => $q->whereDate('created_at', '>=', $dateFrom))
-            ->when($dateTo, fn($q) => $q->whereDate('created_at', '<=', $dateTo))
-            ->orderBy('created_at', 'desc')
-            ->paginate(25);
-
-        $totalAmount = $tickets->sum('total_amount');
-
-        return view('reports.tickets', compact(
-            'tickets',
-            'branches',
-            'ferryBoats',
-            'paymentModes',
-            'ferryTypes',
-            'branchId',
-            'paymentMode',
-            'ferryType',
-            'ferryBoatId',
-            'dateFrom',
-            'dateTo',
-            'totalAmount'
-        ));
+        $branchRestriction = null;
+    } else {
+        // Other users → only their branch
+        $branches = Branch::where('id', $user->branch_id)->get();
+        $branchRestriction = $user->branch_id; 
     }
+
+    // Filter dropdowns
+    $ferryBoats = FerryBoat::all();
+    $paymentModes = ['CASH MEMO', 'CREDIT MEMO', 'GUEST PASS', 'GPay'];
+    $ferryTypes = ['REGULAR', 'SPECIAL'];
+
+    // Query filters from request
+    $branchId = $request->query('branch_id');
+    $paymentMode = $request->query('payment_mode');
+    $ferryType = $request->query('ferry_type');
+    $ferryBoatId = $request->query('ferry_boat_id');
+    $dateFrom = $request->query('date_from');
+    $dateTo = $request->query('date_to');
+
+    // Tickets Query
+    $tickets = Ticket::with('branch', 'ferryBoat')
+        ->where('guest_id', null)
+
+        // Restrict to login user's branch if not admin/manager
+        ->when($branchRestriction, fn($q) => $q->where('branch_id', $branchRestriction))
+
+        // Filters
+        ->when($branchId, fn($q) => $q->where('branch_id', $branchId))
+        ->when($paymentMode, fn($q) => $q->where('payment_mode', $paymentMode))
+        ->when($ferryType, fn($q) => $q->where('ferry_type', $ferryType))
+        ->when($ferryBoatId, fn($q) => $q->where('ferry_boat_id', $ferryBoatId))
+        ->when($dateFrom, fn($q) => $q->whereDate('created_at', '>=', $dateFrom))
+        ->when($dateTo, fn($q) => $q->whereDate('created_at', '<=', $dateTo))
+        ->orderBy('created_at', 'desc')
+        ->paginate(25);
+
+    $totalAmount = $tickets->sum('total_amount');
+
+    return view('reports.tickets', compact(
+        'tickets',
+        'branches',
+        'ferryBoats',
+        'paymentModes',
+        'ferryTypes',
+        'branchId',
+        'paymentMode',
+        'ferryType',
+        'ferryBoatId',
+        'dateFrom',
+        'dateTo',
+        'totalAmount'
+    ));
+}
+
 
     public function getFerryBoatsByBranch($branchId)
     {
