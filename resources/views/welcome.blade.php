@@ -70,13 +70,19 @@
 
       <div class="collapse navbar-collapse justify-content-end" id="navMini">
         <ul class="navbar-nav align-items-lg-center gap-lg-3">
+        <!--
           <li class="nav-item">
             <a class="nav-link" href="{{url('/ticket-entry') }}">Home</a>
           </li>
 
+          -->
+<li class="nav-item">
+    <a class="nav-link" href="{{ route('customer.login') }}">Customer Login</a>
+</li>
+
           @guest
             <li class="nav-item">
-              <a class="nav-link" href="{{ route('login') }}">Login</a>
+              <a class="nav-link" href="{{ route('login') }}">Admin Login</a>
             </li>
           @endguest
 

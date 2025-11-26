@@ -4,6 +4,10 @@ use \App\Http\Controllers\CheckerController;
 use App\Http\Controllers\AdministratorController;
 use App\Http\Controllers\BookingController;
 use App\Http\Controllers\BranchController;
+use App\Http\Controllers\CustomerAuth\ForgotPasswordController;
+use App\Http\Controllers\CustomerAuth\LoginController;
+use App\Http\Controllers\CustomerAuth\RegisterController;
+use App\Http\Controllers\CustomerAuth\ResetPasswordController;
 use App\Http\Controllers\EmployeeTransferController;
 use App\Http\Controllers\FerryBoatController;
 use App\Http\Controllers\FerryScheduleController;
@@ -29,28 +33,17 @@ use Illuminate\Support\Facades\Route;
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 Route::get('/', function () {
     return view('welcome');
 });
 
-Auth::routes();
+Route::middleware('admin.guest')->group(function () {
+    Auth::routes(); // admin login/register
+});
 
-Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
+Route::middleware(['auth', 'blockRole5'])->group(function () {
+    Route::get('/home', [HomeController::class, 'index'])->name('home');
+});
 
 Auth::routes();
 
@@ -180,3 +173,52 @@ Route::get('/clear-config', function () {
 Route::get('/booking', [BookingController::class, 'show'])->name('booking.form');
 Route::post('/booking', [BookingController::class, 'submit'])->name('booking.submit');
 Route::get('/booking/to-branches/{branchId}', [BookingController::class, 'getToBranches']);
+
+// --------------------------------------------------------
+// online customer
+// Customer Register
+// Customer Register
+// Customer Authentication Routes
+Route::middleware(['admin.guest', 'customer.guest'])->group(function () {
+
+    Route::get('customer/register', [RegisterController::class, 'showRegisterForm'])
+        ->name('customer.register');
+
+    Route::post('customer/register', [RegisterController::class, 'register'])
+        ->name('customer.register.submit');
+
+    Route::get('customer/login', [LoginController::class, 'showLoginForm'])
+        ->name('customer.login');
+
+    Route::post('customer/login', [LoginController::class, 'login'])
+        ->name('customer.login.submit');
+
+
+Route::get('/customer/forgot-password', [ForgotPasswordController::class, 'showLinkForm'])
+    ->name('customer.password.request');
+
+Route::post('/customer/forgot-password', [ForgotPasswordController::class, 'sendResetLink'])
+    ->name('customer.password.email');
+
+Route::get('/customer/reset-password/{token}', [ResetPasswordController::class, 'showResetForm'])
+    ->name('customer.password.reset');
+
+Route::post('/customer/reset-password', [ResetPasswordController::class, 'resetPassword'])
+    ->name('customer.password.update');
+
+
+        Route::post('/customer/register/send-otp', [RegisterController::class, 'sendOtp'])->name('customer.register.sendOtp');
+Route::post('/customer/register/verify-otp', [RegisterController::class, 'verifyOtp'])->name('customer.register.verifyOtp');
+});
+
+
+
+// Customer Dashboard (Protected)
+Route::middleware('auth:customer')->group(function () {
+
+    Route::get('customer/dashboard', function () {
+        return view('customer.dashboard');
+    })->name('customer.dashboard');
+
+    Route::post('customer/logout', [LoginController::class, 'logout'])->name('customer.logout');
+});

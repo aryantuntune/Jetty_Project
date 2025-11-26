@@ -19,6 +19,10 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'role' => \App\Http\Middleware\Role::class,
              'blockRole5' => \App\Http\Middleware\BlockRole5::class,
+             'auth' => \App\Http\Middleware\Authenticate::class,
+             'customer.guest' => \App\Http\Middleware\RedirectIfCustomerAuthenticated::class,
+              'admin.guest' => \App\Http\Middleware\RedirectIfAdminAuthenticated::class,
+              'guest' => \App\Http\Middleware\RedirectIfAuthenticated::class,
             // keep other aliases if you have them
         ]);
     })
