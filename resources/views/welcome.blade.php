@@ -77,7 +77,7 @@
 
           -->
 <li class="nav-item">
-    <a class="nav-link" href="{{ route('customer.login') }}">Customer Login</a>
+    <a class="nav-link" href="{{ route('customer.login') }}">Book Now</a>
 </li>
 
           @guest
@@ -108,7 +108,7 @@
           <p class="lead mt-3 mini-note">Fast. Safe. Scenic. Book your ferry in seconds.</p>
 
           {{-- <a href="{{ route('booking.form') }}" class="btn btn-booking mt-3"> --}}
-               <a href="" class="btn btn-booking mt-3">
+               <a href="{{ route('customer.login') }}" class="btn btn-booking mt-3">
             Book Now
           </a>
         </div>

@@ -21,8 +21,8 @@ class BookingController extends Controller
 
         // Check in debug if this returns data
         // dd($branches); // Uncomment this line temporarily if still empty
-//  dd( $branches);
-        return view('booking', compact('branches'));
+        //  dd( $branches);
+        return view('customer.dashboard', compact('branches'));
     }
 
     public function getToBranches($branchId)
@@ -31,18 +31,18 @@ class BookingController extends Controller
         if (!$routeId) {
             return response()->json([]);
         }
-        
+
         $toBranchIds = DB::table('routes')
-        ->where('route_id', $routeId)
-        ->where('branch_id', '!=', $branchId)
-        ->pluck('branch_id');
-        
+            ->where('route_id', $routeId)
+            ->where('branch_id', '!=', $branchId)
+            ->pluck('branch_id');
+
         // dd($toBranchIds);
         $branches = Branch::whereIn('id', $toBranchIds)
-        ->select('id', 'branch_name')
-        ->get();
-        
-       
+            ->select('id', 'branch_name')
+            ->get();
+
+
         return response()->json($branches);
     }
 
@@ -56,5 +56,23 @@ class BookingController extends Controller
         ]);
 
         return redirect()->route('booking.form')->with('success', 'Booking submitted successfully!');
+    }
+
+    public function getItems($branchId)
+    {
+        $items = \App\Models\ItemRate::where('branch_id', $branchId)
+            ->effective()   // apply date filter
+            ->select('id', 'item_name')
+            ->get();
+
+        return response()->json($items);
+    }
+
+    public function getItemRate($itemRateId)
+    {
+        $item = \App\Models\ItemRate::select('item_rate', 'item_lavy')
+            ->find($itemRateId);
+
+        return response()->json($item);
     }
 }

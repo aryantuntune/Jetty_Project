@@ -49,21 +49,21 @@ Auth::routes();
 
 // Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
 
-Route::middleware(['auth','blockRole5'])->group(function () {
+Route::middleware(['auth', 'blockRole5'])->group(function () {
     // Route::get('/admin', [App\Http\Controllers\AdminController::class, 'index'])->name('admin.dashboard');
 
     // List all categories
     Route::get('/item-categories', [ItemCategoryController::class, 'index'])->name('item_categories.index');
 
     // Create new category
-    Route::get('/item-categories/create', [ItemCategoryController::class, 'create'])->name('item_categories.create')->middleware(['auth','role:1,2']);
-    Route::post('/item-categories', [ItemCategoryController::class, 'store'])->name('item_categories.store')->middleware(['auth','role:1,2']);
+    Route::get('/item-categories/create', [ItemCategoryController::class, 'create'])->name('item_categories.create')->middleware(['auth', 'role:1,2']);
+    Route::post('/item-categories', [ItemCategoryController::class, 'store'])->name('item_categories.store')->middleware(['auth', 'role:1,2']);
 
     // Edit category
-    Route::get('/item-categories/{itemCategory}/edit', [ItemCategoryController::class, 'edit'])->name('item_categories.edit')->middleware(['auth','role:1,2']);
+    Route::get('/item-categories/{itemCategory}/edit', [ItemCategoryController::class, 'edit'])->name('item_categories.edit')->middleware(['auth', 'role:1,2']);
 
     // Update category
-    Route::put('/item-categories/{itemCategory}', [ItemCategoryController::class, 'update'])->name('item_categories.update')->middleware(['auth','role:1,2']);
+    Route::put('/item-categories/{itemCategory}', [ItemCategoryController::class, 'update'])->name('item_categories.update')->middleware(['auth', 'role:1,2']);
 
     // Delete category
     Route::delete('/item-categories/{itemCategory}', [ItemCategoryController::class, 'destroy'])->name('item_categories.destroy');
@@ -105,15 +105,15 @@ Route::middleware(['auth','blockRole5'])->group(function () {
 
 
     Route::get('/employees/transfer', [EmployeeTransferController::class, 'transferPage'])
-        ->name('employees.transfer.index')->middleware(['auth','role:1,2']);
+        ->name('employees.transfer.index')->middleware(['auth', 'role:1,2']);
 
     // Show transfer form for specific employee
     Route::get('/employees/{id}/transfer', [EmployeeTransferController::class, 'showTransferForm'])
-        ->name('employees.transfer.form')->middleware(['auth','role:1,2']);
+        ->name('employees.transfer.form')->middleware(['auth', 'role:1,2']);
 
     // Update employee branch
     Route::put('/employees/{id}/transfer', [EmployeeTransferController::class, 'transfer'])
-        ->name('employees.transfer.update')->middleware(['auth','role:1,2']);
+        ->name('employees.transfer.update')->middleware(['auth', 'role:1,2']);
 
 
     //   Report 
@@ -125,31 +125,29 @@ Route::middleware(['auth','blockRole5'])->group(function () {
 
         Route::get('/vehicle-tickets', [TicketReportController::class, 'vehicleWiseIndex'])
             ->name('reports.vehicle_tickets');
-            // ⬇️ New export endpoints
+        // ⬇️ New export endpoints
         Route::get('/tickets/export', [TicketReportController::class, 'exportTicketsCsv'])->name('reports.tickets.export');
         Route::get('/vehicle-tickets/export', [TicketReportController::class, 'exportVehicleTicketsCsv'])->name('reports.vehicle_tickets.export');
     });
 
-    Route::resource('special-charges', SpecialChargeController::class)->middleware(['auth','role:1,2']);
+    Route::resource('special-charges', SpecialChargeController::class)->middleware(['auth', 'role:1,2']);
 
-     Route::get('/tickets/{ticket}/print', [\App\Http\Controllers\TicketEntryController::class, 'print'])
+    Route::get('/tickets/{ticket}/print', [\App\Http\Controllers\TicketEntryController::class, 'print'])
         ->name('tickets.print');
 
 
 
-// web.php
-Route::get('/ajax/search-guest-by-id', [GuestController::class, 'searchById']);
-Route::get('/ajax/search-guest-by-name', [GuestController::class, 'searchByName']);
-Route::post('/ajax/add-guest', [GuestController::class, 'storebyticket']);
+    // web.php
+    Route::get('/ajax/search-guest-by-id', [GuestController::class, 'searchById']);
+    Route::get('/ajax/search-guest-by-name', [GuestController::class, 'searchByName']);
+    Route::post('/ajax/add-guest', [GuestController::class, 'storebyticket']);
 
-Route::get('/verify', [TicketVerifyController::class, 'index'])->name('verify.index')->middleware(['auth','role:1,2,5']);
-Route::post('/verify', [TicketVerifyController::class, 'verify'])->name('verify.ticket')->middleware(['auth','role:1,2,5']);
+    Route::get('/verify', [TicketVerifyController::class, 'index'])->name('verify.index')->middleware(['auth', 'role:1,2,5']);
+    Route::post('/verify', [TicketVerifyController::class, 'verify'])->name('verify.ticket')->middleware(['auth', 'role:1,2,5']);
 
-Route::middleware(['auth', 'role:1,2'])->group(function () {
-    Route::resource('checker', CheckerController::class);
-});
-
-
+    Route::middleware(['auth', 'role:1,2'])->group(function () {
+        Route::resource('checker', CheckerController::class);
+    });
 });
 
 
@@ -170,9 +168,7 @@ Route::get('/clear-config', function () {
 
 
 // Route for showing booking form page
-Route::get('/booking', [BookingController::class, 'show'])->name('booking.form');
-Route::post('/booking', [BookingController::class, 'submit'])->name('booking.submit');
-Route::get('/booking/to-branches/{branchId}', [BookingController::class, 'getToBranches']);
+
 
 // --------------------------------------------------------
 // online customer
@@ -194,21 +190,21 @@ Route::middleware(['admin.guest', 'customer.guest'])->group(function () {
         ->name('customer.login.submit');
 
 
-Route::get('/customer/forgot-password', [ForgotPasswordController::class, 'showLinkForm'])
-    ->name('customer.password.request');
+    Route::get('/customer/forgot-password', [ForgotPasswordController::class, 'showLinkForm'])
+        ->name('customer.password.request');
 
-Route::post('/customer/forgot-password', [ForgotPasswordController::class, 'sendResetLink'])
-    ->name('customer.password.email');
+    Route::post('/customer/forgot-password', [ForgotPasswordController::class, 'sendResetLink'])
+        ->name('customer.password.email');
 
-Route::get('/customer/reset-password/{token}', [ResetPasswordController::class, 'showResetForm'])
-    ->name('customer.password.reset');
+    Route::get('/customer/reset-password/{token}', [ResetPasswordController::class, 'showResetForm'])
+        ->name('customer.password.reset');
 
-Route::post('/customer/reset-password', [ResetPasswordController::class, 'resetPassword'])
-    ->name('customer.password.update');
+    Route::post('/customer/reset-password', [ResetPasswordController::class, 'resetPassword'])
+        ->name('customer.password.update');
 
 
-        Route::post('/customer/register/send-otp', [RegisterController::class, 'sendOtp'])->name('customer.register.sendOtp');
-Route::post('/customer/register/verify-otp', [RegisterController::class, 'verifyOtp'])->name('customer.register.verifyOtp');
+    Route::post('/customer/register/send-otp', [RegisterController::class, 'sendOtp'])->name('customer.register.sendOtp');
+    Route::post('/customer/register/verify-otp', [RegisterController::class, 'verifyOtp'])->name('customer.register.verifyOtp');
 });
 
 
@@ -216,9 +212,18 @@ Route::post('/customer/register/verify-otp', [RegisterController::class, 'verify
 // Customer Dashboard (Protected)
 Route::middleware('auth:customer')->group(function () {
 
-    Route::get('customer/dashboard', function () {
-        return view('customer.dashboard');
-    })->name('customer.dashboard');
+    // Dashboard should load branches → use controller
+    Route::get('customer/dashboard', [BookingController::class, 'show'])
+        ->name('customer.dashboard');
+
+    Route::get('/booking', [BookingController::class, 'show'])->name('booking.form');
+
+    Route::post('/booking', [BookingController::class, 'submit'])->name('booking.submit');
+
+    Route::get('/booking/to-branches/{branchId}', [BookingController::class, 'getToBranches']);
 
     Route::post('customer/logout', [LoginController::class, 'logout'])->name('customer.logout');
+
+    Route::get('/booking/items/{branchId}', [BookingController::class, 'getItems']);
+    Route::get('/booking/item-rate/{itemRateId}', [BookingController::class, 'getItemRate']);
 });
