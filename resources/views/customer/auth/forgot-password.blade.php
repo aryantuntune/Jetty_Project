@@ -3,6 +3,7 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
 
+
 <style>
   /* Center card container */
   .centered-container {
@@ -49,15 +50,16 @@
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content">
 
-      @if (session('status'))
-        <div class="modal-header bg-success text-white">
-          <h5 class="modal-title" id="messageModalLabel">Success</h5>
-          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-        </div>
-        <div class="modal-body">
-          <p>Successfully sent.</p> <!-- Fixed success message -->
-        </div>
-      @elseif ($errors->any())
+@if (session('success'))
+    <div class="modal-header bg-success text-white">
+        <h5 class="modal-title" id="messageModalLabel">Success</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+    </div>
+    <div class="modal-body">
+        <p>Password reset link sent successfully to your email. Please check your inbox.</p>
+    </div>
+@elseif ($errors->any())
+
         <div class="modal-header bg-danger text-white">
           <h5 class="modal-title" id="messageModalLabel">Error</h5>
           <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
@@ -80,7 +82,7 @@
 </div>
 
 <!-- Trigger Modal on page load if message or errors exist -->
-@if(session('status') || $errors->any())
+@if (session('success') || $errors->any())
 <script>
   document.addEventListener('DOMContentLoaded', function () {
     var myModal = new bootstrap.Modal(document.getElementById('messageModal'));

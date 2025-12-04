@@ -55,7 +55,7 @@
                maxlength="6"
                placeholder="------">
 
-        <p id="otpError" class="text-red-500 text-sm mt-2 hidden"></p>
+        {{-- <p id="otpError" class="text-red-500 text-sm mt-2 hidden"></p> --}}
 
         <button onclick="verifyOtp()"
                 class="w-full mt-6 bg-blue-500 text-white py-3 rounded-xl text-lg">
@@ -127,27 +127,37 @@ function verifyOtp() {
 
     axios.post("{{ route('customer.register.verifyOtp') }}", { otp: otp })
     .then(res => {
-        if (res.data.success) {
+
+        // If OTP is invalid -> show popup
+        if (res.data.success === false) {
+            showErrorModal(res.data.message); // <-- popup will show
+            return;
+        }
+
+        // If OTP valid -> redirect
+        if (res.data.success === true) {
             window.location.href = "{{ route('customer.login') }}";
         }
     })
     .catch(err => {
-        document.getElementById('otpError').innerText = "Invalid OTP";
-        document.getElementById('otpError').classList.remove('hidden');
+        showErrorModal("Something went wrong. Try again.");
     });
 }
+
+
 
 function showErrorModal(message) {
     document.getElementById("errorMessage").innerText = message;
     document.getElementById("errorModal").classList.remove("hidden");
 
-    // Show login/forgot links only for specific message
+    // Show Login + Forgot password links if Email exists error
     if (message.includes("Email already exists")) {
         document.getElementById("errorLinks").classList.remove("hidden");
     } else {
         document.getElementById("errorLinks").classList.add("hidden");
     }
 }
+
 
 
 function closeErrorModal() {
