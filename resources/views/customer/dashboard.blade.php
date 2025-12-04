@@ -34,7 +34,7 @@
 </style>
 <body class="bg-light">
 
-<!-- ================= NAVBAR ================= -->
+<!-- ================= NAVBAR =================changes -->
 <nav class="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm">
     <div class="container">
         <a class="navbar-brand fw-bold" href="#">
