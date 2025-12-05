@@ -4,64 +4,107 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Ferry Booking</title>
+
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+
   <style>
-    :root{
-      --brand:#3087FF;
-      --cta1:#FFD700;
-      --cta2:#FF8C00;
-    }
-    html,body{height:100%;}
-    body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:#000;}
+    :root { --brand:#3087FF; --cta1:#FFD700; --cta2:#FF8C00; }
+    html, body { height:100%; margin:0; }
+    body { font-family: system-ui, -apple-system, Roboto, Arial, sans-serif; }
 
-    /* Nav */
-    .navbar{
-      background: rgba(0,0,0,.35);
-      backdrop-filter: blur(6px);
+    /* ---------------- VIDEO BACKGROUND ---------------- */
+    .video-bg {
+        position: fixed;
+        top: 0; 
+        left: 0;
+        width: 100%; 
+        height: 100%;
+        overflow: hidden;
+        z-index: -1;
     }
-    .navbar .nav-link{
-      color:#fff; font-weight:600;
-    }
-    .navbar .nav-link:hover{ color:var(--cta1); }
-    .navbar-brand img{ height:38px; }
 
-    /* Hero */
-    .hero{
-      min-height:100vh;
-      position:relative;
-      display:flex;align-items:center;
-      color:#fff;
-      background:
-        linear-gradient( to bottom right, rgba(0,0,0,.55), rgba(0,0,0,.35) ),
-        url('https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=2000&q=80') center/cover no-repeat fixed;
+    .video-bg video {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        /* Removed darkening filter */
+        filter: brightness(95%);
     }
-    .hero h1{
-      font-weight:800; line-height:1.1; letter-spacing:.3px;
-      text-shadow:0 6px 24px rgba(0,0,0,.5);
-      font-size: clamp(2rem, 4.5vw, 4rem);
+
+    /* Light overlay so text is visible but video remains CLEAR */
+    .hero {
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        position: relative;
+        color: #fff;
     }
+
+    /* More transparent gradient */
+    .hero::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(
+            to bottom right,
+            rgba(0,0,0,0.20),  /* lighter */
+            rgba(0,0,0,0.10)
+        );
+        z-index: 1;
+    }
+
+    .hero .container {
+        position: relative;
+        z-index: 2;
+    }
+
+    .hero h1 {
+      font-weight: 800;
+      font-size: clamp(2.2rem, 5vw, 4rem);
+      text-shadow: 0 4px 14px rgba(0,0,0,.45);
+      line-height: 1.1;
+    }
+
     .btn-booking{
       background: linear-gradient(45deg, var(--cta1), var(--cta2));
-      border:none; color:#111; font-weight:800;
-      padding:14px 32px; border-radius:40px; font-size:1.15rem;
+      border:none; 
+      color:#111; 
+      font-weight:800;
+      padding:14px 32px; 
+      border-radius:40px; 
+      font-size:1.15rem;
       box-shadow:0 12px 30px rgba(0,0,0,.35);
-      transition: transform .2s ease, box-shadow .2s ease, filter .2s ease;
+      transition:.3s ease;
     }
-    .btn-booking:hover{ transform: translateY(-2px) scale(1.03); filter:saturate(1.1); }
-    .btn-outline-light:hover{ color:#111; background:#fff; }
+    .btn-booking:hover{
+      transform: translateX(8px);   /* Left→Right transition */
+      filter: saturate(1.2);
+    }
 
-    /* Footer note (optional) */
-    .mini-note{ opacity:.7; font-size:.9rem; }
-  </style>
+    .navbar{
+      background: rgba(0,0,0,.15);
+      backdrop-filter: blur(4px);
+    }
+    .navbar .nav-link{ color:#fff; font-weight:600; }
+    .navbar .nav-link:hover{ color:var(--cta1); }
+</style>
+
 </head>
 <body>
 
-  <!-- Minimal Top Nav: Home + Login/Logout -->
-  <nav class="navbar navbar-expand-lg fixed-top"> 
+<!-- 🔵 VIDEO BACKGROUND -->
+<div class="video-bg">
+    <video autoplay muted loop playsinline>
+        <source src="{{ asset('videos/1.mp4') }}" type="video/mp4">
+    </video>
+</div>
+
+<!-- 🔵 NAVBAR -->
+<nav class="navbar navbar-expand-lg fixed-top"> 
     <div class="container">
-      <a class="navbar-brand d-flex align-items-center gap-2" href="{{ url('/ticket-entry') }}">
-        <!-- <img src="https://carferry.in/wp-content/uploads/2021/03/LOGO-White-224x150-1.png" alt="Logo"> -->
-     
+      <a class="navbar-brand text-white" href="{{ url('/ticket-entry') }}">
+        <!-- Add logo if required -->
+        <strong>Ferry Booking</strong>
       </a>
 
       <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navMini">
@@ -69,16 +112,10 @@
       </button>
 
       <div class="collapse navbar-collapse justify-content-end" id="navMini">
-        <ul class="navbar-nav align-items-lg-center gap-lg-3">
-        <!--
+        <ul class="navbar-nav gap-lg-3">
           <li class="nav-item">
-            <a class="nav-link" href="{{url('/ticket-entry') }}">Home</a>
+            <a class="nav-link" href="{{ route('customer.login') }}">Book Now</a>
           </li>
-
-          -->
-<li class="nav-item">
-    <a class="nav-link" href="{{ route('customer.login') }}">Book Now</a>
-</li>
 
           @guest
             <li class="nav-item">
@@ -88,7 +125,7 @@
 
           @auth
             <li class="nav-item">
-              <form action="{{ route('logout') }}" method="POST" class="d-inline">
+              <form action="{{ route('logout') }}" method="POST">
                 @csrf
                 <button class="btn btn-outline-light btn-sm">Logout</button>
               </form>
@@ -97,25 +134,27 @@
         </ul>
       </div>
     </div>
-  </nav>
+</nav>
 
-  <!-- Hero -->
-  <section class="hero">
+<!-- 🔵 HERO WITH TITLE & BUTTON -->
+<section class="hero">
     <div class="container">
-      <div class="row align-items-center">
+      <div class="row">
         <div class="col-12 col-lg-7">
-          <h1>Ready to<br>Begin Your<br>Journey?</h1>
-          <p class="lead mt-3 mini-note">Fast. Safe. Scenic. Book your ferry in seconds.</p>
 
-          {{-- <a href="{{ route('booking.form') }}" class="btn btn-booking mt-3"> --}}
-               <a href="{{ route('customer.login') }}" class="btn btn-booking mt-3">
+          <h1>Ready to<br>Begin Your<br>Journey?</h1>
+
+          <p class="lead mt-3">Fast. Safe. Scenic. Book your ferry in seconds.</p>
+
+          <a href="{{ route('customer.login') }}" class="btn btn-booking mt-3">
             Book Now
           </a>
+
         </div>
       </div>
     </div>
-  </section>
+</section>
 
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

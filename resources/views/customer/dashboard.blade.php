@@ -67,6 +67,16 @@
                     </a>
                 </li>
 
+                   <li class="nav-item">
+    <form action="{{ route('customer.logout') }}" method="POST" class="d-inline">
+        @csrf
+        <button type="submit" class="btn nav-link text-white border-0 bg-transparent">
+            <i class="bi bi-box-arrow-right"></i> Logout
+        </button>
+    </form>
+</li>
+
+
             </ul>
         </div>
     </div>
