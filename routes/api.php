@@ -22,3 +22,12 @@ Route::get('customer/branch', [ApiController::class, 'branch_list'])->middleware
 Route::get('ferryboats/branch/{branchId}', [ApiController::class, 'getByBranch'])->middleware('auth:sanctum');
 
 Route::get('item-rates/branch/{branchId}', [ApiController::class, 'getItemByBranch'])->middleware('auth:sanctum');
+
+
+
+Route::post('/razorpay/order', [ApiController::class, 'createMobileOrder'])->middleware('auth:sanctum');
+Route::post('/razorpay/verify', [ApiController::class, 'verifyMobilePayment'])->middleware('auth:sanctum');
+
+Route::get('/bookings/success', [ApiController::class, 'getSuccessfulBookings'])->middleware('auth:sanctum');
+
+Route::get('/bookings/customer/{customer_id}', [ApiController::class, 'getCustomerBookings'])->middleware('auth:sanctum');

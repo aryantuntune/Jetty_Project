@@ -148,6 +148,9 @@ Route::middleware(['auth', 'blockRole5'])->group(function () {
     Route::middleware(['auth', 'role:1,2'])->group(function () {
         Route::resource('checker', CheckerController::class);
     });
+
+    // Create Razorpay Order
+
 });
 
 
@@ -226,4 +229,9 @@ Route::middleware('auth:customer')->group(function () {
 
     Route::get('/booking/items/{branchId}', [BookingController::class, 'getItems']);
     Route::get('/booking/item-rate/{itemRateId}', [BookingController::class, 'getItemRate']);
+
+    Route::post('/payment/create-order', [BookingController::class, 'createOrder'])->name('payment.createOrder');
+
+    // Payment Success Callback
+    Route::post('/payment/verify', [BookingController::class, 'verifyPayment'])->name('payment.verify');
 });

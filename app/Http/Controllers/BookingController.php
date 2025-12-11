@@ -2,9 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Booking;
+use App\Models\Branch;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use App\Models\Branch;
+use Razorpay\Api\Api;
 
 class BookingController extends Controller
 {
@@ -46,17 +48,17 @@ class BookingController extends Controller
         return response()->json($branches);
     }
 
-    public function submit(Request $request)
-    {
-        $validated = $request->validate([
-            'from_branch' => 'required',
-            'to_branch' => 'required',
-            'items' => 'required|string|max:255',
-            'date' => 'required|date',
-        ]);
+    // public function submit(Request $request)
+    // {
+    //     $validated = $request->validate([
+    //         'from_branch' => 'required',
+    //         'to_branch' => 'required',
+    //         'items' => 'required|string|max:255',
+    //         'date' => 'required|date',
+    //     ]);
 
-        return redirect()->route('booking.form')->with('success', 'Booking submitted successfully!');
-    }
+    //     return redirect()->route('booking.form')->with('success', 'Booking submitted successfully!');
+    // }
 
     public function getItems($branchId)
     {
@@ -75,4 +77,70 @@ class BookingController extends Controller
 
         return response()->json($item);
     }
+
+    // ----------------------------------------------------------------
+    public function createOrder(Request $request)
+    {
+
+
+        $api = new Api(env('RAZORPAY_KEY'), env('RAZORPAY_SECRET'));
+
+        $amount = $request->grand_total * 100; // Razorpay uses paise
+
+        // Create Razorpay Order
+        $order = $api->order->create([
+            'receipt' => 'RCPT_' . time(),
+            'amount' => $amount,
+            'currency' => 'INR',
+        ]);
+
+        return response()->json([
+            'order_id'   => $order['id'],
+            'amount'     => $amount,
+            'key'        => env('RAZORPAY_KEY'),
+            'customer'   => auth()->guard('customer')->user(),
+        ]);
+    }
+
+    public function verifyPayment(Request $request)
+    {
+
+        $signatureStatus = false;
+
+        try {
+            $api = new Api(env('RAZORPAY_KEY'), env('RAZORPAY_SECRET'));
+
+            $attributes = [
+                'razorpay_order_id' => $request->razorpay_order_id,
+                'razorpay_payment_id' => $request->razorpay_payment_id,
+                'razorpay_signature' => $request->razorpay_signature,
+            ];
+
+            $api->utility->verifyPaymentSignature($attributes);
+            $signatureStatus = true;
+        } catch (\Exception $e) {
+            $signatureStatus = false;
+        }
+
+        if ($signatureStatus) {
+
+            // ⭐ SAVE BOOKING AFTER SUCCESSFUL PAYMENT ⭐
+            Booking::create([
+                'customer_id'   => auth()->guard('customer')->id(),
+                'from_branch'   => session('from_branch'),
+                'to_branch'     => session('to_branch'),
+                'items'         => json_encode(session('items')),
+                'total_amount'  => session('grand_total'),
+                'payment_id'    => $request->razorpay_payment_id,
+            ]);
+
+            return redirect('/booking')
+                ->with('success', 'Payment successful & booking confirmed!');
+        }
+
+        return redirect('/booking')->with('error', 'Payment Failed!');
+    }
+
+  
+
 }

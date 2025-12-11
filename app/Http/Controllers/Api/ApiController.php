@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\Booking;
 use App\Models\Branch;
 use App\Models\Customer;
 use App\Models\FerryBoat;
@@ -11,6 +12,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
+use Razorpay\Api\Api;
 
 class ApiController extends Controller
 {
@@ -253,7 +255,7 @@ class ApiController extends Controller
     {
         $items = ItemRate::where('branch_id', $branchId)
             ->with([
-              
+
                 'branch:id,branch_name',
             ])
             ->select(
@@ -276,5 +278,165 @@ class ApiController extends Controller
             'status' => true,
             'data'   => $items
         ], 200);
+    }
+
+    // ---------------------------------------------------------------
+
+    public function getBooking()
+    {
+        return response()->json([
+            'status' => true,
+            'data'   => Booking::latest()->get()
+        ]);
+    }
+
+    public function store(Request $request)
+    {
+        $validated = $request->validate([
+            'customer_id'  => 'required|integer',
+            'from_branch'  => 'required|integer',
+            'to_branch'    => 'required|integer',
+            'items'        => 'required',
+            'total_amount'  => 'required|numeric',
+            'payment_id'   => 'nullable|string',
+            'status'       => 'nullable|string'
+        ]);
+
+        $booking = Booking::create([
+            'customer_id'  => $validated['customer_id'],
+            'from_branch'  => $validated['from_branch'],
+            'to_branch'    => $validated['to_branch'],
+            'items'        => json_encode($validated['items']),
+            'total_amount'  => $validated['total_amount'],
+            'payment_id'   => $validated['payment_id'] ?? null,
+            'status'       => $validated['status'] ?? 'Pending',
+        ]);
+
+        return response()->json([
+            'status' => true,
+            'message' => 'Booking created successfully',
+            'data' => $booking
+        ], 201);
+    }
+
+    public function getSingleBooking($id)
+    {
+        $booking = Booking::find($id);
+
+        if (!$booking) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Booking not found'
+            ], 404);
+        }
+
+        return response()->json([
+            'status' => true,
+            'data'   => $booking
+        ]);
+    }
+
+    public function createMobileOrder(Request $request)
+    {
+        $request->validate([
+            'amount' => 'required|numeric',
+        ]);
+
+        $api = new Api(env('RAZORPAY_KEY'), env('RAZORPAY_SECRET'));
+
+        $order = $api->order->create([
+            'receipt'  => 'ORD_' . time(),
+            'amount'   => $request->amount * 100, // important: convert to paise
+            'currency' => 'INR',
+        ]);
+
+        return response()->json([
+            'success'   => true,
+            'order_id'  => $order['id'],
+            'amount'    => $order['amount'],
+            'currency'  => 'INR',
+            'key'       => env('RAZORPAY_KEY'), // mobile needs this for checkout
+        ]);
+    }
+
+    public function verifyMobilePayment(Request $request)
+    {
+        $request->validate([
+            'razorpay_order_id'   => 'required',
+            'razorpay_payment_id' => 'required',
+            'razorpay_signature'  => 'required',
+            'customer_id'         => 'required',
+            'from_branch'         => 'required',
+            'to_branch'           => 'required',
+            'items'               => 'required',
+            'total_amount'         => 'required'
+        ]);
+
+        try {
+            $api = new Api(env('RAZORPAY_KEY'), env('RAZORPAY_SECRET'));
+
+            $api->utility->verifyPaymentSignature([
+                'razorpay_order_id'   => $request->razorpay_order_id,
+                'razorpay_payment_id' => $request->razorpay_payment_id,
+                'razorpay_signature'  => $request->razorpay_signature
+            ]);
+
+            // save booking
+            $booking = Booking::create([
+                'customer_id'  => $request->customer_id,
+                'from_branch'  => $request->from_branch,
+                'to_branch'    => $request->to_branch,
+                'items'        => json_encode($request->items),
+                'total_amount'  => $request->total_amount,
+                'payment_id'   => $request->razorpay_payment_id,
+                'status'       => 'Paid'
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Payment verified & booking created',
+                'booking' => $booking
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Payment verification failed'
+            ], 400);
+        }
+    }
+
+    public function getSuccessfulBookings()
+    {
+        $bookings = Booking::where('status', 'Paid')->get();
+
+        return response()->json([
+            'status' => true,
+            'data' => $bookings
+        ]);
+    }
+
+    public function getCustomerBookings($customer_id)
+    {
+        // 1️⃣ Check if customer exists
+        $customer = Customer::find($customer_id);
+
+        if (!$customer) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Customer not found',
+            ], 404);
+        }
+
+        // 2️⃣ Fetch successful bookings for this customer
+        $bookings = Booking::where('customer_id', $customer_id)
+            ->where('payment_status', 'success')
+            ->get();
+
+        return response()->json([
+            'status' => true,
+            'customer' => $customer,
+            'bookings_count' => $bookings->count(),
+            'data' => $bookings
+        ]);
     }
 }

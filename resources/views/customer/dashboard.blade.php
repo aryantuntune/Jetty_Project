@@ -4,12 +4,22 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Online Ferry Booking</title>
+
+    <!-- jQuery MUST load first -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<!-- Select2 AFTER jQuery -->
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
+
+
     {{-- change for office pc --}}
     <!-- SELECT2 CSS -->
 <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
 
 <!-- SELECT2 JS -->
-<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+{{-- <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script> --}}
 
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -444,16 +454,99 @@ function showPreviewModal() {
 }
 
 
-function proceedToPayment() {
+//function proceedToPayment() {
     // Submit hidden form for payment
-    document.getElementById("ferryBookingForm").submit();
+   // document.getElementById("ferryBookingForm").submit();
+//}
+function collectItems() {
+    let items = [];
+
+    document.querySelectorAll(".item-row").forEach(row => {
+        items.push({
+            item_rate_id: row.querySelector(".itemDescription").value,
+            quantity: row.querySelector(".qty").value,
+            rate: row.querySelector(".rate").value,
+            lavy: row.querySelector(".lavy").value,
+            total: row.querySelector(".itemTotal").value
+        });
+    });
+
+    return items;
 }
+
+
+function proceedToPayment() {
+
+    let grand_total = document.getElementById('grandTotal').innerText;
+
+    fetch("{{ route('payment.createOrder') }}", {
+        method: "POST",
+         credentials: "include",
+        headers: {
+            "Content-Type": "application/json",
+            "Accept": "application/json",
+            "X-CSRF-TOKEN": "{{ csrf_token() }}"
+        },
+        body: JSON.stringify({
+            grand_total: grand_total,
+            from_branch: document.getElementById("fromBranch").value,
+            to_branch: document.getElementById("toBranch").value,
+            items: collectItems()
+        })
+    })
+    .then(async res => {
+        let text = await res.text();
+
+        try {
+            return JSON.parse(text); // valid JSON
+        } catch (e) {
+            console.error("Server returned HTML instead of JSON:", text);
+            alert("Server Error: Payment order failed.");
+            throw new Error("Invalid JSON");
+        }
+    })
+    .then(data => {
+
+        var options = {
+            "key": data.key,
+            "amount": data.amount,
+            "currency": "INR",
+            "name": "Ferry Booking",
+            "description": "Online Ferry Ticket",
+            "order_id": data.order_id,
+
+            "handler": function (response) {
+     fetch("{{ route('payment.verify') }}", {
+    method: "POST",
+    credentials: "include",
+    headers: {
+        "Content-Type": "application/json",
+        "Accept": "application/json",
+        "X-CSRF-TOKEN": "{{ csrf_token() }}"
+    },
+    body: JSON.stringify(response)
+})
+
+                .then(() => window.location.href = "/booking?success=1");
+            },
+
+            "theme": { "color": "#528FF0" }
+        };
+
+        var rzp1 = new Razorpay(options);
+        rzp1.open();
+    })
+    .catch(err => console.error("Payment Error:", err));
+}
+
+
 
 </script>
 
 
 <!-- Bootstrap JS -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 
 </body>
 </html>
