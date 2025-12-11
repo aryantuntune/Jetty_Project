@@ -3,11 +3,14 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
+use App\Models\Branch;
 use App\Models\Customer;
-use Illuminate\Support\Facades\Mail;
+use App\Models\FerryBoat;
+use App\Models\ItemRate;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail;
 
 class ApiController extends Controller
 {
@@ -216,5 +219,62 @@ class ApiController extends Controller
             'message' => 'Profile fetched successfully',
             'data' => $request->user()
         ]);
+    }
+
+    // -----------------------booking api-----------------------------------------------------------
+
+
+    //get branches
+    public function branch_list()
+    {
+        $branches = Branch::select('id', 'branch_id', 'branch_name', 'user_id')->get();
+
+        return response()->json([
+            'status' => true,
+            'data' => $branches
+        ], 200);
+    }
+
+    //get ferryboat branch wise
+
+    public function getByBranch($branchId)
+    {
+        $boats = FerryBoat::where('branch_id', $branchId)
+            ->select('id', 'number', 'name', 'user_id', 'branch_id')
+            ->get();
+
+        return response()->json([
+            'status' => true,
+            'data'   => $boats
+        ], 200);
+    }
+
+    public function getItemByBranch($branchId)
+    {
+        $items = ItemRate::where('branch_id', $branchId)
+            ->with([
+              
+                'branch:id,branch_name',
+            ])
+            ->select(
+                'id',
+                'item_name',
+                'item_category_id',
+                'item_rate',
+                'item_lavy',
+                'branch_id',
+                'starting_date',
+                'ending_date',
+                'user_id',
+                'item_id',
+                'route_id'
+            )
+            ->orderBy('item_name')
+            ->get();
+
+        return response()->json([
+            'status' => true,
+            'data'   => $items
+        ], 200);
     }
 }
