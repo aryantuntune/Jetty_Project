@@ -31,3 +31,5 @@ Route::post('/razorpay/verify', [ApiController::class, 'verifyMobilePayment'])->
 Route::get('/bookings/success', [ApiController::class, 'getSuccessfulBookings'])->middleware('auth:sanctum');
 
 Route::get('/bookings/customer/{customer_id}', [ApiController::class, 'getCustomerBookings'])->middleware('auth:sanctum');
+
+Route::get('/branches/{branchId}/to-branches', [ApiController::class, 'getToBranches'])->middleware('auth:sanctum');

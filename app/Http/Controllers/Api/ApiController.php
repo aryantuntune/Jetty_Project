@@ -10,6 +10,7 @@ use App\Models\FerryBoat;
 use App\Models\ItemRate;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 use Razorpay\Api\Api;
@@ -437,6 +438,41 @@ class ApiController extends Controller
             'customer' => $customer,
             'bookings_count' => $bookings->count(),
             'data' => $bookings
+        ]);
+    }
+
+    // -----------------------------------------------
+
+    public function getToBranches($branchId)
+    {
+        // Find route_id of this "from" branch
+        $routeId = DB::table('routes')
+            ->where('branch_id', $branchId)
+            ->value('route_id');
+
+        if (!$routeId) {
+            return response()->json([
+                'status' => false,
+                'message' => 'No route found for this branch',
+                'data' => []
+            ], 404);
+        }
+
+        // Get all connected branch IDs except from-branch
+        $toBranchIds = DB::table('routes')
+            ->where('route_id', $routeId)
+            ->where('branch_id', '!=', $branchId)
+            ->pluck('branch_id');
+
+        // Get branch names
+        $branches = Branch::whereIn('id', $toBranchIds)
+            ->select('id', 'branch_name')
+            ->get();
+
+        return response()->json([
+            'status' => true,
+            'message' => 'To-branches fetched successfully',
+            'data' => $branches
         ]);
     }
 }
