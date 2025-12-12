@@ -30,6 +30,7 @@ class ApiController extends Controller
             'email'      => 'required|email',
             'mobile'     => 'required|string|max:20',
             'password'   => 'required|string|min:6',
+            'profile_image'  => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
         ]);
 
         $email = $request->email;
@@ -37,6 +38,12 @@ class ApiController extends Controller
         // Check if email already exists
         if (Customer::where('email', $email)->exists()) {
             return response()->json(['message' => 'Email is already registered.'], 422);
+        }
+
+        $profileImagePath = null;
+        if ($request->hasFile('profile_image')) {
+            // stores in storage/app/public/profile_images
+            $profileImagePath = $request->file('profile_image')->store('profile_images', 'public');
         }
 
         // Generate 6 digit OTP
@@ -51,6 +58,7 @@ class ApiController extends Controller
                 'email'      => $email,
                 'mobile'     => $request->mobile,
                 'password'   => $request->password,
+                'profile_image' => $profileImagePath,
             ]
         ];
         Cache::put('signup_otp_for_' . $email, $cacheData, now()->addMinutes(10));
@@ -95,6 +103,7 @@ class ApiController extends Controller
             'email'      => $userData['email'],
             'mobile'     => $userData['mobile'],
             'password'   => Hash::make($userData['password']),
+            'profile_image' => $userData['profile_image'] ?? null,
         ]);
 
         // Delete cached data
