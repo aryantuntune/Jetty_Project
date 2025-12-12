@@ -204,6 +204,7 @@
                             <th>Qty</th>
                             <th>Rate</th>
                             <th>Lavy</th>
+                             <th>Vehical No.</th>
                             <th>Total</th>
                         </tr>
                     </thead>
@@ -227,6 +228,31 @@
 
         </div>
     </div>
+</div>
+
+
+
+<!-- ================= ERROR MODAL ================= -->
+<div class="modal fade" id="errorModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content rounded-4 shadow">
+
+      <div class="modal-header bg-danger text-white">
+        <h5 class="modal-title fw-bold">
+          <i class="bi bi-exclamation-triangle"></i> Missing Details
+        </h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+
+      <div class="modal-body text-center fs-5" id="errorModalMessage">
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-danger px-4" data-bs-dismiss="modal">OK</button>
+      </div>
+
+    </div>
+  </div>
 </div>
 
 
@@ -332,6 +358,14 @@ function addItemRow() {
             <input type="number" name="items[${rowIndex}][quantity]" 
                 class="form-control qty" min="1" value="1" required>
         </div>
+        <div class="col-md-3">
+    <label class="form-label text-secondary">Vehicle No</label>
+    <input type="text" 
+           name="items[${rowIndex}][vehicle_no]" 
+           class="form-control vehicle_no" 
+           placeholder="Enter Vehicle Number">
+</div>
+
 
         <div class="col-md-2">
             <label class="form-label text-secondary">Rate</label>
@@ -343,7 +377,7 @@ function addItemRow() {
             <label class="form-label text-secondary">Lavy</label>
             <input type="number" name="items[${rowIndex}][lavy]" 
                 class="form-control lavy" readonly>
-        </div>
+        </div>  
 
         <div class="col-md-1">
             <label class="form-label text-secondary">Total</label>
@@ -425,6 +459,33 @@ function calculateGrandTotal() {
 
 
 function showPreviewModal() {
+    // VALIDATION
+    let isValid = true;
+    let errorMsg = "";
+
+    document.querySelectorAll(".item-row").forEach(row => {
+        let desc = row.querySelector(".itemDescription").value;
+        let qty  = row.querySelector(".qty").value;
+
+        if (desc === "") {
+            isValid = false;
+            errorMsg = "Please select <b>Description</b> for all items.";
+        }
+        else if (qty === "" || qty <= 0) {
+            isValid = false;
+            errorMsg = "Please enter valid <b>Quantity</b>.";
+        }
+    });
+
+    // If not valid → show error modal instead of opening preview modal
+    if (!isValid) {
+        document.getElementById("errorModalMessage").innerHTML = errorMsg;
+        new bootstrap.Modal(document.getElementById('errorModal')).show();
+        return;  // STOP
+    }
+
+
+
 
     const from = document.querySelector("#fromBranch option:checked").textContent;
     const to   = document.querySelector("#toBranch option:checked").textContent;
@@ -441,6 +502,7 @@ function showPreviewModal() {
                 <td>${row.querySelector(".qty").value}</td>
                 <td>${row.querySelector(".rate").value}</td>
                 <td>${row.querySelector(".lavy").value}</td>
+                 <td>${row.querySelector(".vehicle_no").value}</td>
                 <td>${row.querySelector(".itemTotal").value}</td>
             </tr>`;
     });
@@ -467,6 +529,7 @@ function collectItems() {
             quantity: row.querySelector(".qty").value,
             rate: row.querySelector(".rate").value,
             lavy: row.querySelector(".lavy").value,
+              vehicle_no: row.querySelector(".vehicle_no").value,
             total: row.querySelector(".itemTotal").value
         });
     });
@@ -539,7 +602,11 @@ function proceedToPayment() {
     .catch(err => console.error("Payment Error:", err));
 }
 
-
+document.addEventListener("input", function (e) {
+    if (e.target.classList.contains("vehicle_no")) {
+        e.target.value = e.target.value.toUpperCase();
+    }
+});
 
 </script>
 

@@ -372,45 +372,58 @@ class ApiController extends Controller
     public function verifyMobilePayment(Request $request)
     {
         $request->validate([
-            'razorpay_order_id'   => 'required',
-            'razorpay_payment_id' => 'required',
-            'razorpay_signature'  => 'required',
-            'customer_id'         => 'required',
-            'from_branch'         => 'required',
-            'to_branch'           => 'required',
-            'items'               => 'required',
-            'total_amount'         => 'required'
+            'razorpay_order_id'   => 'required|string',
+            'razorpay_payment_id' => 'required|string',
+            'razorpay_signature'  => 'required|string',
+            'customer_id'         => 'required|exists:customers,id',
+            'from_branch'         => 'required|integer',
+            'to_branch'           => 'required|integer',
+            'items'               => 'required|array',      // MUST be array
+            'total_amount'        => 'required|numeric',
         ]);
 
         try {
             $api = new Api(env('RAZORPAY_KEY'), env('RAZORPAY_SECRET'));
 
+            // Verify payment signature
             $api->utility->verifyPaymentSignature([
                 'razorpay_order_id'   => $request->razorpay_order_id,
                 'razorpay_payment_id' => $request->razorpay_payment_id,
                 'razorpay_signature'  => $request->razorpay_signature
             ]);
 
-            // save booking
+            // ⭐ Process items (ensure each item has vehicle_no if required) 
+            $items = collect($request->items)->map(function ($item) use ($request) {
+                return [
+                    'item_name'  => $item['item_name'] ?? null,
+                    'quantity'   => $item['quantity'] ?? null,
+                    'rate'       => $item['rate'] ?? null,
+                    'vehicle_no' => $item['vehicle_no'] ?? $request->vehical_no ?? null,
+                ];
+            });
+
+            // ⭐ Save booking
             $booking = Booking::create([
-                'customer_id'  => $request->customer_id,
-                'from_branch'  => $request->from_branch,
-                'to_branch'    => $request->to_branch,
-                'items'        => json_encode($request->items),
+                'customer_id'   => $request->customer_id,
+                'from_branch'   => $request->from_branch,
+                'to_branch'     => $request->to_branch,
+                'items'         => json_encode($items),
                 'total_amount'  => $request->total_amount,
-                'payment_id'   => $request->razorpay_payment_id,
-                'status'       => 'Paid'
+                'payment_id'    => $request->razorpay_payment_id,
+
+                'status' => 'paid'
             ]);
 
             return response()->json([
                 'success' => true,
-                'message' => 'Payment verified & booking created',
+                'message' => 'Payment verified & booking created successfully',
                 'booking' => $booking
             ]);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Payment verification failed'
+                'message' => 'Payment verification failed',
+                'error'   => $e->getMessage()  // Optional: remove in production
             ], 400);
         }
     }

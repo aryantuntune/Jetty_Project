@@ -104,7 +104,6 @@ class BookingController extends Controller
 
     public function verifyPayment(Request $request)
     {
-
         $signatureStatus = false;
 
         try {
@@ -124,23 +123,29 @@ class BookingController extends Controller
 
         if ($signatureStatus) {
 
-            // ⭐ SAVE BOOKING AFTER SUCCESSFUL PAYMENT ⭐
+            // ⭐ BUILD ITEM ARRAY INCLUDING VEHICLE NUMBER ⭐
+            $items = collect(session('items'))->map(function ($item) {
+                return [
+                    'item_name'  => $item['item_name'] ?? '',
+                    'quantity'   => $item['quantity'] ?? '',
+                    'rate'       => $item['rate'] ?? '',
+                    'vehicle_no' => $item['vehicle_no'] ?? null,   
+                ];
+            });
+
             Booking::create([
                 'customer_id'   => auth()->guard('customer')->id(),
                 'from_branch'   => session('from_branch'),
                 'to_branch'     => session('to_branch'),
-                'items'         => json_encode(session('items')),
+                'items'         => json_encode($items),
                 'total_amount'  => session('grand_total'),
                 'payment_id'    => $request->razorpay_payment_id,
+                'status' => 'success'
             ]);
 
-            return redirect('/booking')
-                ->with('success', 'Payment successful & booking confirmed!');
+            return redirect('/booking')->with('success', 'Payment successful & booking confirmed!');
         }
 
         return redirect('/booking')->with('error', 'Payment Failed!');
     }
-
-  
-
 }

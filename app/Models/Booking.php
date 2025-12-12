@@ -11,7 +11,7 @@ class Booking extends Model
         'from_branch',
         'to_branch',
         'items',
-        'grand_total',
+        'total_amount',
         'payment_id',
         'status'
     ];
