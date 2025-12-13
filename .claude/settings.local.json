@@ -1,0 +1,22 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git checkout:*)",
+      "Bash(cat:*)",
+      "Bash(find:*)",
+      "Bash(tree:*)",
+      "Bash(dir:*)",
+      "Bash(flutter pub:*)",
+      "Bash(flutter build:*)",
+      "Bash(./gradlew signingReport:*)",
+      "Bash(flutter clean:*)",
+      "Bash(where:*)",
+      "Bash(curl:*)",
+      "Bash(git add:*)",
+      "Bash(git commit -m \"$(cat <<''EOF''\nFix: Add JSON success field to all API responses and password reset endpoints\n\nCritical fixes for mobile app compatibility:\n- LoginController: Added ''success'' field to login/logout responses\n- RegisterController: Added ''success'' field to OTP and registration responses  \n- ForgotPasswordController: Added 3 new API methods (requestOTP, verifyOTP, resetPassword)\n- routes/api.php: Added password reset routes\n- Added DEPLOYMENT_INSTRUCTIONS.md for developer\n\nWithout these changes, the mobile app cannot function properly because\nit checks response.success to determine navigation flow.\n\n🤖 Generated with Claude Code\nEOF\n)\")",
+      "Bash(git reset:*)",
+      "Bash(git clone:*)",
+      "Bash(timeout 30 git clone:*)"
+    ]
+  }
+}

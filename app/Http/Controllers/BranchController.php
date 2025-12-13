@@ -73,4 +73,18 @@ class BranchController extends Controller
         $branch->delete();
         return redirect()->route('branches.index')->with('success', 'Branch deleted successfully!');
     }
+
+    // API Methods for Mobile App
+    public function getBranches()
+    {
+        $branches = Branch::select('id', 'branch_name')
+            ->orderBy('branch_name')
+            ->get();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Branches retrieved successfully',
+            'data' => $branches
+        ]);
+    }
 }

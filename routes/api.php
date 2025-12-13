@@ -9,6 +9,7 @@ use App\Http\Controllers\BranchController;
 use App\Http\Controllers\FerryBoatController;
 use App\Http\Controllers\ItemRateController;
 use App\Http\Controllers\BookingController;
+use App\Http\Controllers\RazorpayController;
 
 /*
 |--------------------------------------------------------------------------
@@ -42,7 +43,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Customer routes
     Route::prefix('customer')->group(function () {
-        Route::post('logout', [LoginController::class, 'logout']);
+        Route::get('logout', [LoginController::class, 'logout']); // Changed from POST to GET
         Route::get('profile', function (Request $request) {
             return response()->json([
                 'success' => true,
@@ -52,15 +53,18 @@ Route::middleware('auth:sanctum')->group(function () {
         });
     });
 
-    // Branch routes
-    Route::get('branches', [BranchController::class, 'index']);
-    Route::get('branches/{id}/ferries', [FerryBoatController::class, 'getFerriesByBranch']);
-    Route::get('branches/{from}/to/{to}/routes', [BranchController::class, 'getRoutes']);
+    // Branch routes - Updated to match Postman collection
+    Route::get('customer/branch', [BranchController::class, 'getBranches']); // Changed from /branches
+    Route::get('branches/{id}/to-branches', [BookingController::class, 'getToBranches']); // New route
+    Route::get('ferryboats/branch/{id}', [FerryBoatController::class, 'getFerriesByBranch']); // Changed path
+    Route::get('item-rates/branch/{id}', [ItemRateController::class, 'getItemRatesByBranch']); // Changed path
 
-    // Item rates (pricing)
-    Route::get('item-rates', [ItemRateController::class, 'getItemRates']);
+    // Razorpay payment routes
+    Route::post('razorpay/order', [RazorpayController::class, 'createOrder']);
+    Route::post('razorpay/verify', [RazorpayController::class, 'verifyPayment']);
 
     // Bookings
+    Route::get('bookings/success', [BookingController::class, 'getSuccessfulBookings']); // New route
     Route::get('bookings', [BookingController::class, 'index']);
     Route::post('bookings', [BookingController::class, 'store']);
     Route::get('bookings/{id}', [BookingController::class, 'show']);
