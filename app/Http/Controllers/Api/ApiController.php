@@ -14,6 +14,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 use Razorpay\Api\Api;
+use Illuminate\Support\Facades\Storage;
 
 class ApiController extends Controller
 {
@@ -37,7 +38,10 @@ class ApiController extends Controller
 
         // Check if email already exists
         if (Customer::where('email', $email)->exists()) {
-            return response()->json(['message' => 'Email is already registered.'], 422);
+            return response()->json([
+                'success' => false,
+                'message' => 'Email is already registered.'
+            ], 422);
         }
 
         $profileImagePath = null;
@@ -68,7 +72,10 @@ class ApiController extends Controller
             $message->to($email)->subject('Signup OTP Verification');
         });
 
-        return response()->json(['message' => 'OTP sent successfully.']);
+        return response()->json([
+            'success' => true,
+            'message' => 'OTP sent successfully.'
+        ], 200);
     }
 
 
@@ -110,6 +117,7 @@ class ApiController extends Controller
         Cache::forget('signup_otp_for_' . $email);
 
         return response()->json([
+            'success' => true,
             'message' => 'Signup successful.',
             'data'    => $customer
         ], 201);
@@ -135,7 +143,7 @@ class ApiController extends Controller
             $message->to($email)->subject('Password Reset OTP Verification');
         });
 
-        return response()->json(['message' => 'Password reset OTP sent successfully.']);
+        return response()->json(['success' => true, 'message' => 'Password reset OTP sent successfully.']);
     }
 
     // Verify Password Reset OTP
@@ -159,7 +167,7 @@ class ApiController extends Controller
             return response()->json(['message' => 'Invalid OTP.'], 422);
         }
 
-        return response()->json(['message' => 'OTP verified successfully.']);
+        return response()->json(['success' => true, 'message' => 'OTP verified successfully.']);
     }
 
     // Reset Password after OTP verified
@@ -182,7 +190,7 @@ class ApiController extends Controller
         // Clear OTP cache
         Cache::forget('password_reset_otp_for_' . $email);
 
-        return response()->json(['message' => 'Password reset successful.']);
+        return response()->json(['success' => true, 'message' => 'Password reset successful.']);
     }
 
     public function login(Request $request)
@@ -196,6 +204,7 @@ class ApiController extends Controller
 
         if (!$customer || !Hash::check($request->password, $customer->password)) {
             return response()->json([
+                'success' => false,
                 'message' => 'Invalid email or password'
             ], 401);
         }
@@ -204,6 +213,7 @@ class ApiController extends Controller
         $token = $customer->createToken('customer_api_token')->plainTextToken;
 
         return response()->json([
+            'success' => true,
             'message' => 'Login successful',
             'token'   => $token,
             'data'    => $customer
@@ -218,6 +228,7 @@ class ApiController extends Controller
         $request->user()->currentAccessToken()->delete();
 
         return response()->json([
+            'success' => true,
             'message' => 'Logged out successfully'
         ]);
     }
@@ -228,6 +239,7 @@ class ApiController extends Controller
     public function profile(Request $request)
     {
         return response()->json([
+            'success' => true,
             'message' => 'Profile fetched successfully',
             'data' => $request->user()
         ]);
@@ -242,7 +254,7 @@ class ApiController extends Controller
         $branches = Branch::select('id', 'branch_id', 'branch_name', 'user_id')->get();
 
         return response()->json([
-            'status' => true,
+            'success' => true,
             'data' => $branches
         ], 200);
     }
@@ -256,7 +268,7 @@ class ApiController extends Controller
             ->get();
 
         return response()->json([
-            'status' => true,
+            'success' => true,
             'data'   => $boats
         ], 200);
     }
@@ -285,7 +297,7 @@ class ApiController extends Controller
             ->get();
 
         return response()->json([
-            'status' => true,
+            'success' => true,
             'data'   => $items
         ], 200);
     }
@@ -295,7 +307,7 @@ class ApiController extends Controller
     public function getBooking()
     {
         return response()->json([
-            'status' => true,
+            'success' => true,
             'data'   => Booking::latest()->get()
         ]);
     }
@@ -323,7 +335,7 @@ class ApiController extends Controller
         ]);
 
         return response()->json([
-            'status' => true,
+            'success' => true,
             'message' => 'Booking created successfully',
             'data' => $booking
         ], 201);
@@ -335,13 +347,13 @@ class ApiController extends Controller
 
         if (!$booking) {
             return response()->json([
-                'status' => false,
+                'success' => true,
                 'message' => 'Booking not found'
             ], 404);
         }
 
         return response()->json([
-            'status' => true,
+            'success' => true,
             'data'   => $booking
         ]);
     }
@@ -433,7 +445,7 @@ class ApiController extends Controller
         $bookings = Booking::where('status', 'Paid')->get();
 
         return response()->json([
-            'status' => true,
+            'success' => true,
             'data' => $bookings
         ]);
     }
@@ -445,7 +457,7 @@ class ApiController extends Controller
 
         if (!$customer) {
             return response()->json([
-                'status' => false,
+                'success' => false,
                 'message' => 'Customer not found',
             ], 404);
         }
@@ -456,7 +468,7 @@ class ApiController extends Controller
             ->get();
 
         return response()->json([
-            'status' => true,
+            'success' => true,
             'customer' => $customer,
             'bookings_count' => $bookings->count(),
             'data' => $bookings
@@ -474,7 +486,7 @@ class ApiController extends Controller
 
         if (!$routeId) {
             return response()->json([
-                'status' => false,
+                'success' => false,
                 'message' => 'No route found for this branch',
                 'data' => []
             ], 404);
@@ -492,9 +504,40 @@ class ApiController extends Controller
             ->get();
 
         return response()->json([
-            'status' => true,
+            'success' => true,
             'message' => 'To-branches fetched successfully',
             'data' => $branches
         ]);
+    }
+
+    public function updateProfileImage(Request $request)
+    {
+        $request->validate([
+            'profile_image' => 'required|image|mimes:jpg,jpeg,png,webp|max:2048',
+        ]);
+
+        $customer = $request->user(); // logged-in customer via Sanctum
+
+        // Delete old image if exists
+        if ($customer->profile_image && Storage::disk('public')->exists($customer->profile_image)) {
+            Storage::disk('public')->delete($customer->profile_image);
+        }
+
+        // Store new image
+        $path = $request->file('profile_image')
+            ->store('profile_images', 'public');
+
+        // Update customer record
+        $customer->profile_image = $path;
+        $customer->save();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Profile image updated successfully',
+            'data' => [
+                'customer_id'  => $customer->id,
+                'profile_image' => asset('storage/' . $path),
+            ]
+        ], 200);
     }
 }
