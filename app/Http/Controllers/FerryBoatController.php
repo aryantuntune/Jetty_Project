@@ -99,4 +99,19 @@ class FerryBoatController extends Controller
         return redirect()->route('ferryboats.index')
                          ->with('success','Ferry Boat deleted successfully.');
     }
+
+    // API Method for Mobile App
+    public function getFerriesByBranch($branchId)
+    {
+        $ferries = FerryBoat::where('branch_id', $branchId)
+            ->select('id', 'number', 'name')
+            ->orderBy('name')
+            ->get();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Ferry boats retrieved successfully',
+            'data' => $ferries
+        ]);
+    }
 }

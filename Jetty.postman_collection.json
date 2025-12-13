@@ -13,8 +13,8 @@
 				"method": "POST",
 				"header": [],
 				"body": {
-					"mode": "urlencoded",
-					"urlencoded": [
+					"mode": "formdata",
+					"formdata": [
 						{
 							"key": "first_name",
 							"value": "test",
@@ -39,6 +39,11 @@
 							"key": "password",
 							"value": "Admin@123",
 							"type": "text"
+						},
+						{
+							"key": "profile_image",
+							"type": "file",
+							"src": []
 						}
 					]
 				},
@@ -532,6 +537,43 @@
 						"api",
 						"customer",
 						"logout"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "{{baseURL}}/api/branches/1/to-branches",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "4|GlRtn8o9vWWHfFnbMXQjqML1pQJRmoTJPwPDDixh504098ef",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"razorpay_order_id\": \"order_RqPhE1X2qfXhlV\",\r\n  \"razorpay_payment_id\": \"test_payment_123\",\r\n  \"razorpay_signature\": \"test_sign_123\",\r\n  \"customer_id\": 1,\r\n  \"from_branch\": 2,\r\n  \"to_branch\": 4,\r\n  \"items\": [\r\n    { \"item_id\": 1, \"qty\": 2, \"rate\": 100 }\r\n  ],\r\n  \"grand_total\": 200\r\n}\r\n"
+				},
+				"url": {
+					"raw": "{{baseURL}}/api/branches/1/to-branches",
+					"host": [
+						"{{baseURL}}"
+					],
+					"path": [
+						"api",
+						"branches",
+						"1",
+						"to-branches"
 					]
 				}
 			},

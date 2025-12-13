@@ -29,7 +29,11 @@ class BookingController extends Controller
     {
         $routeId = DB::table('routes')->where('branch_id', $branchId)->value('route_id');
         if (!$routeId) {
-            return response()->json([]);
+            return response()->json([
+                'success' => false,
+                'message' => 'No routes found for this branch',
+                'data' => []
+            ]);
         }
 
         $toBranchIds = DB::table('routes')
@@ -37,13 +41,15 @@ class BookingController extends Controller
             ->where('branch_id', '!=', $branchId)
             ->pluck('branch_id');
 
-        // dd($toBranchIds);
         $branches = Branch::whereIn('id', $toBranchIds)
             ->select('id', 'branch_name')
             ->get();
 
-
-        return response()->json($branches);
+        return response()->json([
+            'success' => true,
+            'message' => 'To branches retrieved successfully',
+            'data' => $branches
+        ]);
     }
 
     public function submit(Request $request)
@@ -74,5 +80,34 @@ class BookingController extends Controller
             ->find($itemRateId);
 
         return response()->json($item);
+    }
+
+    public function getSuccessfulBookings()
+    {
+        $customerId = auth()->id();
+
+        $bookings = \App\Models\Booking::where('customer_id', $customerId)
+            ->where('status', 'confirmed')
+            ->with(['fromBranch', 'toBranch', 'ticket'])
+            ->orderBy('created_at', 'desc')
+            ->get()
+            ->map(function ($booking) {
+                return [
+                    'id' => $booking->id,
+                    'ticket_number' => $booking->ticket->ticket_number ?? null,
+                    'from_branch' => $booking->fromBranch->branch_name ?? null,
+                    'to_branch' => $booking->toBranch->branch_name ?? null,
+                    'booking_date' => $booking->booking_date,
+                    'total_amount' => $booking->total_amount,
+                    'status' => $booking->status,
+                    'created_at' => $booking->created_at
+                ];
+            });
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Successful bookings retrieved successfully',
+            'data' => $bookings
+        ]);
     }
 }

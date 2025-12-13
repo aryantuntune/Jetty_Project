@@ -35,14 +35,15 @@ class BookingService {
       );
     }
 
-    // Note: This method returns destinations but the API might return routes
-    // If API returns route objects, you may need to adjust the parsing
+    // Use the new getToBranches endpoint from Postman collection
     return await ApiService.get<List<Branch>>(
-      '${ApiConfig.branches}/$branchId/destinations',
+      ApiConfig.getToBranches(branchId),
       fromJson: (data) => (data as List).map((item) => Branch.fromJson(item)).toList(),
     );
   }
 
+  // Note: Routes are now fetched via getToBranches endpoint
+  // This method is kept for backward compatibility but uses getToBranches internally
   static Future<ApiResponse> getRoutes(int fromBranchId, int toBranchId) async {
     if (AppConfig.useMockData) {
       await Future.delayed(const Duration(milliseconds: 500));
@@ -53,10 +54,8 @@ class BookingService {
       );
     }
 
-    return await ApiService.get(
-      ApiConfig.getRoutes(fromBranchId, toBranchId),
-      fromJson: (data) => data,
-    );
+    // Use getToBranches endpoint instead (from Postman collection)
+    return await getDestinations(fromBranchId);
   }
 
   static Future<ApiResponse<List<Ferry>>> getFerries({int? branchId}) async {
@@ -200,5 +199,97 @@ class BookingService {
     }
 
     return await ApiService.post('${ApiConfig.bookings}/$id/cancel');
+  }
+
+  // Razorpay Payment Integration
+  static Future<ApiResponse<Map<String, dynamic>>> createRazorpayOrder({
+    required double amount,
+  }) async {
+    if (AppConfig.useMockData) {
+      await Future.delayed(const Duration(milliseconds: 500));
+      return ApiResponse<Map<String, dynamic>>(
+        success: true,
+        message: 'Razorpay order created (Mock)',
+        data: {
+          'order_id': 'order_mock_${DateTime.now().millisecondsSinceEpoch}',
+          'amount': amount,
+          'currency': 'INR',
+        },
+      );
+    }
+
+    return await ApiService.post<Map<String, dynamic>>(
+      ApiConfig.razorpayCreateOrder,
+      body: {
+        'amount': amount.toString(),
+      },
+      fromJson: (data) => data as Map<String, dynamic>,
+    );
+  }
+
+  static Future<ApiResponse<Booking>> verifyRazorpayPayment({
+    required String razorpayOrderId,
+    required String razorpayPaymentId,
+    required String razorpaySignature,
+    required int customerId,
+    required int fromBranch,
+    required int toBranch,
+    required List<Map<String, dynamic>> items,
+    required double grandTotal,
+  }) async {
+    if (AppConfig.useMockData) {
+      await Future.delayed(const Duration(seconds: 1));
+
+      final newBooking = Booking(
+        id: DateTime.now().millisecondsSinceEpoch,
+        customerId: customerId,
+        ferryId: 1,
+        fromBranchId: fromBranch,
+        toBranchId: toBranch,
+        bookingDate: DateTime.now().toString().split(' ')[0],
+        departureTime: '10:00 AM',
+        totalAmount: grandTotal,
+        status: 'confirmed',
+        qrCode: 'JETTY-MOCK-${DateTime.now().millisecondsSinceEpoch}',
+        createdAt: DateTime.now(),
+      );
+
+      return ApiResponse<Booking>(
+        success: true,
+        message: 'Payment verified and booking created (Mock)',
+        data: newBooking,
+      );
+    }
+
+    return await ApiService.post<Booking>(
+      ApiConfig.razorpayVerifyPayment,
+      body: {
+        'razorpay_order_id': razorpayOrderId,
+        'razorpay_payment_id': razorpayPaymentId,
+        'razorpay_signature': razorpaySignature,
+        'customer_id': customerId,
+        'from_branch': fromBranch,
+        'to_branch': toBranch,
+        'items': items,
+        'grand_total': grandTotal,
+      },
+      fromJson: (data) => Booking.fromJson(data),
+    );
+  }
+
+  static Future<ApiResponse<List<Booking>>> getSuccessfulBookings() async {
+    if (AppConfig.useMockData) {
+      await Future.delayed(const Duration(milliseconds: 500));
+      return ApiResponse<List<Booking>>(
+        success: true,
+        message: 'Successful bookings loaded (Mock)',
+        data: MockDataService.getMockBookings().where((b) => b.status == 'confirmed').toList(),
+      );
+    }
+
+    return await ApiService.get<List<Booking>>(
+      ApiConfig.bookingsSuccess,
+      fromJson: (data) => (data as List).map((item) => Booking.fromJson(item)).toList(),
+    );
   }
 }

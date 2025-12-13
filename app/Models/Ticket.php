@@ -12,13 +12,17 @@ class Ticket extends Model
     use HasFactory;
 
     protected $fillable = [
+        'booking_id',
+        'ticket_number',
+        'customer_id',
+        'total_amount',
+        'status',
         'branch_id',
         'ferry_boat_id',
         'payment_mode',
         'ferry_time',
         'discount_pct',
         'discount_rs',
-        'total_amount',
         'user_id',
         'ferry_type',
         'customer_name',
@@ -55,5 +59,15 @@ class Ticket extends Model
        public function user()
     {
         return $this->belongsTo(User::class); // uses user_id
+    }
+
+    public function booking()
+    {
+        return $this->belongsTo(Booking::class);
+    }
+
+    public function customer()
+    {
+        return $this->belongsTo(Customer::class);
     }
 }
