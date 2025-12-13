@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\CustomerAuth;
 
 use App\Http\Controllers\Controller;
+use App\Models\Customer;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -21,26 +22,78 @@ class LoginController extends Controller
             'password' => 'required',
         ]);
 
-        $credentials = $request->only('email', 'password');
+        // Find customer by email
+        $customer = \App\Models\Customer::where('email', $request->email)->first();
 
-        if (Auth::guard('customer')->attempt($credentials, $request->filled('remember'))) {
-            // regenerate session for security
-            $request->session()->regenerate();
-
-          return redirect()->route('customer.dashboard');
-
+        // Check if customer exists and password matches
+        if (!$customer || !\Hash::check($request->password, $customer->password)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Invalid email or password'
+            ], 401);
         }
 
-        return back()->withErrors(['email' => 'The provided credentials do not match our records.']);
+        // Create authentication token
+        $token = $customer->createToken('mobile-app')->plainTextToken;
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Login successful',
+            'data' => [
+                'token' => $token,
+                'customer' => $customer
+            ]
+        ]);
     }
 
     public function logout(Request $request)
     {
-        Auth::guard('customer')->logout();
+        // Revoke current token for API
+        $request->user()->currentAccessToken()->delete();
 
-        $request->session()->invalidate();
-        $request->session()->regenerateToken();
+        return response()->json([
+            'success' => true,
+            'message' => 'Logged out successfully'
+        ]);
+    }
 
-        return redirect()->route('customer.login');
+    /**
+     * Google Sign-In for API
+     * Accepts Google ID token and creates/logs in the user
+     */
+    public function googleSignIn(Request $request)
+    {
+        $request->validate([
+            'id_token' => 'required|string',
+            'email' => 'required|email',
+            'first_name' => 'required|string',
+            'last_name' => 'nullable|string',
+        ]);
+
+        // Check if customer exists
+        $customer = Customer::where('email', $request->email)->first();
+
+        if (!$customer) {
+            // Create new customer from Google account
+            $customer = Customer::create([
+                'first_name' => $request->first_name,
+                'last_name' => $request->last_name ?? '',
+                'email' => $request->email,
+                'mobile' => '', // User can add later in profile
+                'password' => Hash::make(uniqid()), // Random password for Google users
+            ]);
+        }
+
+        // Create authentication token
+        $token = $customer->createToken('mobile-app')->plainTextToken;
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Google Sign-In successful',
+            'data' => [
+                'token' => $token,
+                'customer' => $customer
+            ]
+        ]);
     }
 }

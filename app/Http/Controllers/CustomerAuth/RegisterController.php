@@ -41,17 +41,16 @@ class RegisterController
     // --------------------------------------------
     $otp = rand(100000, 999999);
 
-    // Save form data + OTP in session
-    session([
-        'pending_user' => [
-            'first_name' => $request->first_name,
-            'last_name'  => $request->last_name,
-            'mobile'     => $request->mobile,
-            'email'      => $request->email,
-            'password'   => $request->password
-        ],
-        'otp' => $otp
-    ]);
+    // Store OTP data in cache (15 minutes expiry) instead of session for API support
+    $cacheKey = 'pending_registration_' . $request->email;
+    \Cache::put($cacheKey, [
+        'first_name' => $request->first_name,
+        'last_name'  => $request->last_name,
+        'mobile'     => $request->mobile,
+        'email'      => $request->email,
+        'password'   => $request->password,
+        'otp'        => $otp
+    ], now()->addMinutes(15));
 
     // --------------------------------------------
     // SEND OTP EMAIL
@@ -71,13 +70,31 @@ class RegisterController
     // STEP 2: VERIFY OTP
     public function verifyOtp(Request $request)
     {
-        if ($request->otp != session('otp')) {
-            return response()->json(['success' => false, 'message' => 'Invalid OTP']);
+        $request->validate([
+            'email' => 'required|email',
+            'otp' => 'required',
+        ]);
+
+        // Retrieve registration data from cache
+        $cacheKey = 'pending_registration_' . $request->email;
+        $data = \Cache::get($cacheKey);
+
+        if (!$data) {
+            return response()->json([
+                'success' => false,
+                'message' => 'OTP expired or invalid. Please request a new one.'
+            ], 400);
+        }
+
+        // Verify OTP
+        if ($request->otp != $data['otp']) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Invalid OTP'
+            ], 400);
         }
 
         // OTP Correct → Create Customer
-        $data = session('pending_user');
-
         $customer = Customer::create([
             'first_name' => $data['first_name'],
             'last_name' => $data['last_name'],
@@ -86,10 +103,20 @@ class RegisterController
             'password' => Hash::make($data['password']),
         ]);
 
-        // Clear session data
-        session()->forget(['pending_user', 'otp']);
+        // Create authentication token
+        $token = $customer->createToken('mobile-app')->plainTextToken;
 
-        return response()->json(['success' => true]);
+        // Clear cache data
+        \Cache::forget($cacheKey);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Registration successful',
+            'data' => [
+                'token' => $token,
+                'customer' => $customer
+            ]
+        ]);
     }
 }
 

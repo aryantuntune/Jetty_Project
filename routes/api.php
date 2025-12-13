@@ -1,40 +1,68 @@
 <?php
 
-use App\Http\Controllers\Api\ApiController;
-use Illuminate\Support\Facades\Route;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\CustomerAuth\LoginController;
+use App\Http\Controllers\CustomerAuth\RegisterController;
+use App\Http\Controllers\CustomerAuth\ForgotPasswordController;
+use App\Http\Controllers\BranchController;
+use App\Http\Controllers\FerryBoatController;
+use App\Http\Controllers\ItemRateController;
+use App\Http\Controllers\BookingController;
 
+/*
+|--------------------------------------------------------------------------
+| API Routes
+|--------------------------------------------------------------------------
+|
+| Here is where you can register API routes for your application. These
+| routes are loaded by the RouteServiceProvider within a group which
+| is assigned the "api" middleware group. Enjoy building your API!
+|
+*/
 
+// Public routes (no authentication required)
+Route::prefix('customer')->group(function () {
+    // Registration
+    Route::post('generate-otp', [RegisterController::class, 'sendOtp']);
+    Route::post('verify-otp', [RegisterController::class, 'verifyOtp']);
 
-Route::post('customer/generate-otp', [ApiController::class, 'generateOtp']);
-Route::post('customer/verify-otp', [ApiController::class, 'verifyOtpAndRegister']);
+    // Login
+    Route::post('login', [LoginController::class, 'login']);
+    Route::post('google-signin', [LoginController::class, 'googleSignIn']);
 
-Route::post('customer/password-reset/request-otp', [ApiController::class, 'sendPasswordResetOtp']);
-Route::post('customer/password-reset/verify-otp', [ApiController::class, 'verifyPasswordResetOtp']);
-Route::post('customer/password-reset/reset', [ApiController::class, 'resetPassword']);
+    // Password Reset
+    Route::post('password-reset/request-otp', [ForgotPasswordController::class, 'requestOTP']);
+    Route::post('password-reset/verify-otp', [ForgotPasswordController::class, 'verifyOTP']);
+    Route::post('password-reset/reset', [ForgotPasswordController::class, 'resetPassword']);
+});
 
-Route::post('customer/login', [ApiController::class, 'login']);
-Route::post('customer/logout', [ApiController::class, 'logout'])->middleware('auth:sanctum');
-Route::get('customer/profile', [ApiController::class, 'profile'])->middleware('auth:sanctum');
+// Protected routes (require authentication with Sanctum token)
+Route::middleware('auth:sanctum')->group(function () {
 
-Route::get('customer/branch', [ApiController::class, 'branch_list'])->middleware('auth:sanctum');
+    // Customer routes
+    Route::prefix('customer')->group(function () {
+        Route::post('logout', [LoginController::class, 'logout']);
+        Route::get('profile', function (Request $request) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Profile retrieved successfully',
+                'data' => $request->user()
+            ]);
+        });
+    });
 
-Route::get('ferryboats/branch/{branchId}', [ApiController::class, 'getByBranch'])->middleware('auth:sanctum');
+    // Branch routes
+    Route::get('branches', [BranchController::class, 'index']);
+    Route::get('branches/{id}/ferries', [FerryBoatController::class, 'getFerriesByBranch']);
+    Route::get('branches/{from}/to/{to}/routes', [BranchController::class, 'getRoutes']);
 
-Route::get('item-rates/branch/{branchId}', [ApiController::class, 'getItemByBranch'])->middleware('auth:sanctum');
+    // Item rates (pricing)
+    Route::get('item-rates', [ItemRateController::class, 'getItemRates']);
 
-
-
-Route::post('/razorpay/order', [ApiController::class, 'createMobileOrder'])->middleware('auth:sanctum');
-Route::post('/razorpay/verify', [ApiController::class, 'verifyMobilePayment'])->middleware('auth:sanctum');
-
-Route::get('/bookings/success', [ApiController::class, 'getSuccessfulBookings'])->middleware('auth:sanctum');
-
-Route::get('/bookings/customer/{customer_id}', [ApiController::class, 'getCustomerBookings'])->middleware('auth:sanctum');
-
-Route::get('/branches/{branchId}/to-branches', [ApiController::class, 'getToBranches'])->middleware('auth:sanctum');
-
-Route::middleware('auth:sanctum')->post(
-    '/customer/profile-image',
-    [ApiController::class, 'updateProfileImage']
-);
+    // Bookings
+    Route::get('bookings', [BookingController::class, 'index']);
+    Route::post('bookings', [BookingController::class, 'store']);
+    Route::get('bookings/{id}', [BookingController::class, 'show']);
+    Route::post('bookings/{id}/cancel', [BookingController::class, 'cancel']);
+});
