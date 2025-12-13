@@ -19,10 +19,12 @@ class DatabaseSeeder extends Seeder
 
        $this->call(ItemCategorySeeder::class);
        $this->call([GuestCategorySeeder::class]);
-         $this->call([
-        FerryBoatsTableSeeder::class,
-    ]);
-    $this->call(BranchSeeder::class);
+       $this->call(BranchSeeder::class); // Branches must come before FerryBoats (foreign key)
+       $this->call([
+            FerryBoatsTableSeeder::class,
+        ]);
+       $this->call(ItemRatesSeeder::class); // Add ItemRatesSeeder
+       $this->call(RoutesSeeder::class); // Add RoutesSeeder
 
     
 
