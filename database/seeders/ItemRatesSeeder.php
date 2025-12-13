@@ -37,7 +37,7 @@ class ItemRatesSeeder extends Seeder
                 [
                     'item_name'        => $name,
                     'item_category_id' => $cat,
-                    'branch_id'        => 101,
+                    'branch_id'        => 1, // References branches.id (DABHOL)
                     'starting_date'    => '2024-10-11',
                 ],
                 [
