@@ -15,11 +15,6 @@ use App\Http\Controllers\RazorpayController;
 |--------------------------------------------------------------------------
 | API Routes
 |--------------------------------------------------------------------------
-|
-| Here is where you can register API routes for your application. These
-| routes are loaded by the RouteServiceProvider within a group which
-| is assigned the "api" middleware group. Enjoy building your API!
-|
 */
 
 // Public routes (no authentication required)
@@ -38,12 +33,12 @@ Route::prefix('customer')->group(function () {
     Route::post('password-reset/reset', [ForgotPasswordController::class, 'resetPassword']);
 });
 
-// Protected routes (require authentication with Sanctum token)
+// Protected routes (require authentication with customer token)
 Route::middleware('customer.api')->group(function () {
 
     // Customer routes
     Route::prefix('customer')->group(function () {
-        Route::get('logout', [LoginController::class, 'logout']); // Changed from POST to GET
+        Route::get('logout', [LoginController::class, 'logout']);
         Route::get('profile', function (Request $request) {
             return response()->json([
                 'success' => true,
@@ -51,20 +46,25 @@ Route::middleware('customer.api')->group(function () {
                 'data' => $request->user()
             ]);
         });
+        Route::get('branch', [BranchController::class, 'getBranches']);
     });
 
-    // Branch routes - Updated to match Postman collection
-    Route::get('customer/branch', [BranchController::class, 'getBranches']); // Changed from /branches
-    Route::get('branches/{id}/to-branches', [BookingController::class, 'getToBranches']); // New route
-    Route::get('ferryboats/branch/{id}', [FerryBoatController::class, 'getFerriesByBranch']); // Changed path
-    Route::get('item-rates/branch/{id}', [ItemRateController::class, 'getItemRatesByBranch']); // Changed path
+    // Branch routes
+    Route::get('branches/{id}/to-branches', [BookingController::class, 'getToBranches']);
+    
+    // Ferry routes - Explicitly add middleware
+    Route::get('ferryboats/branch/{id}', [FerryBoatController::class, 'getFerriesByBranch'])
+        ->middleware('customer.api');
+    
+    // Item rates
+    Route::get('item-rates/branch/{id}', [ItemRateController::class, 'getItemRatesByBranch']);
 
     // Razorpay payment routes
     Route::post('razorpay/order', [RazorpayController::class, 'createOrder']);
     Route::post('razorpay/verify', [RazorpayController::class, 'verifyPayment']);
 
     // Bookings
-    Route::get('bookings/success', [BookingController::class, 'getSuccessfulBookings']); // New route
+    Route::get('bookings/success', [BookingController::class, 'getSuccessfulBookings']);
     Route::get('bookings', [BookingController::class, 'index']);
     Route::post('bookings', [BookingController::class, 'store']);
     Route::get('bookings/{id}', [BookingController::class, 'show']);
