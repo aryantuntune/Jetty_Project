@@ -77,7 +77,7 @@ class BranchController extends Controller
     // API Methods for Mobile App
     public function getBranches()
     {
-        $branches = Branch::select('id', 'branch_name')
+        $branches = Branch::select('id', 'branch_name as name')
             ->orderBy('branch_name')
             ->get();
 

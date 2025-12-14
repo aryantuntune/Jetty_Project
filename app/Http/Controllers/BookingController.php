@@ -149,7 +149,7 @@ class BookingController extends Controller
             ->pluck('branch_id');
 
         $branches = Branch::whereIn('id', $toBranchIds)
-            ->select('id', 'branch_name')
+            ->select('id', 'branch_name as name')
             ->get();
 
         return response()->json([
