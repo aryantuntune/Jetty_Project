@@ -45,11 +45,6 @@ return [
             'driver' => 'session',
             'provider' => 'customers',
         ],
-
-        'api' => [
-            'driver' => 'sanctum',
-            'provider' => 'customers',
-        ],
     ],
 
     /*
@@ -72,18 +67,13 @@ return [
     'providers' => [
         'users' => [
             'driver' => 'eloquent',
-            'model' =>  App\Models\User::class,
+            'model' => App\Models\User::class,
         ],
 
-        // 'users' => [
-        //     'driver' => 'database',
-        //     'table' => 'users',
-        // ],
         'customers' => [
             'driver' => 'eloquent',
             'model' => App\Models\Customer::class,
         ],
-
     ],
 
     /*
@@ -108,26 +98,25 @@ return [
     'passwords' => [
         'users' => [
             'provider' => 'users',
-            'table' => 'password_reset_tokens',
+            'table' => env('AUTH_PASSWORD_RESET_TOKEN_TABLE', 'password_reset_tokens'),
             'expire' => 60,
             'throttle' => 60,
         ],
 
         'customers' => [
             'provider' => 'customers',
-            'table' => 'password_reset_tokens',   // IMPORTANT
+            'table' => 'password_reset_tokens',
             'expire' => 60,
             'throttle' => 60,
         ],
     ],
-
 
     /*
     |--------------------------------------------------------------------------
     | Password Confirmation Timeout
     |--------------------------------------------------------------------------
     |
-    | Here you may define the number of seconds before a password confirmation
+    | Here you may define the amount of seconds before a password confirmation
     | window expires and users are asked to re-enter their password via the
     | confirmation screen. By default, the timeout lasts for three hours.
     |
