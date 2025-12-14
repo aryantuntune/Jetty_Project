@@ -210,4 +210,20 @@ public function update(Request $request, ItemRate $itemRate)
     // simplest: reuse edit page or make a read-only view
     return view('item-rates.show', compact('itemRate'));
 }
+
+    // API Method for Mobile App
+    public function getItemRatesByBranch($branchId)
+    {
+        $items = ItemRate::where('branch_id', $branchId)
+            ->effective() // apply date filter
+            ->select('id', 'item_name', 'item_rate', 'item_lavy')
+            ->orderBy('item_name')
+            ->get();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Item rates retrieved successfully',
+            'data' => $items
+        ]);
+    }
 }

@@ -2,11 +2,9 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Booking;
-use App\Models\Branch;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Razorpay\Api\Api;
+use App\Models\Branch;
 
 class BookingController extends Controller
 {
@@ -31,7 +29,11 @@ class BookingController extends Controller
     {
         $routeId = DB::table('routes')->where('branch_id', $branchId)->value('route_id');
         if (!$routeId) {
-            return response()->json([]);
+            return response()->json([
+                'success' => false,
+                'message' => 'No routes found for this branch',
+                'data' => []
+            ]);
         }
 
         $toBranchIds = DB::table('routes')
@@ -39,26 +41,28 @@ class BookingController extends Controller
             ->where('branch_id', '!=', $branchId)
             ->pluck('branch_id');
 
-        // dd($toBranchIds);
         $branches = Branch::whereIn('id', $toBranchIds)
             ->select('id', 'branch_name')
             ->get();
 
-
-        return response()->json($branches);
+        return response()->json([
+            'success' => true,
+            'message' => 'To branches retrieved successfully',
+            'data' => $branches
+        ]);
     }
 
-    // public function submit(Request $request)
-    // {
-    //     $validated = $request->validate([
-    //         'from_branch' => 'required',
-    //         'to_branch' => 'required',
-    //         'items' => 'required|string|max:255',
-    //         'date' => 'required|date',
-    //     ]);
+    public function submit(Request $request)
+    {
+        $validated = $request->validate([
+            'from_branch' => 'required',
+            'to_branch' => 'required',
+            'items' => 'required|string|max:255',
+            'date' => 'required|date',
+        ]);
 
-    //     return redirect()->route('booking.form')->with('success', 'Booking submitted successfully!');
-    // }
+        return redirect()->route('booking.form')->with('success', 'Booking submitted successfully!');
+    }
 
     public function getItems($branchId)
     {
@@ -78,74 +82,32 @@ class BookingController extends Controller
         return response()->json($item);
     }
 
-    // ----------------------------------------------------------------
-    public function createOrder(Request $request)
+    public function getSuccessfulBookings()
     {
+        $customerId = auth()->id();
 
-
-        $api = new Api(env('RAZORPAY_KEY'), env('RAZORPAY_SECRET'));
-
-        $amount = $request->grand_total * 100; // Razorpay uses paise
-
-        // Create Razorpay Order
-        $order = $api->order->create([
-            'receipt' => 'RCPT_' . time(),
-            'amount' => $amount,
-            'currency' => 'INR',
-        ]);
-
-        return response()->json([
-            'order_id'   => $order['id'],
-            'amount'     => $amount,
-            'key'        => env('RAZORPAY_KEY'),
-            'customer'   => auth()->guard('customer')->user(),
-        ]);
-    }
-
-    public function verifyPayment(Request $request)
-    {
-        $signatureStatus = false;
-
-        try {
-            $api = new Api(env('RAZORPAY_KEY'), env('RAZORPAY_SECRET'));
-
-            $attributes = [
-                'razorpay_order_id' => $request->razorpay_order_id,
-                'razorpay_payment_id' => $request->razorpay_payment_id,
-                'razorpay_signature' => $request->razorpay_signature,
-            ];
-
-            $api->utility->verifyPaymentSignature($attributes);
-            $signatureStatus = true;
-        } catch (\Exception $e) {
-            $signatureStatus = false;
-        }
-
-        if ($signatureStatus) {
-
-            // ⭐ BUILD ITEM ARRAY INCLUDING VEHICLE NUMBER ⭐
-            $items = collect(session('items'))->map(function ($item) {
+        $bookings = \App\Models\Booking::where('customer_id', $customerId)
+            ->where('status', 'confirmed')
+            ->with(['fromBranch', 'toBranch', 'ticket'])
+            ->orderBy('created_at', 'desc')
+            ->get()
+            ->map(function ($booking) {
                 return [
-                    'item_name'  => $item['item_name'] ?? '',
-                    'quantity'   => $item['quantity'] ?? '',
-                    'rate'       => $item['rate'] ?? '',
-                    'vehicle_no' => $item['vehicle_no'] ?? null,   
+                    'id' => $booking->id,
+                    'ticket_number' => $booking->ticket->ticket_number ?? null,
+                    'from_branch' => $booking->fromBranch->branch_name ?? null,
+                    'to_branch' => $booking->toBranch->branch_name ?? null,
+                    'booking_date' => $booking->booking_date,
+                    'total_amount' => $booking->total_amount,
+                    'status' => $booking->status,
+                    'created_at' => $booking->created_at
                 ];
             });
 
-            Booking::create([
-                'customer_id'   => auth()->guard('customer')->id(),
-                'from_branch'   => session('from_branch'),
-                'to_branch'     => session('to_branch'),
-                'items'         => json_encode($items),
-                'total_amount'  => session('grand_total'),
-                'payment_id'    => $request->razorpay_payment_id,
-                'status' => 'success'
-            ]);
-
-            return redirect('/booking')->with('success', 'Payment successful & booking confirmed!');
-        }
-
-        return redirect('/booking')->with('error', 'Payment Failed!');
+        return response()->json([
+            'success' => true,
+            'message' => 'Successful bookings retrieved successfully',
+            'data' => $bookings
+        ]);
     }
 }
