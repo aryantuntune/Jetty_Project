@@ -22,13 +22,16 @@ class BookingController extends Controller
             ->map(function ($booking) {
                 return [
                     'id' => $booking->id,
+                    'customer_id' => $booking->customer_id,
+                    'ferry_id' => $booking->ferry_id,
                     'from_branch_id' => $booking->from_branch,
                     'to_branch_id' => $booking->to_branch,
-                    'items' => $booking->items,
-                    'total_amount' => $booking->total_amount,
-                    'payment_id' => $booking->payment_id,
+                    'booking_date' => $booking->booking_date,
+                    'departure_time' => $booking->departure_time,
+                    'total_amount' => floatval($booking->total_amount),
                     'status' => $booking->status,
-                    'created_at' => $booking->created_at,
+                    'qr_code' => $booking->qr_code,
+                    'created_at' => $booking->created_at->toIso8601String(),
                 ];
             });
 
@@ -70,27 +73,58 @@ class BookingController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'from_branch' => 'required|integer',
-            'to_branch' => 'required|integer',
-            'items' => 'required',
-            'total_amount' => 'required|numeric',
-            'payment_id' => 'nullable|string',
+            'ferry_id' => 'required|integer',
+            'from_branch_id' => 'required|integer',
+            'to_branch_id' => 'required|integer',
+            'booking_date' => 'required|date',
+            'departure_time' => 'required',
+            'items' => 'required|array',
         ]);
+
+        // Calculate total amount from items
+        $totalAmount = 0;
+        foreach ($validated['items'] as $item) {
+            $itemRate = \App\Models\ItemRate::find($item['item_rate_id']);
+            if ($itemRate) {
+                $totalAmount += ($itemRate->item_rate + $itemRate->item_lavy) * $item['quantity'];
+            }
+        }
+
+        // Generate QR code
+        $qrCode = 'JETTY-' . strtoupper(uniqid());
 
         $booking = Booking::create([
             'customer_id' => $request->user()->id,
-            'from_branch' => $validated['from_branch'],
-            'to_branch' => $validated['to_branch'],
-            'items' => $validated['items'],
-            'total_amount' => $validated['total_amount'],
-            'payment_id' => $validated['payment_id'] ?? null,
-            'status' => 'pending',
+            'ferry_id' => $validated['ferry_id'],
+            'from_branch' => $validated['from_branch_id'],
+            'to_branch' => $validated['to_branch_id'],
+            'booking_date' => $validated['booking_date'],
+            'departure_time' => $validated['departure_time'],
+            'items' => json_encode($validated['items']),
+            'total_amount' => $totalAmount,
+            'qr_code' => $qrCode,
+            'status' => 'confirmed',
         ]);
+
+        // Reload to get proper formatting
+        $booking->refresh();
 
         return response()->json([
             'success' => true,
             'message' => 'Booking created successfully',
-            'data' => $booking
+            'data' => [
+                'id' => $booking->id,
+                'customer_id' => $booking->customer_id,
+                'ferry_id' => $booking->ferry_id,
+                'from_branch_id' => $booking->from_branch,
+                'to_branch_id' => $booking->to_branch,
+                'booking_date' => $booking->booking_date,
+                'departure_time' => $booking->departure_time,
+                'total_amount' => floatval($booking->total_amount),
+                'status' => $booking->status,
+                'qr_code' => $booking->qr_code,
+                'created_at' => $booking->created_at->toIso8601String(),
+            ]
         ], 201);
     }
 
