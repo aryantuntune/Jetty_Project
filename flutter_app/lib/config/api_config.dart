@@ -15,12 +15,15 @@ class ApiConfig {
   static const String forgotPasswordVerifyOtp = '/customer/password-reset/verify-otp';
   static const String resetPassword = '/customer/password-reset/reset';
 
+  // Branch and ferry endpoints - UPDATED
   static const String branches = '/customer/branch';
-  static String getFerries(int branchId) => '/ferryboats/branch/$branchId';
-  static String getRoutes(int fromBranchId, int toBranchId) => '/branches/$fromBranchId/to/$toBranchId/routes';
+  static String getFerries(int branchId) => '/customer/ferries/branch/$branchId';  // FIXED
+  static String getToBranches(int branchId) => '/branches/$branchId/to-branches';  // FIXED
+  
+  // Item rates endpoint - UPDATED
+  static String getItemRates(int branchId) => '/customer/rates/branch/$branchId';  // FIXED
 
-  static String getItemRates(int branchId) => '/item-rates/branch/$branchId';
-
+  // Booking endpoints
   static const String bookings = '/bookings';
   static String getBooking(int bookingId) => '/bookings/$bookingId';
   static String cancelBooking(int bookingId) => '/bookings/$bookingId/cancel';
