@@ -32,21 +32,24 @@ class ItemRatesSeeder extends Seeder
             ['PASSENGER BUS',                        1, 360.00, 40.00],
         ];
 
-        foreach ($rows as [$name, $cat, $rate, $levy]) {
-            ItemRate::updateOrCreate(
-                [
-                    'item_name'        => $name,
-                    'item_category_id' => $cat,
-                    'branch_id'        => 1,  // Changed from 101 to 1 (auto-increment id)
-                    'starting_date'    => '2024-10-11',
-                ],
-                [
-                    'item_rate'  => $rate,
-                    'item_lavy'  => $levy,
-                    'ending_date'=> null,
-                    'user_id'    => 1,
-                ]
-            );
+        // Apply rates to all branches (1-12)
+        for ($branchId = 1; $branchId <= 12; $branchId++) {
+            foreach ($rows as [$name, $cat, $rate, $levy]) {
+                ItemRate::updateOrCreate(
+                    [
+                        'item_name'        => $name,
+                        'item_category_id' => $cat,
+                        'branch_id'        => $branchId,
+                        'starting_date'    => '2024-10-11',
+                    ],
+                    [
+                        'item_rate'  => $rate,
+                        'item_lavy'  => $levy,
+                        'ending_date'=> null,
+                        'user_id'    => 1,
+                    ]
+                );
+            }
         }
     }
 }

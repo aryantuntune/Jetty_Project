@@ -11,7 +11,7 @@ class ApiService {
     T? Function(dynamic)? fromJson,
   }) async {
     try {
-      final url = Uri.parse('\${ApiConfig.baseUrl}\$endpoint');
+      final url = Uri.parse('${ApiConfig.baseUrl}$endpoint');
       final headers = await _getHeaders(requiresAuth);
 
       final response = await http.get(url, headers: headers);
@@ -19,7 +19,7 @@ class ApiService {
     } catch (e) {
       return ApiResponse<T>(
         success: false,
-        message: 'Network error: \${e.toString()}',
+        message: 'Network error: ${e.toString()}',
       );
     }
   }
@@ -31,36 +31,36 @@ class ApiService {
     T? Function(dynamic)? fromJson,
   }) async {
     try {
-      final url = Uri.parse('\${ApiConfig.baseUrl}\$endpoint');
+      final url = Uri.parse('${ApiConfig.baseUrl}$endpoint');
       final baseHeaders = await _getHeaders(requiresAuth);
 
       print('🌐 API POST Request:');
-      print('   URL: \$url');
-      print('   Body: \$body');
-      print('   RequiresAuth: \$requiresAuth');
+      print('   URL: $url');
+      print('   Body: $body');
+      print('   RequiresAuth: $requiresAuth');
 
-      // Send as form-urlencoded to match backend expectation
+      // Send as JSON to properly handle arrays and nested objects
       final response = await http.post(
         url,
         headers: {
           'Accept': 'application/json',
-          'Content-Type': 'application/x-www-form-urlencoded',
+          'Content-Type': 'application/json',
           if (requiresAuth && baseHeaders.containsKey('Authorization'))
             'Authorization': baseHeaders['Authorization']!,
         },
-        body: body?.map((key, value) => MapEntry(key, value.toString())),
+        body: body != null ? jsonEncode(body) : null,
       );
 
       print('📥 API Response:');
-      print('   Status: \${response.statusCode}');
-      print('   Body: \${response.body}');
+      print('   Status: ${response.statusCode}');
+      print('   Body: ${response.body}');
 
       return _handleResponse<T>(response, fromJson);
     } catch (e) {
-      print('❌ API Error: \$e');
+      print('❌ API Error: $e');
       return ApiResponse<T>(
         success: false,
-        message: 'Network error: \${e.toString()}',
+        message: 'Network error: ${e.toString()}',
       );
     }
   }
@@ -72,36 +72,35 @@ class ApiService {
     T? Function(dynamic)? fromJson,
   }) async {
     try {
-      final url = Uri.parse('\${ApiConfig.baseUrl}\$endpoint');
+      final url = Uri.parse('${ApiConfig.baseUrl}$endpoint');
       final baseHeaders = await _getHeaders(requiresAuth);
 
       print('🌐 API PUT Request:');
-      print('   URL: \$url');
-      print('   Body: \$body');
-      print('   RequiresAuth: \$requiresAuth');
+      print('   URL: $url');
+      print('   Body: $body');
+      print('   RequiresAuth: $requiresAuth');
 
-      // Send as form-urlencoded to match backend expectation
       final response = await http.put(
         url,
         headers: {
           'Accept': 'application/json',
-          'Content-Type': 'application/x-www-form-urlencoded',
+          'Content-Type': 'application/json',
           if (requiresAuth && baseHeaders.containsKey('Authorization'))
             'Authorization': baseHeaders['Authorization']!,
         },
-        body: body?.map((key, value) => MapEntry(key, value.toString())),
+        body: body != null ? jsonEncode(body) : null,
       );
 
       print('📥 API Response:');
-      print('   Status: \${response.statusCode}');
-      print('   Body: \${response.body}');
+      print('   Status: ${response.statusCode}');
+      print('   Body: ${response.body}');
 
       return _handleResponse<T>(response, fromJson);
     } catch (e) {
-      print('❌ API Error: \$e');
+      print('❌ API Error: $e');
       return ApiResponse<T>(
         success: false,
-        message: 'Network error: \${e.toString()}',
+        message: 'Network error: ${e.toString()}',
       );
     }
   }
@@ -115,7 +114,7 @@ class ApiService {
     if (requiresAuth) {
       final token = StorageService.getToken();
       if (token != null) {
-        headers['Authorization'] = 'Bearer \$token';
+        headers['Authorization'] = 'Bearer $token';
       }
     }
 
@@ -141,7 +140,7 @@ class ApiService {
     } catch (e) {
       return ApiResponse<T>(
         success: false,
-        message: 'Failed to parse response: \${e.toString()}',
+        message: 'Failed to parse response: ${e.toString()}',
       );
     }
   }
