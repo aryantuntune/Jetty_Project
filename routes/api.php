@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\CustomerAuth\LoginController;
 use App\Http\Controllers\CustomerAuth\RegisterController;
 use App\Http\Controllers\CustomerAuth\ForgotPasswordController;
+use App\Http\Controllers\CustomerAuth\CustomerProfileController;
 use App\Http\Controllers\BranchController;
 use App\Http\Controllers\FerryBoatController;
 use App\Http\Controllers\ItemRateController;
@@ -46,9 +47,12 @@ Route::middleware('customer.api')->group(function () {
                 'data' => $request->user()
             ]);
         });
+        Route::put('profile', [CustomerProfileController::class, 'updateProfile']);
+        Route::post('profile/upload-picture', [CustomerProfileController::class, 'uploadProfilePicture']);
+        
         Route::get('branch', [BranchController::class, 'getBranches']);
         
-        // CHANGED: Move ferries inside customer prefix to avoid conflicts
+        // Ferry and rates routes
         Route::get('ferries/branch/{id}', [FerryBoatController::class, 'getFerriesByBranch']);
         Route::get('rates/branch/{id}', [ItemRateController::class, 'getItemRatesByBranch']);
     });

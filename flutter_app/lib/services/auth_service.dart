@@ -218,6 +218,9 @@ class AuthService {
     );
   }
 
+  static Future<ApiResponse<Customer>> updateProfile({    required String firstName,    required String lastName,    required String mobile,  }) async {    if (AppConfig.useMockData) {      await Future.delayed(const Duration(milliseconds: 500));      return ApiResponse<Customer>(        success: true,        message: 'Profile updated successfully (Mock)',        data: MockDataService.getMockCustomer(),      );    }
+    final response = await ApiService.put<Customer>(      ApiConfig.updateProfile,      body: {        'first_name': firstName,        'last_name': lastName,        'mobile': mobile,      },      fromJson: (data) => Customer.fromJson(data),    );
+    return response;  }
   static bool isLoggedIn() {
     return StorageService.isLoggedIn();
   }
