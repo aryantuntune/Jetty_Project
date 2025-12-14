@@ -106,7 +106,15 @@ class FerryBoatController extends Controller
         $ferries = FerryBoat::where('branch_id', $branchId)
             ->select('id', 'number', 'name')
             ->orderBy('name')
-            ->get();
+            ->get()
+            ->map(function($ferry) {
+                return [
+                    'id' => $ferry->id,
+                    'name' => $ferry->name,
+                    'capacity' => 100, // Default capacity since column doesn't exist
+                    'description' => $ferry->number,
+                ];
+            });
 
         return response()->json([
             'success' => true,

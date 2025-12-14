@@ -218,7 +218,15 @@ public function update(Request $request, ItemRate $itemRate)
             ->effective() // apply date filter
             ->select('id', 'item_name', 'item_rate', 'item_lavy')
             ->orderBy('item_name')
-            ->get();
+            ->get()
+            ->map(function($item) {
+                return [
+                    'id' => $item->id,
+                    'item_name' => $item->item_name,
+                    'price' => floatval($item->item_rate) + floatval($item->item_lavy), // Combine rate + lavy
+                    'description' => 'Rate: ₹' . $item->item_rate . ' + Lavy: ₹' . $item->item_lavy,
+                ];
+            });
 
         return response()->json([
             'success' => true,
