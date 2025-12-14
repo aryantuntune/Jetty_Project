@@ -12,7 +12,7 @@ class FerryBoatController extends Controller
     public function __construct()
     {
         // Protect all actions except index and show
-        $this->middleware(['auth', 'role:1,2'])->except(['index', 'show']);
+        $this->middleware(['auth', 'role:1,2'])->except(['index', 'show', 'getFerriesByBranch']);
     }
     public function index(Request $request)
     {
