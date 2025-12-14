@@ -9,8 +9,8 @@ class BranchController extends Controller
 {
      public function __construct()
     {
-        // Protect all actions except index and show
-        $this->middleware(['auth', 'role:1,2'])->except(['index', 'show']);
+        // Protect all actions except index, show, and getBranches (API method)
+        $this->middleware(['auth', 'role:1,2'])->except(['index', 'show', 'getBranches']);
     }
     
     public function index(Request $request)
