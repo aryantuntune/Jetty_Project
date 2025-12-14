@@ -39,7 +39,7 @@ Route::prefix('customer')->group(function () {
 });
 
 // Protected routes (require authentication with Sanctum token)
-Route::middleware('auth:sanctum')->group(function () {
+Route::middleware('customer.api')->group(function () {
 
     // Customer routes
     Route::prefix('customer')->group(function () {
