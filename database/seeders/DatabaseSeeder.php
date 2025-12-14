@@ -20,7 +20,8 @@ class DatabaseSeeder extends Seeder
         // Order matters! Seed in dependency order
         $this->call(ItemCategorySeeder::class);      
         $this->call(GuestCategorySeeder::class);     
-        $this->call(BranchSeeder::class);            
+        $this->call(BranchSeeder::class);
+        $this->call(RoutesSeeder::class);            
         $this->call(FerryBoatsTableSeeder::class);   
         $this->call(ItemRatesSeeder::class);         
         $this->call(FerryScheduleSeeder::class);     
