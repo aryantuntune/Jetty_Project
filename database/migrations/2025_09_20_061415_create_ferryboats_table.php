@@ -15,7 +15,9 @@ return new class extends Migration
             $table->id();
             $table->string('number')->unique();
             $table->string('name');
-            $table->integer('user_id'); 
+            $table->integer('user_id');
+            $table->unsignedBigInteger('branch_id');
+            $table->foreign('branch_id')->references('id')->on('branches')->onDelete('cascade');
             $table->timestamps();
         });
     }

@@ -17,14 +17,14 @@ class DatabaseSeeder extends Seeder
     {
         // User::factory(10)->create();
 
-       $this->call(ItemCategorySeeder::class);
-       $this->call([GuestCategorySeeder::class]);
-         $this->call([
-        FerryBoatsTableSeeder::class,
-    ]);
-    $this->call(BranchSeeder::class);
-
-    
-
+        // IMPORTANT: Order matters! Seed in dependency order
+        $this->call(UserSeeder::class);              // Must be first (users.id needed by branches)
+        $this->call(CustomerSeeder::class);          // Demo customers for login testing
+        $this->call(ItemCategorySeeder::class);      // Categories before items
+        $this->call(GuestCategorySeeder::class);     // Guest categories
+        $this->call(BranchSeeder::class);            // Branches before ferries
+        $this->call(FerryBoatsTableSeeder::class);   // Ferries depend on branches
+        $this->call(ItemRatesSeeder::class);         // Item rates depend on branches
+        $this->call(FerryScheduleSeeder::class);     // Schedules last
     }
 }

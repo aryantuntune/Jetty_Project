@@ -37,14 +37,14 @@ class ItemRatesSeeder extends Seeder
                 [
                     'item_name'        => $name,
                     'item_category_id' => $cat,
-                    'branch_id'        => 101,
+                    'branch_id'        => 1,  // Changed from 101 to 1 (auto-increment id)
                     'starting_date'    => '2024-10-11',
                 ],
                 [
                     'item_rate'  => $rate,
                     'item_lavy'  => $levy,
                     'ending_date'=> null,
-                    'user_id'    => 1, // set to an existing user id or null
+                    'user_id'    => 1,
                 ]
             );
         }
