@@ -11,11 +11,14 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('customers', function (Blueprint $table) {
-            $table->string('profile_image')
-                ->nullable()
-                ->after('mobile');
-        });
+        // Only add column if customers table exists and doesn't have profile_image
+        if (Schema::hasTable('customers') && !Schema::hasColumn('customers', 'profile_image')) {
+            Schema::table('customers', function (Blueprint $table) {
+                $table->string('profile_image')
+                    ->nullable()
+                    ->after('mobile');
+            });
+        }
     }
 
     /**
@@ -23,8 +26,10 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('customers', function (Blueprint $table) {
-            $table->dropColumn('profile_image');
-        });
+        if (Schema::hasColumn('customers', 'profile_image')) {
+            Schema::table('customers', function (Blueprint $table) {
+                $table->dropColumn('profile_image');
+            });
+        }
     }
 };
