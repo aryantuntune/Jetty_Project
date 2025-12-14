@@ -47,17 +47,14 @@ Route::middleware('customer.api')->group(function () {
             ]);
         });
         Route::get('branch', [BranchController::class, 'getBranches']);
+        
+        // CHANGED: Move ferries inside customer prefix to avoid conflicts
+        Route::get('ferries/branch/{id}', [FerryBoatController::class, 'getFerriesByBranch']);
+        Route::get('rates/branch/{id}', [ItemRateController::class, 'getItemRatesByBranch']);
     });
 
     // Branch routes
     Route::get('branches/{id}/to-branches', [BookingController::class, 'getToBranches']);
-    
-    // Ferry routes - Explicitly add middleware
-    Route::get('ferryboats/branch/{id}', [FerryBoatController::class, 'getFerriesByBranch'])
-        ->middleware('customer.api');
-    
-    // Item rates
-    Route::get('item-rates/branch/{id}', [ItemRateController::class, 'getItemRatesByBranch']);
 
     // Razorpay payment routes
     Route::post('razorpay/order', [RazorpayController::class, 'createOrder']);
