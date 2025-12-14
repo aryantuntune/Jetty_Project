@@ -45,7 +45,7 @@ class RoutesSeeder extends Seeder
         // Combine all routes
         $allRoutes = array_merge($route1, $route2, $route3, $route4);
 
-        // Insert all routes
+        // Insert all routes (without timestamps since the table doesn't have them)
         foreach ($allRoutes as $route) {
             DB::table('routes')->updateOrInsert(
                 [
@@ -53,9 +53,7 @@ class RoutesSeeder extends Seeder
                     'branch_id' => $route['branch_id']
                 ],
                 [
-                    'sequence' => $route['sequence'],
-                    'created_at' => now(),
-                    'updated_at' => now()
+                    'sequence' => $route['sequence']
                 ]
             );
         }
