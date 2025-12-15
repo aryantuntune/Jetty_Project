@@ -1,163 +1,160 @@
-# Deployment Guide for Jetty Project
+# Complete Deployment Guide - Ferry Booking System
 
-## What Was Fixed
+## Summary of All Fixes Applied
 
-This version includes critical database fixes from the original fork:
+### 1. Reports Page 500 Error ✅
+**Issue:** Reports page was calling `sum()` on paginated results, only summing current page
+**Fix:** Clone query before pagination to calculate total across all records
+**Commit:** b119572
 
-1. **Migration Order**: Ferryboats migration now runs AFTER branches (fixes FK errors)
-2. **Missing Seeders**: Added UserSeeder and CustomerSeeder for demo data
-3. **Seeder Fields**: Fixed missing user_id and branch_id in all seeders
-4. **Foreign Keys**: Fixed ItemRatesSeeder to use correct branch_id reference
-5. **API Ready**: Customer model has HasApiTokens, bootstrap configured for API routes
+### 2. Customer Booking Page Black Screen ✅
+**Issue:** Dashboard route called `show($id)` method without ID, returned JSON error
+**Fix:** Added `showDashboard()` method to load booking form with branches data
+**Added Methods:** getItems(), getItemRate(), createOrder(), verifyPayment()
+**Commit:** b453341
 
-## Deployment Steps
+### 3. Mobile App Payment Verification Failure ✅
+**Issue:** RazorpayController used wrong field names and tried to create Ticket/TicketLine
+**Fix:**
+- Changed `from_branch_id` → `from_branch`, `to_branch_id` → `to_branch`
+- Removed non-existent `payment_status` field
+- Removed Ticket/TicketLine creation (wrong system)
+- Added ferry_id, booking_date, departure_time, qr_code
+**Commit:** 9c947fd
 
-### Step 1: Upload Files to Server
-Upload all files from this directory to your server at `unfurling.ninja`
+### 4. Grey Screen Issues - Item Rates ✅
+**Issue:** Missing PASSENGER SENIOR CITIZEN type caused app crash
+**Fix:** Added all 3 passenger types to ItemRatesSeeder for all 12 branches
+**Commit:** 79ba111
 
-### Step 2: Configure Environment
+### 5. Grey Screen Issues - Ferry Distribution ✅
+**Issue:** All ferries assigned to branch 1, other branches showed grey screen
+**Fix:** Redistributed 10 ferries across 10 branches in FerryBoatsTableSeeder
+**Commit:** 9d920e0
+
+---
+
+## Deployment Instructions
+
+### Server Deployment (unfurling.ninja)
+
+Run these commands in order:
+
 ```bash
-# Copy environment file
-cp .env.example .env
+# 1. Navigate to project directory
+cd /var/www/unfurling.ninja
 
-# Edit .env with your database credentials
-nano .env
+# 2. Pull latest changes from GitHub
+git pull origin master
+
+# 3. Run database migrations (adds ferry_id, booking_date, departure_time, qr_code)
+php artisan migrate
+
+# 4. Seed ferry boats (redistributes across branches)
+php artisan db:seed --class=FerryBoatsTableSeeder
+
+# 5. Seed item rates (adds all passenger types + vehicles for all branches)
+php artisan db:seed --class=ItemRatesSeeder
+
+# 6. Clear all caches
+php artisan config:clear
+php artisan cache:clear
+php artisan route:clear
+php artisan view:clear
+
+# 7. Restart PHP-FPM
+sudo systemctl restart php8.3-fpm
+
+# 8. Restart Nginx (if needed)
+sudo systemctl restart nginx
 ```
 
-Set these values in `.env`:
-```
-DB_CONNECTION=mysql
-DB_HOST=127.0.0.1
-DB_PORT=3306
-DB_DATABASE=your_database_name
-DB_USERNAME=your_username
-DB_PASSWORD=your_password
-```
+### Verify Deployment
 
-### Step 3: Install Dependencies
 ```bash
-composer install --no-dev --optimize-autoloader
+# Check if seeders created records
+php artisan tinker
+>>> \App\Models\FerryBoat::count();  // Should show 10
+>>> \App\Models\ItemRate::where('item_name', 'LIKE', '%PASSENGER%')->count();  // Should show 36 (3 types × 12 branches)
+>>> exit
+
+# Check logs for errors
+tail -f storage/logs/laravel.log
 ```
 
-### Step 4: Generate Application Key
-```bash
-php artisan key:generate
+---
+
+## Mobile App Testing - Complete Booking Flow
+
+**Prerequisites:**
+- APK version: 04:28 build (49.6 MB) ✅
+- Server: RAZORPAY_KEY and RAZORPAY_SECRET configured ✅
+
+### Test Steps:
+
+1. **Login** → Should redirect to route selection (not black screen)
+2. **Select Route** → All routes should load destinations (not grey screen)
+3. **Select Ferry** → Ferry schedule should appear (not grey screen)
+4. **Add Passengers** → Adult (₹20), Child (₹9), Senior (₹17) all visible
+5. **Add Vehicles** → All 17 vehicle types with correct prices
+6. **Confirm Booking** → Razorpay payment screen opens
+7. **Complete Payment** → Booking created with QR code
+8. **View History** → Booking appears in list
+
+---
+
+## Web Application Testing
+
+### Admin Reports (FIXED)
+- `/reports/tickets` → No 500 error, totals calculate correctly
+- `/reports/vehicle-tickets` → Filters work correctly
+
+### Customer Booking (FIXED)
+- `/customer/dashboard` → Form loads (not black screen)
+- Booking creation → Works with Razorpay integration
+
+---
+
+## Database Verification
+
+### Check bookings table has all columns:
+```sql
+DESCRIBE bookings;
 ```
 
-### Step 5: Run Migrations and Seeders
-```bash
-# Fresh migration (WARNING: This will drop all existing tables!)
-php artisan migrate:fresh --seed
+Required columns: id, customer_id, ferry_id, from_branch, to_branch, booking_date, departure_time, items, total_amount, payment_id, qr_code, status, created_at, updated_at
+
+### Verify item rates distribution:
+```sql
+SELECT branch_id, COUNT(*) as count FROM item_rates GROUP BY branch_id;
 ```
 
-### Step 6: Clear Caches
-```bash
-php artisan config:cache
-php artisan route:cache
-php artisan view:cache
-php artisan optimize
+Each branch should have 20 items (3 passengers + 17 vehicles)
+
+### Verify ferry distribution:
+```sql
+SELECT branch_id, COUNT(*) as count FROM ferry_boats GROUP BY branch_id;
 ```
 
-### Step 7: Set Permissions
-```bash
-chmod -R 775 storage bootstrap/cache
-chown -R www-data:www-data storage bootstrap/cache
-```
+Branches 1-10 should each have 1 ferry
 
-## Demo Credentials
+---
 
-After seeding, you can use these credentials:
+## All Fixed Issues Summary
 
-### Admin (Web App):
-- Email: `admin@jetty.com`
-- Password: `password`
+| Issue | Status | Commit |
+|-------|--------|--------|
+| Reports 500 error | ✅ Fixed | b119572 |
+| Customer booking black screen | ✅ Fixed | b453341 |
+| Payment verification field mismatch | ✅ Fixed | 9c947fd |
+| Missing Senior Citizen passenger type | ✅ Fixed | 79ba111 |
+| Ferry distribution (all on branch 1) | ✅ Fixed | 9d920e0 |
+| Passenger prices showing ₹0 | ✅ Fixed | 79ba111 |
+| Vehicle prices not loading | ✅ Fixed | 79ba111 |
+| Grey screens on all routes | ✅ Fixed | 79ba111 |
 
-### Customers (Mobile App):
-- Email: `john.doe@example.com` | Password: `password`
-- Email: `jane.smith@example.com` | Password: `password`
-- Email: `test@example.com` | Password: `password`
+---
 
-## API Endpoints
-
-### Public (No Authentication):
-- POST `/api/customer/login` - Customer login
-- POST `/api/customer/generate-otp` - Register step 1
-- POST `/api/customer/verify-otp` - Register step 2
-- POST `/api/customer/password-reset/request-otp` - Password reset step 1
-- POST `/api/customer/password-reset/verify-otp` - Password reset step 2
-- POST `/api/customer/password-reset/reset` - Password reset step 3
-
-### Protected (Requires Sanctum Token):
-- POST `/api/customer/logout`
-- GET `/api/customer/profile`
-- GET `/api/branches`
-- GET `/api/branches/{id}/ferries`
-- GET `/api/item-rates`
-- GET/POST `/api/bookings`
-
-## Testing the API
-
-### 1. Login Test:
-```bash
-curl -X POST https://unfurling.ninja/api/customer/login \
-  -H "Content-Type: application/json" \
-  -d '{"email":"test@example.com","password":"password"}'
-```
-
-Expected response:
-```json
-{
-  "success": true,
-  "message": "Login successful",
-  "data": {
-    "token": "...",
-    "customer": {...}
-  }
-}
-```
-
-### 2. Get Branches (requires token):
-```bash
-curl -X GET https://unfurling.ninja/api/branches \
-  -H "Authorization: Bearer YOUR_TOKEN_HERE"
-```
-
-## Troubleshooting
-
-### If migrations fail:
-```bash
-# Check database connection
-php artisan migrate:status
-
-# Reset and try again
-php artisan migrate:fresh --seed
-```
-
-### If API returns 404:
-- Check that `bootstrap/app.php` includes the `api:` line
-- Run `php artisan route:clear` and `php artisan route:cache`
-
-### If login returns 500:
-- Check storage logs: `tail -f storage/logs/laravel.log`
-- Verify Customer model has `use Laravel\Sanctum\HasApiTokens`
-
-### If "Field doesn't have default value":
-- The seeders have been fixed to include all required fields
-- Run `php artisan migrate:fresh --seed` to start clean
-
-## Important Notes
-
-- ✅ Database structure is now correct and complete
-- ✅ All seeders include required fields (user_id, branch_id, etc.)
-- ✅ Migration order is fixed (branches before ferryboats)
-- ✅ API authentication is configured and working
-- ✅ Customer model has token support
-- ⚠️ Remember to backup your database before running `migrate:fresh`!
-
-## Next Steps
-
-After successful deployment:
-1. Test login with demo customer credentials
-2. Test fetching branches and ferries from mobile app
-3. Create real customer accounts via registration flow
-4. Configure profile image uploads if needed
+**Deploy Status:** ✅ Ready for Production
+**Last Updated:** December 15, 2025
+**Latest Commit:** 9c947fd
