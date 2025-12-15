@@ -43,6 +43,15 @@ class BookingController extends Controller
     }
 
     /**
+     * Show customer dashboard with booking form (WEB)
+     */
+    public function showDashboard()
+    {
+        $branches = Branch::orderBy('branch_name')->get();
+        return view('customer.dashboard', compact('branches'));
+    }
+
+    /**
      * Show booking details by ID (API)
      */
     public function show(Request $request, $id)
@@ -220,5 +229,125 @@ class BookingController extends Controller
             'message' => 'Successful bookings retrieved successfully',
             'data' => $bookings
         ]);
+    }
+
+    /**
+     * Get items (rates) for a branch (WEB)
+     */
+    public function getItems($branchId)
+    {
+        $items = \App\Models\ItemRate::where('branch_id', $branchId)
+            ->where(function($q) {
+                $q->whereNull('ending_date')
+                  ->orWhere('ending_date', '>=', now());
+            })
+            ->select('id', 'item_name', 'item_rate', 'item_lavy')
+            ->get();
+
+        return response()->json($items);
+    }
+
+    /**
+     * Get single item rate details (WEB)
+     */
+    public function getItemRate($itemRateId)
+    {
+        $item = \App\Models\ItemRate::find($itemRateId);
+
+        if (!$item) {
+            return response()->json(['error' => 'Item not found'], 404);
+        }
+
+        return response()->json([
+            'item_rate' => $item->item_rate,
+            'item_lavy' => $item->item_lavy
+        ]);
+    }
+
+    /**
+     * Submit booking form (WEB) - currently unused, handled by Razorpay
+     */
+    public function submit(Request $request)
+    {
+        return redirect()->route('booking.form')
+            ->with('success', 'Booking submitted successfully');
+    }
+
+    /**
+     * Create Razorpay order (WEB)
+     */
+    public function createOrder(Request $request)
+    {
+        $validated = $request->validate([
+            'grand_total' => 'required|numeric',
+            'from_branch' => 'required|integer',
+            'to_branch' => 'required|integer',
+            'items' => 'required|array'
+        ]);
+
+        // Store in session for later use after payment
+        session([
+            'booking_data' => [
+                'from_branch' => $validated['from_branch'],
+                'to_branch' => $validated['to_branch'],
+                'items' => $validated['items'],
+                'grand_total' => $validated['grand_total']
+            ]
+        ]);
+
+        // Create Razorpay order
+        $api = new \Razorpay\Api\Api(config('services.razorpay.key'), config('services.razorpay.secret'));
+
+        $orderData = [
+            'receipt'         => 'FERRY-' . time(),
+            'amount'          => $validated['grand_total'] * 100, // Convert to paise
+            'currency'        => 'INR',
+            'payment_capture' => 1
+        ];
+
+        $razorpayOrder = $api->order->create($orderData);
+
+        return response()->json([
+            'order_id' => $razorpayOrder['id'],
+            'amount' => $razorpayOrder['amount'],
+            'key' => config('services.razorpay.key')
+        ]);
+    }
+
+    /**
+     * Verify Razorpay payment (WEB)
+     */
+    public function verifyPayment(Request $request)
+    {
+        // Razorpay signature verification
+        $api = new \Razorpay\Api\Api(config('services.razorpay.key'), config('services.razorpay.secret'));
+
+        try {
+            $attributes = [
+                'razorpay_order_id' => $request->razorpay_order_id,
+                'razorpay_payment_id' => $request->razorpay_payment_id,
+                'razorpay_signature' => $request->razorpay_signature
+            ];
+
+            $api->utility->verifyPaymentSignature($attributes);
+
+            // Payment verified - create booking
+            $bookingData = session('booking_data');
+
+            // TODO: Create booking record here
+
+            session()->forget('booking_data');
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Payment verified successfully'
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Payment verification failed: ' . $e->getMessage()
+            ], 400);
+        }
     }
 }
