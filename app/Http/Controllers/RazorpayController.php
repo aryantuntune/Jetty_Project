@@ -70,14 +70,14 @@ class RazorpayController extends Controller
             'razorpay_order_id' => 'required|string',
             'razorpay_payment_id' => 'required|string',
             'razorpay_signature' => 'required|string',
-            'customer_id' => 'required|integer',
-            'from_branch' => 'required|integer',
-            'to_branch' => 'required|integer',
+            'ferry_id' => 'required|integer',
+            'from_branch_id' => 'required|integer',
+            'to_branch_id' => 'required|integer',
+            'booking_date' => 'required|date',
+            'departure_time' => 'required',
             'items' => 'required|array',
-            'items.*.item_id' => 'required|integer',
-            'items.*.qty' => 'required|integer|min:1',
-            'items.*.rate' => 'required|numeric|min:0',
-            'grand_total' => 'required|numeric|min:0'
+            'items.*.item_rate_id' => 'required|integer',
+            'items.*.quantity' => 'required|integer|min:1'
         ]);
 
         if ($validator->fails()) {
@@ -101,37 +101,32 @@ class RazorpayController extends Controller
             // Payment verified, create booking
             DB::beginTransaction();
 
+            // Calculate total amount from items
+            $totalAmount = 0;
+            foreach ($request->items as $item) {
+                $itemRate = \App\Models\ItemRate::find($item['item_rate_id']);
+                if ($itemRate) {
+                    $totalAmount += ($itemRate->item_rate + $itemRate->item_lavy) * $item['quantity'];
+                }
+            }
+
+            // Generate QR code
+            $qrCode = 'JETTY-' . strtoupper(uniqid());
+
             // Create booking record
             $booking = Booking::create([
-                'customer_id' => $request->customer_id,
-                'from_branch_id' => $request->from_branch,
-                'to_branch_id' => $request->to_branch,
-                'booking_date' => now(),
-                'total_amount' => $request->grand_total,
-                'payment_status' => 'paid',
+                'customer_id' => $request->user()->id,
+                'ferry_id' => $request->ferry_id,
+                'from_branch' => $request->from_branch_id,
+                'to_branch' => $request->to_branch_id,
+                'booking_date' => $request->booking_date,
+                'departure_time' => $request->departure_time,
+                'items' => json_encode($request->items),
+                'total_amount' => $totalAmount,
                 'payment_id' => $request->razorpay_payment_id,
+                'qr_code' => $qrCode,
                 'status' => 'confirmed'
             ]);
-
-            // Create ticket
-            $ticket = Ticket::create([
-                'booking_id' => $booking->id,
-                'customer_id' => $request->customer_id,
-                'ticket_number' => 'TKT-' . time() . '-' . $booking->id,
-                'total_amount' => $request->grand_total,
-                'status' => 'active'
-            ]);
-
-            // Create ticket lines
-            foreach ($request->items as $item) {
-                TicketLine::create([
-                    'ticket_id' => $ticket->id,
-                    'item_rate_id' => $item['item_rate_id'],
-                    'quantity' => $item['qty'],
-                    'rate' => $item['rate'],
-                    'total' => $item['qty'] * $item['rate']
-                ]);
-            }
 
             DB::commit();
 
@@ -139,13 +134,22 @@ class RazorpayController extends Controller
                 'success' => true,
                 'message' => 'Payment verified and booking created successfully',
                 'data' => [
-                    'booking_id' => $booking->id,
-                    'ticket_id' => $ticket->id,
-                    'ticket_number' => $ticket->ticket_number
+                    'id' => $booking->id,
+                    'customer_id' => $booking->customer_id,
+                    'ferry_id' => $booking->ferry_id,
+                    'from_branch_id' => $booking->from_branch,
+                    'to_branch_id' => $booking->to_branch,
+                    'booking_date' => $booking->booking_date,
+                    'departure_time' => $booking->departure_time,
+                    'total_amount' => floatval($booking->total_amount),
+                    'status' => $booking->status,
+                    'qr_code' => $booking->qr_code,
+                    'created_at' => $booking->created_at->toIso8601String(),
                 ]
             ]);
 
         } catch (\Razorpay\Api\Errors\SignatureVerificationError $e) {
+            DB::rollBack();
             return response()->json([
                 'success' => false,
                 'message' => 'Payment signature verification failed'
