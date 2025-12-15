@@ -34,7 +34,10 @@ class ItemRatesSeeder extends Seeder
 
         // Apply rates to all branches (1-12)
         for ($branchId = 1; $branchId <= 12; $branchId++) {
-            foreach ($rows as [$name, $cat, $rate, $levy]) {
+            foreach ($rows as $index => [$name, $cat, $rate, $levy]) {
+                // Use index + 1 as item_id to ensure uniqueness per branch
+                $itemId = ($branchId * 100) + $index + 1;
+
                 ItemRate::updateOrCreate(
                     [
                         'item_name'        => $name,
@@ -43,6 +46,7 @@ class ItemRatesSeeder extends Seeder
                         'starting_date'    => '2024-10-11',
                     ],
                     [
+                        'item_id'    => $itemId,
                         'item_rate'  => $rate,
                         'item_lavy'  => $levy,
                         'ending_date'=> null,
