@@ -43,7 +43,7 @@ class TicketReportController extends Controller
     $dateTo = $request->query('date_to');
 
     // Tickets Query
-    $tickets = Ticket::with('branch', 'ferryBoat')
+    $query = Ticket::with('branch', 'ferryBoat')
         ->where('guest_id', null)
 
         // Restrict to login user's branch if not admin/manager
@@ -56,10 +56,13 @@ class TicketReportController extends Controller
         ->when($ferryBoatId, fn($q) => $q->where('ferry_boat_id', $ferryBoatId))
         ->when($dateFrom, fn($q) => $q->whereDate('created_at', '>=', $dateFrom))
         ->when($dateTo, fn($q) => $q->whereDate('created_at', '<=', $dateTo))
-        ->orderBy('created_at', 'desc')
-        ->paginate(25);
+        ->orderBy('created_at', 'desc');
 
-    $totalAmount = $tickets->sum('total_amount');
+    // Calculate total BEFORE pagination
+    $totalAmount = (clone $query)->sum('total_amount');
+
+    // Now paginate
+    $tickets = $query->paginate(25);
 
     return view('reports.tickets', compact(
         'tickets',
