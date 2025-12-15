@@ -10,6 +10,12 @@ class ItemRatesSeeder extends Seeder
     public function run(): void
     {
         $rows = [
+            // Passenger types (MUST be first for app logic)
+            ['PASSENGER ADULT ABOVE 12 YR',         1,  18.00,  2.00],
+            ['PASSENGER CHILD 3-12 YR',             1,   9.00,  0.00],
+            ['PASSENGER SENIOR CITIZEN',            1,  15.00,  2.00],
+
+            // Vehicles
             ['CYCLE',                               1,  13.00,  2.00],
             ['MOTORCYCLE WITH DRIVER',              1,  58.00,  7.00],
             ['EMPTY 3 WHLR RICKSHAW',               1,  81.00,  9.00],
@@ -20,16 +26,14 @@ class ItemRatesSeeder extends Seeder
             ['EMPTY LUX. CAR 5 ST',                 1, 181.00, 19.00],
             ['SUMO/SCAPIO/TAVERA/INOVA 7 ST',       1, 181.00, 19.00],
             ['TATA MOBILE/MAX PICKUP',              1, 181.00, 19.00],
-            ['PASSENGER ADULT ABOVE 12 YR',         1,  18.00,  2.00],
-            ['PASSENGER CHILD 3-12 YR',             1,   9.00,  0.00],
             ['AMBULANCE',                            1, 180.00,  0.00],
             ['TEMPO TRAVELER/18 ST BUS',            1, 215.00, 25.00],
             ['407 TEMPO',                            1, 215.00, 25.00],
             ['MINI BUS 21 ST',                       1, 225.00, 25.00],
+            ['BUS (PASSENGER)',                      1, 360.00, 40.00],
             ['LOADED 709',                           1,  70.00,  0.00],
             ['MED.GOODS 6 WHLR  (709)',              1, 225.00, 25.00],
             ['TRUCK /TANKER',                        1, 360.00, 40.00],
-            ['PASSENGER BUS',                        1, 360.00, 40.00],
         ];
 
         // Apply rates to all branches (1-12)
