@@ -17,7 +17,8 @@ class AdministratorController extends Controller
     }
     public function index()
     {
-        $administrators = User::where('role_id', 2)
+        // Show both Super Admins (role_id=1) and Administrators (role_id=2)
+        $administrators = User::whereIn('role_id', [1, 2])
             ->with(['branch', 'ferryboat'])
             ->paginate(10);
 
@@ -59,13 +60,13 @@ class AdministratorController extends Controller
 
     public function show(User $admin)
     {
-        abort_if($admin->role_id != 2, 404);
+        abort_if(!in_array($admin->role_id, [1, 2]), 404);
         return view('admin.show', compact('admin'));
     }
 
     public function edit(User $admin)
     {
-        abort_if($admin->role_id != 2, 404);
+        abort_if(!in_array($admin->role_id, [1, 2]), 404);
 
         $branches = Branch::all();
         $ferryboats = FerryBoat::all();
@@ -75,7 +76,7 @@ class AdministratorController extends Controller
 
     public function update(Request $request, User $admin)
     {
-        abort_if($admin->role_id != 2, 404);
+        abort_if(!in_array($admin->role_id, [1, 2]), 404);
 
         $request->validate([
             'name'        => 'required|string|max:255',
@@ -106,7 +107,12 @@ class AdministratorController extends Controller
 
     public function destroy(User $admin)
     {
-        abort_if($admin->role_id != 2, 404);
+        abort_if(!in_array($admin->role_id, [1, 2]), 404);
+
+        // Prevent deletion of superadmin (role_id = 1)
+        if ($admin->role_id == 1) {
+            return redirect()->route('admin.index')->with('error', 'Cannot delete Super Admin!');
+        }
 
         $admin->delete();
 
