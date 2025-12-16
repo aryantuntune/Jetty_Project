@@ -19,19 +19,22 @@ use App\Http\Controllers\RazorpayController;
 */
 
 // Public routes (no authentication required)
+// RATE LIMITING: Prevent brute force and abuse
 Route::prefix('customer')->group(function () {
-    // Registration
-    Route::post('generate-otp', [RegisterController::class, 'sendOtp']);
-    Route::post('verify-otp', [RegisterController::class, 'verifyOtp']);
+    // Strict rate limiting for OTP (prevent spam)
+    Route::middleware('throttle:5,1')->group(function () {
+        Route::post('generate-otp', [RegisterController::class, 'sendOtp']);
+        Route::post('password-reset/request-otp', [ForgotPasswordController::class, 'requestOTP']);
+    });
 
-    // Login
-    Route::post('login', [LoginController::class, 'login']);
-    Route::post('google-signin', [LoginController::class, 'googleSignIn']);
-
-    // Password Reset
-    Route::post('password-reset/request-otp', [ForgotPasswordController::class, 'requestOTP']);
-    Route::post('password-reset/verify-otp', [ForgotPasswordController::class, 'verifyOTP']);
-    Route::post('password-reset/reset', [ForgotPasswordController::class, 'resetPassword']);
+    // Moderate rate limiting for authentication
+    Route::middleware('throttle:10,1')->group(function () {
+        Route::post('verify-otp', [RegisterController::class, 'verifyOtp']);
+        Route::post('login', [LoginController::class, 'login']);
+        Route::post('google-signin', [LoginController::class, 'googleSignIn']);
+        Route::post('password-reset/verify-otp', [ForgotPasswordController::class, 'verifyOTP']);
+        Route::post('password-reset/reset', [ForgotPasswordController::class, 'resetPassword']);
+    });
 });
 
 // Protected routes (require authentication with customer token)
