@@ -178,7 +178,7 @@ CREATE TABLE bookings (
 ```
 App              Laravel                 Razorpay
  │                  │                        │
- │ 1. Create Order │                        │
+ │ 1. Create Order  │                        │
  ├────────────────→ │                        │
  │                  │ 2. Create Order        │
  │                  ├───────────────────────→│

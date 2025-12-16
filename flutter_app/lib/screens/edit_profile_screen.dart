@@ -44,20 +44,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
     setState(() => _isLoading = true);
 
-    // Simulate API call (in mock mode, just show success)
-    await Future.delayed(const Duration(milliseconds: 500));
-
-    setState(() => _isLoading = false);
-
-    if (!mounted) return;
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Profile updated successfully!'),
-        backgroundColor: AppColors.success,
-        behavior: SnackBarBehavior.floating,
-      ),
-    );
+    // Call real API    final response = await AuthService.updateProfile(      firstName: _firstNameController.text.trim(),      lastName: _lastNameController.text.trim(),      mobile: _mobileController.text.trim(),    );    setState(() => _isLoading = false);    if (!mounted) return;    if (response.success) {      ScaffoldMessenger.of(context).showSnackBar(        SnackBar(          content: Text(response.message),          backgroundColor: AppColors.success,          behavior: SnackBarBehavior.floating,        ),      );      Navigator.pop(context, true);    } else {      ScaffoldMessenger.of(context).showSnackBar(        SnackBar(          content: Text(response.message),          backgroundColor: AppColors.error,          behavior: SnackBarBehavior.floating,        ),      );    }
 
     Navigator.pop(context, true); // Return true to indicate profile was updated
   }

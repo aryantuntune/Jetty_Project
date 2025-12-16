@@ -35,10 +35,9 @@ class BookingService {
       );
     }
 
-    // Note: This method returns destinations but the API might return routes
-    // If API returns route objects, you may need to adjust the parsing
+    // Use the getToBranches endpoint from API config
     return await ApiService.get<List<Branch>>(
-      '${ApiConfig.branches}/$branchId/destinations',
+      ApiConfig.getToBranches(branchId),
       fromJson: (data) => (data as List).map((item) => Branch.fromJson(item)).toList(),
     );
   }
@@ -53,10 +52,7 @@ class BookingService {
       );
     }
 
-    return await ApiService.get(
-      ApiConfig.getRoutes(fromBranchId, toBranchId),
-      fromJson: (data) => data,
-    );
+    return await getDestinations(fromBranchId);
   }
 
   static Future<ApiResponse<List<Ferry>>> getFerries({int? branchId}) async {
