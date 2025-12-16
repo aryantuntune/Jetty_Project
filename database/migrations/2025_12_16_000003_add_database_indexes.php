@@ -13,37 +13,77 @@ return new class extends Migration
     public function up(): void
     {
         // Bookings table indexes
-        Schema::table('bookings', function (Blueprint $table) {
-            $table->index('customer_id', 'idx_bookings_customer');
-            $table->index('status', 'idx_bookings_status');
-            $table->index('booking_date', 'idx_bookings_date');
-            $table->index(['customer_id', 'status'], 'idx_bookings_customer_status');
-        });
+        if (!$this->indexExists('bookings', 'idx_bookings_customer')) {
+            Schema::table('bookings', function (Blueprint $table) {
+                $table->index('customer_id', 'idx_bookings_customer');
+            });
+        }
+        if (!$this->indexExists('bookings', 'idx_bookings_status')) {
+            Schema::table('bookings', function (Blueprint $table) {
+                $table->index('status', 'idx_bookings_status');
+            });
+        }
+        if (!$this->indexExists('bookings', 'idx_bookings_date')) {
+            Schema::table('bookings', function (Blueprint $table) {
+                $table->index('booking_date', 'idx_bookings_date');
+            });
+        }
+        if (!$this->indexExists('bookings', 'idx_bookings_customer_status')) {
+            Schema::table('bookings', function (Blueprint $table) {
+                $table->index(['customer_id', 'status'], 'idx_bookings_customer_status');
+            });
+        }
 
         // Tickets table indexes
-        Schema::table('tickets', function (Blueprint $table) {
-            $table->index('branch_id', 'idx_tickets_branch');
-            $table->index('ferry_boat_id', 'idx_tickets_ferry');
-            $table->index('created_at', 'idx_tickets_created');
-            $table->index(['branch_id', 'created_at'], 'idx_tickets_branch_date');
-
-            // Only add user_id index if column exists
-            if (Schema::hasColumn('tickets', 'user_id')) {
+        if (!$this->indexExists('tickets', 'idx_tickets_branch')) {
+            Schema::table('tickets', function (Blueprint $table) {
+                $table->index('branch_id', 'idx_tickets_branch');
+            });
+        }
+        if (!$this->indexExists('tickets', 'idx_tickets_ferry')) {
+            Schema::table('tickets', function (Blueprint $table) {
+                $table->index('ferry_boat_id', 'idx_tickets_ferry');
+            });
+        }
+        if (!$this->indexExists('tickets', 'idx_tickets_created')) {
+            Schema::table('tickets', function (Blueprint $table) {
+                $table->index('created_at', 'idx_tickets_created');
+            });
+        }
+        if (!$this->indexExists('tickets', 'idx_tickets_branch_date')) {
+            Schema::table('tickets', function (Blueprint $table) {
+                $table->index(['branch_id', 'created_at'], 'idx_tickets_branch_date');
+            });
+        }
+        if (Schema::hasColumn('tickets', 'user_id') && !$this->indexExists('tickets', 'idx_tickets_user')) {
+            Schema::table('tickets', function (Blueprint $table) {
                 $table->index('user_id', 'idx_tickets_user');
-            }
-        });
+            });
+        }
 
         // Ticket lines table indexes
-        Schema::table('ticket_lines', function (Blueprint $table) {
-            $table->index('ticket_id', 'idx_ticket_lines_ticket');
-            $table->index('vehicle_no', 'idx_ticket_lines_vehicle_no');
-        });
+        if (!$this->indexExists('ticket_lines', 'idx_ticket_lines_ticket')) {
+            Schema::table('ticket_lines', function (Blueprint $table) {
+                $table->index('ticket_id', 'idx_ticket_lines_ticket');
+            });
+        }
+        if (!$this->indexExists('ticket_lines', 'idx_ticket_lines_vehicle_no')) {
+            Schema::table('ticket_lines', function (Blueprint $table) {
+                $table->index('vehicle_no', 'idx_ticket_lines_vehicle_no');
+            });
+        }
 
         // Item rates table indexes
-        Schema::table('item_rates', function (Blueprint $table) {
-            $table->index('branch_id', 'idx_item_rates_branch');
-            $table->index(['branch_id', 'starting_date', 'ending_date'], 'idx_item_rates_branch_dates');
-        });
+        if (!$this->indexExists('item_rates', 'idx_item_rates_branch')) {
+            Schema::table('item_rates', function (Blueprint $table) {
+                $table->index('branch_id', 'idx_item_rates_branch');
+            });
+        }
+        if (!$this->indexExists('item_rates', 'idx_item_rates_branch_dates')) {
+            Schema::table('item_rates', function (Blueprint $table) {
+                $table->index(['branch_id', 'starting_date', 'ending_date'], 'idx_item_rates_branch_dates');
+            });
+        }
 
         // Personal access tokens indexes (CRITICAL for auth performance)
         // Token lookup is on EVERY API request - this is the most critical index
