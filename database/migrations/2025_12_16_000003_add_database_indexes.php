@@ -46,13 +46,18 @@ return new class extends Migration
         });
 
         // Personal access tokens indexes (CRITICAL for auth performance)
-        Schema::table('personal_access_tokens', function (Blueprint $table) {
-            // Token lookup is on EVERY API request
-            if (!$this->indexExists('personal_access_tokens', 'idx_tokens_token')) {
+        // Token lookup is on EVERY API request - this is the most critical index
+        if (!$this->indexExists('personal_access_tokens', 'idx_tokens_token')) {
+            Schema::table('personal_access_tokens', function (Blueprint $table) {
                 $table->index('token', 'idx_tokens_token');
-            }
-            $table->index('expires_at', 'idx_tokens_expires');
-        });
+            });
+        }
+
+        if (!$this->indexExists('personal_access_tokens', 'idx_tokens_expires')) {
+            Schema::table('personal_access_tokens', function (Blueprint $table) {
+                $table->index('expires_at', 'idx_tokens_expires');
+            });
+        }
     }
 
     /**
@@ -100,10 +105,7 @@ return new class extends Migration
      */
     private function indexExists($table, $index): bool
     {
-        $connection = Schema::getConnection();
-        $indexes = $connection->getDoctrineSchemaManager()
-            ->listTableIndexes($table);
-
-        return array_key_exists($index, $indexes);
+        $indexes = DB::select("SHOW INDEX FROM `{$table}` WHERE Key_name = ?", [$index]);
+        return count($indexes) > 0;
     }
 };
