@@ -42,28 +42,31 @@ class LoginController extends Controller
 
     protected function authenticated(Request $request, $user)
 {
-   // Always override previous session id
-    $newSessionId = session()->getId();
+    // Only track session if session_id column exists
+    if (\Schema::hasColumn('users', 'session_id')) {
+        // Always override previous session id
+        $newSessionId = session()->getId();
 
-    // If there is an old session, destroy it
-    if ($user->session_id && $user->session_id !== $newSessionId) {
-        // Remove old session from session table (optional)
-        \DB::table('sessions')->where('id', $user->session_id)->delete();
+        // If there is an old session, destroy it
+        if ($user->session_id && $user->session_id !== $newSessionId) {
+            // Remove old session from session table (optional)
+            \DB::table('sessions')->where('id', $user->session_id)->delete();
+        }
+
+        // Save new session ID
+        $user->session_id = $newSessionId;
+        $user->save();
     }
 
-    // Save new session ID
-    $user->session_id = $newSessionId;
-    $user->save();
-
-     if ($user->role_id == 5) {
+    if ($user->role_id == 5) {
         return redirect()->route('verify.index');
     }
 }
 
-public function logout(Request $request) 
+public function logout(Request $request)
 {
     $user = Auth::user();
-    if ($user) {
+    if ($user && \Schema::hasColumn('users', 'session_id')) {
         $user->session_id = null; // clear session
         $user->save();
     }
