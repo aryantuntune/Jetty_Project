@@ -176,9 +176,12 @@ class BookingController extends Controller
      */
     public function getToBranches($branchId)
     {
-        $routeId = DB::table('routes')->where('branch_id', $branchId)->value('route_id');
-        
-        if (!$routeId) {
+        // Get ALL route_ids that this branch belongs to (not just one!)
+        $routeIds = DB::table('routes')
+            ->where('branch_id', $branchId)
+            ->pluck('route_id');
+
+        if ($routeIds->isEmpty()) {
             return response()->json([
                 'success' => false,
                 'message' => 'No routes found for this branch',
@@ -186,13 +189,16 @@ class BookingController extends Controller
             ]);
         }
 
+        // Get all connected branch IDs from ALL routes this branch is on
         $toBranchIds = DB::table('routes')
-            ->where('route_id', $routeId)
+            ->whereIn('route_id', $routeIds)
             ->where('branch_id', '!=', $branchId)
+            ->distinct()
             ->pluck('branch_id');
 
         $branches = Branch::whereIn('id', $toBranchIds)
             ->select('id', 'branch_name as name')
+            ->orderBy('branch_name')
             ->get();
 
         return response()->json([
