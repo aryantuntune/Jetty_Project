@@ -25,6 +25,7 @@ class Ticket extends Model
         'customer_mobile',
         'guest_id',
         'verified_at',
+        'checker_id',
     ];
 
      protected $dates = [
@@ -55,5 +56,10 @@ class Ticket extends Model
        public function user()
     {
         return $this->belongsTo(User::class); // uses user_id
+    }
+
+    public function checker()
+    {
+        return $this->belongsTo(User::class, 'checker_id'); // checker who verified the ticket
     }
 }
