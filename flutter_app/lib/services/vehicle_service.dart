@@ -1,8 +1,6 @@
-import '../config/api_config.dart';
 import '../config/app_config.dart';
 import '../models/api_response.dart';
 import '../models/vehicle.dart';
-import 'api_service.dart';
 import 'mock_data_service.dart';
 
 class VehicleService {
@@ -16,9 +14,12 @@ class VehicleService {
       );
     }
 
-    return await ApiService.get<List<Vehicle>>(
-      '${ApiConfig.baseUrl}/vehicles',
-      fromJson: (data) => (data as List).map((item) => Vehicle.fromJson(item)).toList(),
+    // Return empty list since vehicles come from item_rates API
+    // The app should use item_rates with category_id=2 for vehicles
+    return ApiResponse<List<Vehicle>>(
+      success: true,
+      message: 'Vehicles not available - use item rates instead',
+      data: [],
     );
   }
 }
