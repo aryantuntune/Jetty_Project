@@ -56,7 +56,12 @@ class TicketVerifyController extends Controller
     }
 
     $ticket->verified_at = now();
-    $ticket->checker_id = $user->id;
+
+    // Only set checker_id if column exists
+    if (\Schema::hasColumn('tickets', 'checker_id')) {
+        $ticket->checker_id = $user->id;
+    }
+
     $ticket->save();
 
     return back()->with('success', 'Ticket verified successfully!');
