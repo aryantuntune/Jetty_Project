@@ -216,10 +216,10 @@ Route::middleware(['admin.guest', 'customer.guest'])->group(function () {
 Route::middleware('auth:customer')->group(function () {
 
     // Dashboard should load branches → use controller
-    Route::get('customer/dashboard', [BookingController::class, 'showDashboard'])
+    Route::get('customer/dashboard', [BookingController::class, 'show'])
         ->name('customer.dashboard');
 
-    Route::get('/booking', [BookingController::class, 'showDashboard'])->name('booking.form');
+    Route::get('/booking', [BookingController::class, 'show'])->name('booking.form');
 
     Route::post('/booking', [BookingController::class, 'submit'])->name('booking.submit');
 
