@@ -22,7 +22,7 @@ use App\Http\Controllers\RazorpayController;
 Route::prefix('customer')->group(function () {
     // Registration
     Route::post('generate-otp', [ApiController::class, 'sendOtp']);
-    Route::post('verify-otp', [ApiController::class, 'verifyOtp']);
+    Route::post('verify-otp', [ApiController::class, 'verifyOtpLogin']);
 
     // Login
     Route::post('login', [ApiController::class, 'customerlogin']);

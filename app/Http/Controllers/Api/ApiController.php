@@ -171,7 +171,7 @@ class ApiController extends Controller
     }
 
     // Reset Password after OTP verified
-    public function resetPassword(Request $request)
+    public function resetPassword_old(Request $request)
     {
         $request->validate([
             'email' => 'required|email|exists:customers,email',
@@ -982,61 +982,61 @@ class ApiController extends Controller
 
     // --------------------customers register api  --------------------------------------------------
 
-     // STEP 1: SEND OTP
-   public function sendOtp(Request $request)
-{
-    $request->validate([
-        'first_name' => 'required',
-        'last_name'  => 'required',
-        'mobile'     => 'required',
-        'email'      => 'required|email',
-        'password'   => 'required|min:6',
-    ]);
+    // STEP 1: SEND OTP
+    public function sendOtp(Request $request)
+    {
+        $request->validate([
+            'first_name' => 'required',
+            'last_name'  => 'required',
+            'mobile'     => 'required',
+            'email'      => 'required|email',
+            'password'   => 'required|min:6',
+        ]);
 
-    // --------------------------------------------
-    // CHECK IF EMAIL EXISTS IN CUSTOMERS TABLE
-    // --------------------------------------------
-    if (\App\Models\Customer::where('email', $request->email)->exists()) {
-        return response()->json([
-            'success' => false,
-            'exists' => true,
-            'message' => "Email already exists. Please login or reset your password."
-        ], 409);
-    }
+        // --------------------------------------------
+        // CHECK IF EMAIL EXISTS IN CUSTOMERS TABLE
+        // --------------------------------------------
+        if (\App\Models\Customer::where('email', $request->email)->exists()) {
+            return response()->json([
+                'success' => false,
+                'exists' => true,
+                'message' => "Email already exists. Please login or reset your password."
+            ], 409);
+        }
 
-    // --------------------------------------------
-    // GENERATE OTP
-    // --------------------------------------------
-    $otp = rand(100000, 999999);
+        // --------------------------------------------
+        // GENERATE OTP
+        // --------------------------------------------
+        $otp = rand(100000, 999999);
 
-    // Store OTP data in cache (15 minutes expiry) instead of session for API support
-    $cacheKey = 'pending_registration_' . $request->email;
-    Cache::put($cacheKey, [
-        'first_name' => $request->first_name,
-        'last_name'  => $request->last_name,
-        'mobile'     => $request->mobile,
-        'email'      => $request->email,
-        'password'   => $request->password,
-        'otp'        => $otp
-    ], now()->addMinutes(15));
+        // Store OTP data in cache (15 minutes expiry) instead of session for API support
+        $cacheKey = 'pending_registration_' . $request->email;
+        Cache::put($cacheKey, [
+            'first_name' => $request->first_name,
+            'last_name'  => $request->last_name,
+            'mobile'     => $request->mobile,
+            'email'      => $request->email,
+            'password'   => $request->password,
+            'otp'        => $otp
+        ], now()->addMinutes(15));
 
-    // --------------------------------------------
-    // SEND OTP EMAIL
-    // --------------------------------------------
-    Mail::raw("Your OTP is: $otp", function ($message) use ($request) {
-        $message->to($request->email)
+        // --------------------------------------------
+        // SEND OTP EMAIL
+        // --------------------------------------------
+        Mail::raw("Your OTP is: $otp", function ($message) use ($request) {
+            $message->to($request->email)
                 ->subject('Your Email OTP Verification');
-    });
+        });
 
-    return response()->json([
-        'success' => true,
-        'message' => "OTP sent successfully!"
-    ]);
-}
+        return response()->json([
+            'success' => true,
+            'message' => "OTP sent successfully!"
+        ]);
+    }
 
 
     // STEP 2: VERIFY OTP
-    public function verifyOtp(Request $request)
+    public function verifyOtpLogin(Request $request)
     {
         $request->validate([
             'email' => 'required|email',
@@ -1088,7 +1088,7 @@ class ApiController extends Controller
     }
     // ----------------------------forgotpassword controller code-----------------------------------------------
 
-     // API METHOD: Request Password Reset OTP
+    // API METHOD: Request Password Reset OTP
     public function requestOTP(Request $request)
     {
         $request->validate([
@@ -1118,7 +1118,7 @@ class ApiController extends Controller
         // Send OTP email
         Mail::raw("Your password reset OTP is: $otp\n\nThis OTP will expire in 15 minutes.", function ($message) use ($request) {
             $message->to($request->email)
-                    ->subject('Password Reset OTP');
+                ->subject('Password Reset OTP');
         });
 
         return response()->json([
