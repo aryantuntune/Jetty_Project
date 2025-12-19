@@ -123,7 +123,7 @@ class BookingController extends Controller
 
         if ($signatureStatus) {
 
-            // ⭐ BUILD ITEM ARRAY INCLUDING VEHICLE NUMBER ⭐
+
             $items = collect(session('items'))->map(function ($item) {
                 return [
                     'item_name'  => $item['item_name'] ?? '',
@@ -140,6 +140,8 @@ class BookingController extends Controller
                 'items'         => json_encode($items),
                 'total_amount'  => session('grand_total'),
                 'payment_id'    => $request->razorpay_payment_id,
+                'booking_source' => 'web',
+
                 'status' => 'success'
             ]);
 

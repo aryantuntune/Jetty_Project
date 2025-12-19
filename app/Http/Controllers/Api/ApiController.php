@@ -656,6 +656,7 @@ class ApiController extends Controller
             'total_amount' => $totalAmount,
             'qr_code' => $qrCode,
             'status' => 'confirmed',
+            'booking_source' => 'mobile_app',
         ]);
 
         // Reload to get proper formatting
