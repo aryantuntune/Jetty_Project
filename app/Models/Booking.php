@@ -17,6 +17,8 @@ class Booking extends Model
         'total_amount',
         'payment_id',
         'qr_code',
-        'status'
+        'status',
+        'booking_source',
+        'verified_at'
     ];
 }
