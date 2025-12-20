@@ -28,14 +28,16 @@ class Ticket extends Model
         'checker_id',
     ];
 
-     protected $dates = [
+    protected $dates = [
         'created_at',
         'updated_at',
         'verified_at',
     ];
-    
+
+
     protected $casts = [
         'ferry_time' => 'datetime',
+        'verified_at' => 'datetime',
     ];
 
     public function lines()
@@ -53,7 +55,7 @@ class Ticket extends Model
         return $this->belongsTo(Branch::class);
     }
 
-       public function user()
+    public function user()
     {
         return $this->belongsTo(User::class); // uses user_id
     }

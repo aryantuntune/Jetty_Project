@@ -1,16 +1,18 @@
 <?php
 
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Api\ApiController;
+use App\Http\Controllers\Api\CheckerAuthController;
+use App\Http\Controllers\BranchController;
+use App\Http\Controllers\CustomerAuth\CustomerProfileController;
+use App\Http\Controllers\CustomerAuth\ForgotPasswordController;
 use App\Http\Controllers\CustomerAuth\LoginController;
 use App\Http\Controllers\CustomerAuth\RegisterController;
-use App\Http\Controllers\CustomerAuth\ForgotPasswordController;
-use App\Http\Controllers\CustomerAuth\CustomerProfileController;
-use App\Http\Controllers\BranchController;
 use App\Http\Controllers\FerryBoatController;
 use App\Http\Controllers\ItemRateController;
-use App\Http\Controllers\Api\ApiController;
 use App\Http\Controllers\RazorpayController;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Route;
+
 
 /*
 |--------------------------------------------------------------------------
@@ -71,4 +73,15 @@ Route::middleware('customer.api')->group(function () {
     Route::post('bookings', [ApiController::class, 'store']);
     Route::get('bookings/{id}', [ApiController::class, 'show']);
     Route::post('bookings/{id}/cancel', [ApiController::class, 'cancel']);
+});
+
+
+Route::prefix('checker')->group(function () {
+    Route::post('/login', [CheckerAuthController::class, 'login']);
+
+    Route::middleware('auth:sanctum')->group(function () {
+        Route::post('/logout', [CheckerAuthController::class, 'logout']);
+        Route::get('/profile', [CheckerAuthController::class, 'profile']);
+        Route::post('/verify-ticket', [CheckerAuthController::class, 'verifyTicket']);
+    });
 });
