@@ -19,8 +19,16 @@ class Booking extends Model
         'qr_code',
         'status',
         'booking_source',
-        'verified_at'
+        'verified_at',
+        'verified_by',
+        'ticket_id'
     ];
+
+    protected $casts = [
+        'verified_at' => 'datetime',
+
+    ];
+
 
     public function customer()
     {

@@ -16,7 +16,7 @@ use Illuminate\Support\Facades\Mail;
 use Razorpay\Api\Api;
 use Illuminate\Support\Facades\Storage;
 use App\Mail\BookingConfirmationMail;
-
+use Carbon\Carbon;
 
 
 class ApiController extends Controller
@@ -625,6 +625,16 @@ class ApiController extends Controller
     /**
      * Create new booking (API)
      */
+
+    private function generateTicketNo()
+    {
+        $year   = Carbon::now()->format('Y');
+        $date   = Carbon::now()->format('md'); // MMDD
+        $random = random_int(100000, 999999);
+
+        return "{$year}{$date}{$random}";
+    }
+
     public function store(Request $request)
     {
         $validated = $request->validate([
@@ -648,6 +658,13 @@ class ApiController extends Controller
         // Generate QR code
         $qrCode = 'JETTY-' . strtoupper(uniqid());
 
+        $ticketNo = null;
+
+        do {
+            $ticketNo = $this->generateTicketNo();
+        } while (Booking::where('ticket_no', $ticketNo)->exists());
+
+
         $booking = Booking::create([
             'customer_id' => $request->user()->id,
             'ferry_id' => $validated['ferry_id'],
@@ -660,7 +677,9 @@ class ApiController extends Controller
             'qr_code' => $qrCode,
             'status' => 'confirmed',
             'booking_source' => 'mobile_app',
+            'ticket_no'      => $ticketNo,
         ]);
+
 
         $booking->load(['customer', 'fromBranch', 'toBranch']);
 
@@ -677,6 +696,7 @@ class ApiController extends Controller
             'data' => [
                 'id' => $booking->id,
                 'customer_id' => $booking->customer_id,
+                'ticket_id'       => $booking->ticket_id,
                 'ferry_id' => $booking->ferry_id,
                 'from_branch_id' => $booking->from_branch,
                 'to_branch_id' => $booking->to_branch,
@@ -919,7 +939,7 @@ class ApiController extends Controller
         $customer = \App\Models\Customer::where('email', $request->email)->first();
 
         // Check if customer exists and password matches
-        if (!$customer || !\Hash::check($request->password, $customer->password)) {
+        if (!$customer || !Hash::check($request->password, $customer->password)) {
             return response()->json([
                 'success' => false,
                 'message' => 'Invalid email or password'
@@ -1120,7 +1140,7 @@ class ApiController extends Controller
 
         // Store OTP in cache (15 minutes expiry)
         $cacheKey = 'password_reset_' . $request->email;
-        \Cache::put($cacheKey, [
+        Cache::put($cacheKey, [
             'email' => $request->email,
             'otp' => $otp
         ], now()->addMinutes(15));
@@ -1147,7 +1167,7 @@ class ApiController extends Controller
 
         // Retrieve OTP from cache
         $cacheKey = 'password_reset_' . $request->email;
-        $data = \Cache::get($cacheKey);
+        $data = Cache::get($cacheKey);
 
         if (!$data) {
             return response()->json([
@@ -1181,7 +1201,7 @@ class ApiController extends Controller
 
         // Verify OTP one more time
         $cacheKey = 'password_reset_' . $request->email;
-        $data = \Cache::get($cacheKey);
+        $data = Cache::get($cacheKey);
 
         if (!$data || $request->otp != $data['otp']) {
             return response()->json([
@@ -1201,11 +1221,11 @@ class ApiController extends Controller
         }
 
         // Update password
-        $customer->password = \Hash::make($request->password);
+        $customer->password = Hash::make($request->password);
         $customer->save();
 
         // Clear OTP from cache
-        \Cache::forget($cacheKey);
+        Cache::forget($cacheKey);
 
         return response()->json([
             'success' => true,
