@@ -9,6 +9,8 @@ use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
+use Barryvdh\DomPDF\Facade\Pdf;
+
 
 class BookingConfirmationMail extends Mailable
 {
@@ -24,8 +26,21 @@ class BookingConfirmationMail extends Mailable
 
     public function build()
     {
+       
+        $pdf = Pdf::loadView('pdf.booking_ticket', [
+            'booking' => $this->booking
+        ]);
+
+       
         return $this->subject('Jetty Booking Confirmation')
-            ->view('emails.booking_confirmation');
+            ->view('emails.booking_confirmation') 
+            ->attachData(
+                $pdf->output(),
+                'Jetty_Ticket_' . $this->booking->id . '.pdf',
+                [
+                    'mime' => 'application/pdf'
+                ]
+            );
     }
 
     /**
