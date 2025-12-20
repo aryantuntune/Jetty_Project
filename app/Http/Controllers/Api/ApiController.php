@@ -15,6 +15,9 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 use Razorpay\Api\Api;
 use Illuminate\Support\Facades\Storage;
+use App\Mail\BookingConfirmationMail;
+
+
 
 class ApiController extends Controller
 {
@@ -658,6 +661,12 @@ class ApiController extends Controller
             'status' => 'confirmed',
             'booking_source' => 'mobile_app',
         ]);
+
+        $booking->load(['customer', 'fromBranch', 'toBranch']);
+
+        //  SEND BOOKING CONFIRMATION EMAIL
+        Mail::to($booking->customer->email)
+            ->send(new BookingConfirmationMail($booking));
 
         // Reload to get proper formatting
         $booking->refresh();

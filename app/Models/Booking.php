@@ -21,4 +21,19 @@ class Booking extends Model
         'booking_source',
         'verified_at'
     ];
+
+    public function customer()
+    {
+        return $this->belongsTo(\App\Models\Customer::class);
+    }
+
+    public function fromBranch()
+    {
+        return $this->belongsTo(\App\Models\Branch::class, 'from_branch');
+    }
+
+    public function toBranch()
+    {
+        return $this->belongsTo(\App\Models\Branch::class, 'to_branch');
+    }
 }
