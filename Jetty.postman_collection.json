@@ -1,0 +1,572 @@
+{
+	"info": {
+		"_postman_id": "2f2b8de4-0dda-43ba-933b-515a1c69aae8",
+		"name": "Jetty",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "50739840",
+		"_collection_link": "https://mahesh-6752647.postman.co/workspace/a30e03f7-706e-4c3c-8f4d-43e54dc5eba7/collection/44906558-2f2b8de4-0dda-43ba-933b-515a1c69aae8?action=share&source=collection_link&creator=50739840"
+	},
+	"item": [
+		{
+			"name": "generate otp",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "urlencoded",
+					"urlencoded": [
+						{
+							"key": "first_name",
+							"value": "test",
+							"type": "text"
+						},
+						{
+							"key": "last_name",
+							"value": "ltest",
+							"type": "text"
+						},
+						{
+							"key": "email",
+							"value": "mahesh.zemse@gmail.com",
+							"type": "text"
+						},
+						{
+							"key": "mobile",
+							"value": "9975863133",
+							"type": "text"
+						},
+						{
+							"key": "password",
+							"value": "Admin@123",
+							"type": "text"
+						}
+					]
+				},
+				"url": {
+					"raw": "{{baseURL}}/api/customer/generate-otp",
+					"host": [
+						"{{baseURL}}"
+					],
+					"path": [
+						"api",
+						"customer",
+						"generate-otp"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "verify otp and register",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "urlencoded",
+					"urlencoded": [
+						{
+							"key": "email",
+							"value": "mahesh.zemse@gmail.com",
+							"type": "text"
+						},
+						{
+							"key": "otp",
+							"value": "877832",
+							"type": "text"
+						}
+					]
+				},
+				"url": {
+					"raw": "{{baseURL}}/api/customer/verify-otp",
+					"host": [
+						"{{baseURL}}"
+					],
+					"path": [
+						"api",
+						"customer",
+						"verify-otp"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "reset password otp",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "urlencoded",
+					"urlencoded": [
+						{
+							"key": "email",
+							"value": "mahesh.zemse@gmail.com",
+							"type": "text"
+						}
+					]
+				},
+				"url": {
+					"raw": "{{baseURL}}/api/customer/password-reset/request-otp",
+					"host": [
+						"{{baseURL}}"
+					],
+					"path": [
+						"api",
+						"customer",
+						"password-reset",
+						"request-otp"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "verify reset password otp",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "urlencoded",
+					"urlencoded": [
+						{
+							"key": "email",
+							"value": "mahesh.zemse@gmail.com",
+							"type": "text"
+						},
+						{
+							"key": "otp",
+							"value": "613286",
+							"type": "text"
+						}
+					]
+				},
+				"url": {
+					"raw": "{{baseURL}}/api/customer/password-reset/verify-otp",
+					"host": [
+						"{{baseURL}}"
+					],
+					"path": [
+						"api",
+						"customer",
+						"password-reset",
+						"verify-otp"
+					],
+					"query": [
+						{
+							"key": "",
+							"value": null,
+							"disabled": true
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "reset password new created",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "urlencoded",
+					"urlencoded": [
+						{
+							"key": "email",
+							"value": "mahesh.zemse@gmail.com",
+							"type": "text"
+						},
+						{
+							"key": "password",
+							"value": "Aadmin@123",
+							"type": "text"
+						}
+					]
+				},
+				"url": {
+					"raw": "{{baseURL}}/api/customer/password-reset/reset",
+					"host": [
+						"{{baseURL}}"
+					],
+					"path": [
+						"api",
+						"customer",
+						"password-reset",
+						"reset"
+					],
+					"query": [
+						{
+							"key": "",
+							"value": null,
+							"disabled": true
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "login customer",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "urlencoded",
+					"urlencoded": [
+						{
+							"key": "email",
+							"value": "mahesh.zemse@gmail.com",
+							"type": "text"
+						},
+						{
+							"key": "password",
+							"value": "Aadmin@123",
+							"type": "text"
+						}
+					]
+				},
+				"url": {
+					"raw": "{{baseURL}}/api/customer/login",
+					"host": [
+						"{{baseURL}}"
+					],
+					"path": [
+						"api",
+						"customer",
+						"login"
+					],
+					"query": [
+						{
+							"key": "",
+							"value": null,
+							"disabled": true
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "customer profile",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "2|DezcIRVINUEVDomrlSvJ23OclnIkkZ3xOqmWv1n54725266e",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "urlencoded",
+					"urlencoded": [
+						{
+							"key": "email",
+							"value": "mahesh.zemse@gmail.com",
+							"type": "text"
+						},
+						{
+							"key": "password",
+							"value": "Aadmin@123",
+							"type": "text"
+						}
+					]
+				},
+				"url": {
+					"raw": "{{baseURL}}/api/customer/profile",
+					"host": [
+						"{{baseURL}}"
+					],
+					"path": [
+						"api",
+						"customer",
+						"profile"
+					],
+					"query": [
+						{
+							"key": "",
+							"value": null,
+							"disabled": true
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "get branch",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "2|DezcIRVINUEVDomrlSvJ23OclnIkkZ3xOqmWv1n54725266e",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{baseURL}}/api/customer/branch",
+					"host": [
+						"{{baseURL}}"
+					],
+					"path": [
+						"api",
+						"customer",
+						"branch"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "get ferryboat branchwise",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "2|DezcIRVINUEVDomrlSvJ23OclnIkkZ3xOqmWv1n54725266e",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{baseURL}}/api/ferryboats/branch/1",
+					"host": [
+						"{{baseURL}}"
+					],
+					"path": [
+						"api",
+						"ferryboats",
+						"branch",
+						"1"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "get items branchwise",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "2|DezcIRVINUEVDomrlSvJ23OclnIkkZ3xOqmWv1n54725266e",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{baseURL}}/api/item-rates/branch/1",
+					"host": [
+						"{{baseURL}}"
+					],
+					"path": [
+						"api",
+						"item-rates",
+						"branch",
+						"1"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "{{baseURL}}/api/razorpay/order",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "2|DezcIRVINUEVDomrlSvJ23OclnIkkZ3xOqmWv1n54725266e",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "urlencoded",
+					"urlencoded": [
+						{
+							"key": "amount",
+							"value": "500",
+							"type": "text"
+						}
+					]
+				},
+				"url": {
+					"raw": "{{baseURL}}/api/razorpay/order",
+					"host": [
+						"{{baseURL}}"
+					],
+					"path": [
+						"api",
+						"razorpay",
+						"order"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "{{baseURL}}/api/razorpay/verify",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "2|DezcIRVINUEVDomrlSvJ23OclnIkkZ3xOqmWv1n54725266e",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"razorpay_order_id\": \"order_RqPhE1X2qfXhlV\",\r\n  \"razorpay_payment_id\": \"test_payment_123\",\r\n  \"razorpay_signature\": \"test_sign_123\",\r\n  \"customer_id\": 1,\r\n  \"from_branch\": 2,\r\n  \"to_branch\": 4,\r\n  \"items\": [\r\n    { \"item_id\": 1, \"qty\": 2, \"rate\": 100 }\r\n  ],\r\n  \"grand_total\": 200\r\n}\r\n",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{baseURL}}/api/razorpay/verify",
+					"host": [
+						"{{baseURL}}"
+					],
+					"path": [
+						"api",
+						"razorpay",
+						"verify"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "{{baseURL}}/api/bookings/success",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "2|DezcIRVINUEVDomrlSvJ23OclnIkkZ3xOqmWv1n54725266e",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"razorpay_order_id\": \"order_RqPhE1X2qfXhlV\",\r\n  \"razorpay_payment_id\": \"test_payment_123\",\r\n  \"razorpay_signature\": \"test_sign_123\",\r\n  \"customer_id\": 1,\r\n  \"from_branch\": 2,\r\n  \"to_branch\": 4,\r\n  \"items\": [\r\n    { \"item_id\": 1, \"qty\": 2, \"rate\": 100 }\r\n  ],\r\n  \"grand_total\": 200\r\n}\r\n"
+				},
+				"url": {
+					"raw": "{{baseURL}}/api/bookings/success",
+					"host": [
+						"{{baseURL}}"
+					],
+					"path": [
+						"api",
+						"bookings",
+						"success"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "{{baseURL}}/api/customer/logout",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "2|DezcIRVINUEVDomrlSvJ23OclnIkkZ3xOqmWv1n54725266e",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": ""
+				},
+				"url": {
+					"raw": "{{baseURL}}/api/customer/logout",
+					"host": [
+						"{{baseURL}}"
+					],
+					"path": [
+						"api",
+						"customer",
+						"logout"
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"requests": {},
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"requests": {},
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "baseURL",
+			"value": "",
+			"type": "default"
+		}
+	]
+}
