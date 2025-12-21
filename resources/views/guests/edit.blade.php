@@ -1,97 +1,60 @@
-@extends('layouts.app')
+{{-- OLD DESIGN COMMENTED OUT --}}
+
+@extends('layouts.admin')
+
+@section('title', 'Edit Guest')
+@section('page-title', 'Edit Guest')
 
 @section('content')
-<style>
-    .win-card {
-        border: 1px solid #a0c4ff;
-        background: #f8fafc;
-        box-shadow: 2px 2px 6px rgba(0,0,0,0.15);
-         max-width: 90%; 
-        margin: 40px auto;
-        border-radius: 6px;
-    }
-    .win-header {
-        background: #fff;
-        text-align: center;
-        font-weight: bold;
-        color: darkred;
-        padding: 12px;
-        border-bottom: 1px solid #ccc;
-        font-size: 18px;
-        border-top-left-radius: 6px;
-        border-top-right-radius: 6px;
-    }
-    .form-input, .form-select {
-        width: 100%;
-        padding: 8px 10px;
-        font-size: 14px;
-        border: 1px solid #ccc;
-        border-radius: 4px;
-        margin-top: 4px;
-    }
-    .form-group {
-        margin-bottom: 16px;
-    }
-    .win-footer {
-        background: darkred;
-        color: white;
-        padding: 10px 16px;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        font-weight: bold;
-        border-bottom-left-radius: 6px;
-        border-bottom-right-radius: 6px;
-    }
-    .btn-primary {
-        background: #1d4ed8;
-        color: white;
-        border: none;
-        padding: 6px 14px;
-        border-radius: 4px;
-        font-size: 14px;
-    }
-    .btn-secondary {
-        background: gray;
-        color: white;
-        border: none;
-        padding: 6px 14px;
-        border-radius: 4px;
-        font-size: 14px;
-    }
-</style>
+<div class="mb-8">
+    <a href="{{ route('guests.index') }}" class="inline-flex items-center space-x-2 text-slate-600 hover:text-slate-800 transition-colors">
+        <i data-lucide="arrow-left" class="w-4 h-4"></i>
+        <span>Back to Guests</span>
+    </a>
+</div>
 
-<div class="win-card">
-    <div class="win-header">Edit Guest</div>
-
-    <form action="{{ route('guests.update', $guest->id) }}" method="POST" class="p-4">
-        @csrf
-        @method('PUT')
-
-        <div class="form-group">
-            <label for="name">Guest Name</label>
-            <input type="text" name="name" id="name" 
-                   class="form-input @error('name') is-invalid @enderror" 
-                   value="{{ old('name', $guest->name) }}" required>
-            @error('name') <div style="color:red;font-size:13px;">{{ $message }}</div> @enderror
+<div class="max-w-2xl">
+    <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden">
+        <div class="px-6 py-4 border-b border-slate-200 bg-gradient-to-r from-orange-600 to-orange-700">
+            <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center">
+                    <i data-lucide="user" class="w-5 h-5 text-white"></i>
+                </div>
+                <div>
+                    <h2 class="font-semibold text-white">Edit Guest</h2>
+                    <p class="text-sm text-orange-100">Update the details below</p>
+                </div>
+            </div>
         </div>
 
-        <div class="form-group">
-            <label for="category_id">Guest Category</label>
-            <select name="category_id" id="category_id" class="form-select @error('category_id') is-invalid @enderror" required>
-                @foreach($categories as $category)
-                    <option value="{{ $category->id }}" {{ $guest->category_id == $category->id ? 'selected' : '' }}>
-                        {{ $category->name }}
-                    </option>
-                @endforeach
-            </select>
-            @error('category_id') <div style="color:red;font-size:13px;">{{ $message }}</div> @enderror
-        </div>
+        <form action="{{ route('guests.update', $guest->id) }}" method="POST" class="p-6 space-y-6">
+            @csrf
+            @method('PUT')
 
-        <div class="win-footer">
-            <a href="{{ route('guests.index') }}" class="btn-secondary">Back</a>
-            <button type="submit" class="btn-primary">Update Guest</button>
-        </div>
-    </form>
+            <div>
+                <label for="name" class="block text-sm font-medium text-slate-700 mb-2">Guest Name <span class="text-red-500">*</span></label>
+                <input type="text" name="name" id="name" value="{{ old('name', $guest->name) }}" class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 outline-none @error('name') border-red-500 @enderror" placeholder="Enter guest name" required>
+                @error('name')<p class="mt-1 text-sm text-red-600">{{ $message }}</p>@enderror
+            </div>
+
+            <div>
+                <label for="category_id" class="block text-sm font-medium text-slate-700 mb-2">Guest Category <span class="text-red-500">*</span></label>
+                <select name="category_id" id="category_id" class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 outline-none @error('category_id') border-red-500 @enderror" required>
+                    @foreach($categories as $category)
+                        <option value="{{ $category->id }}" {{ old('category_id', $guest->category_id) == $category->id ? 'selected' : '' }}>{{ $category->name }}</option>
+                    @endforeach
+                </select>
+                @error('category_id')<p class="mt-1 text-sm text-red-600">{{ $message }}</p>@enderror
+            </div>
+
+            <div class="flex items-center justify-end space-x-4 pt-4 border-t border-slate-200">
+                <a href="{{ route('guests.index') }}" class="px-6 py-2.5 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 font-medium transition-colors">Cancel</a>
+                <button type="submit" class="inline-flex items-center space-x-2 bg-primary-600 hover:bg-primary-700 text-white px-6 py-2.5 rounded-xl font-medium transition-colors">
+                    <i data-lucide="save" class="w-4 h-4"></i>
+                    <span>Update Guest</span>
+                </button>
+            </div>
+        </form>
+    </div>
 </div>
 @endsection

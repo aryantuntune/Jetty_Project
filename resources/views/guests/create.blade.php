@@ -1,113 +1,73 @@
-@extends('layouts.app')
+{{-- OLD DESIGN COMMENTED OUT --}}
+
+@extends('layouts.admin')
+
+@section('title', 'Add Guest')
+@section('page-title', 'Add Guest')
 
 @section('content')
-<div class="flex justify-center items-center min-h-screen bg-gray-200 container mx-auto p-4">
-    <div class="card guest-card w-3/4">
-        <div class="guest-header">Add New Guest</div>
-        <form action="{{ route('guests.store') }}" method="POST" class="guest-form">
+<div class="mb-8">
+    <a href="{{ route('guests.index') }}" class="inline-flex items-center space-x-2 text-slate-600 hover:text-slate-800 transition-colors">
+        <i data-lucide="arrow-left" class="w-4 h-4"></i>
+        <span>Back to Guests</span>
+    </a>
+</div>
+
+<div class="max-w-2xl">
+    <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden">
+        <div class="px-6 py-4 border-b border-slate-200 bg-gradient-to-r from-orange-600 to-orange-700">
+            <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center">
+                    <i data-lucide="user-plus" class="w-5 h-5 text-white"></i>
+                </div>
+                <div>
+                    <h2 class="font-semibold text-white">Add New Guest</h2>
+                    <p class="text-sm text-orange-100">Fill in the details below</p>
+                </div>
+            </div>
+        </div>
+
+        <form action="{{ route('guests.store') }}" method="POST" class="p-6 space-y-6">
             @csrf
 
-            <div class="mb-3">
-                <label for="name" class="form-label">Guest Name</label>
-                <input type="text" name="name" id="name"
-                       class="form-control @error('name') is-invalid @enderror"
-                       value="{{ old('name') }}">
-                @error('name') <div class="invalid-feedback">{{ $message }}</div> @enderror
+            <div>
+                <label for="name" class="block text-sm font-medium text-slate-700 mb-2">Guest Name <span class="text-red-500">*</span></label>
+                <input type="text" name="name" id="name" value="{{ old('name') }}" class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 outline-none @error('name') border-red-500 @enderror" placeholder="Enter guest name" required>
+                @error('name')<p class="mt-1 text-sm text-red-600">{{ $message }}</p>@enderror
             </div>
 
-            <div class="mb-3">
-                <label for="category_id" class="form-label">Guest Category</label>
-                <select name="category_id" id="category_id"
-                        class="form-control @error('category_id') is-invalid @enderror">
+            <div>
+                <label for="category_id" class="block text-sm font-medium text-slate-700 mb-2">Guest Category <span class="text-red-500">*</span></label>
+                <select name="category_id" id="category_id" class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 outline-none @error('category_id') border-red-500 @enderror" required>
                     <option value="">-- Select Category --</option>
                     @foreach($categories as $category)
-                        <option value="{{ $category->id }}" 
-                            {{ old('category_id') == $category->id ? 'selected' : '' }}>
-                            {{ $category->name }}
-                        </option>
+                        <option value="{{ $category->id }}" {{ old('category_id') == $category->id ? 'selected' : '' }}>{{ $category->name }}</option>
                     @endforeach
                 </select>
-                @error('category_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                @error('category_id')<p class="mt-1 text-sm text-red-600">{{ $message }}</p>@enderror
             </div>
 
-            {{-- Branch Dropdown for role_id 1 and 2 --}}
             @if(in_array(Auth::user()->role_id, [1,2]))
-            <div class="mb-3">
-                <label for="branch_id" class="form-label">Select Branch</label>
-                <select name="branch_id" id="branch_id" class="form-control @error('branch_id') is-invalid @enderror" required>
+            <div>
+                <label for="branch_id" class="block text-sm font-medium text-slate-700 mb-2">Select Branch <span class="text-red-500">*</span></label>
+                <select name="branch_id" id="branch_id" class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 outline-none @error('branch_id') border-red-500 @enderror" required>
                     <option value="">-- Select Branch --</option>
                     @foreach($branches as $branch)
-                        <option value="{{ $branch->id }}" {{ old('branch_id') == $branch->id ? 'selected' : '' }}>
-                            {{ $branch->branch_name }}
-                        </option>
+                        <option value="{{ $branch->id }}" {{ old('branch_id') == $branch->id ? 'selected' : '' }}>{{ $branch->branch_name }}</option>
                     @endforeach
                 </select>
-                @error('branch_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                @error('branch_id')<p class="mt-1 text-sm text-red-600">{{ $message }}</p>@enderror
             </div>
             @endif
 
-            <div class="guest-footer">
-                <a href="{{ route('guests.index') }}" class="btn btn-back">Back</a>
-                <button type="submit" class="btn btn-save">Save Guest</button>
+            <div class="flex items-center justify-end space-x-4 pt-4 border-t border-slate-200">
+                <a href="{{ route('guests.index') }}" class="px-6 py-2.5 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 font-medium transition-colors">Cancel</a>
+                <button type="submit" class="inline-flex items-center space-x-2 bg-primary-600 hover:bg-primary-700 text-white px-6 py-2.5 rounded-xl font-medium transition-colors">
+                    <i data-lucide="save" class="w-4 h-4"></i>
+                    <span>Save Guest</span>
+                </button>
             </div>
         </form>
     </div>
 </div>
-
-<style>
-    .guest-card {
-        border: 1px solid #a2c4f5; /* light blue border like screenshot */
-        border-radius: 4px;
-        padding: 0;
-        box-shadow: 1px 1px 5px rgba(0,0,0,0.1);
-        margin: 0 auto;
-    }
-
-    .guest-header {
-        background: #fff;
-        text-align: center;
-        font-weight: bold;
-        color: #8b0000; /* dark red text */
-        padding: 10px 0;
-        border-bottom: 1px solid #ccc;
-    }
-
-    .guest-form {
-        padding: 15px 20px;
-        background: #f9f9f9;
-    }
-
-    .guest-footer {
-        background-color: #8b0000; /* dark red footer */
-        padding: 10px 20px;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-    }
-
-    .btn-back {
-        background-color: #6c757d; /* gray */
-        color: #fff;
-        border: none;
-        padding: 6px 12px;
-        border-radius: 3px;
-        text-decoration: none;
-    }
-
-    .btn-back:hover {
-        background-color: #5a6268;
-    }
-
-    .btn-save {
-        background-color: #007bff; /* blue */
-        color: #fff;
-        border: none;
-        padding: 6px 12px;
-        border-radius: 3px;
-    }
-
-    .btn-save:hover {
-        background-color: #0069d9;
-    }
-</style>
 @endsection

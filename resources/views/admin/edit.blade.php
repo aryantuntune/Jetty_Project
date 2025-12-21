@@ -1,99 +1,66 @@
-@extends('layouts.app')
+{{-- OLD DESIGN COMMENTED OUT --}}
+
+@extends('layouts.admin')
+
+@section('title', 'Edit Administrator')
+@section('page-title', 'Edit Administrator')
 
 @section('content')
-<style>
-    /* Consistent window/card container like your reference pages */
-    .list-window{
-        max-width:1120px; margin:18px auto 32px;
-        border:1px solid #a9a9a9; border-radius:6px; background:#fff;
-        box-shadow:0 2px 10px rgba(0,0,0,.04); overflow:hidden;
-    }
-    .list-body{ padding:16px; }
+<div class="mb-8">
+    <a href="{{ route('admin.index') }}" class="inline-flex items-center space-x-2 text-slate-600 hover:text-slate-800 transition-colors">
+        <i data-lucide="arrow-left" class="w-4 h-4"></i>
+        <span>Back to Administrators</span>
+    </a>
+</div>
 
-    /* Title uses the same red as .text-danger from Bootstrap */
-    .page-title { color:#dc3545; margin:0; }
-
-    /* Form consistency */
-    .form-label { font-weight:600; }
-</style>
-
-<div class="container list-window">
-    <div class="list-body">
-        <div class="d-flex justify-content-between align-items-center mb-3">
-            <h2 class="page-title">Edit Administrator</h2>
-            <a href="{{ route('admin.index') }}" class="btn btn-secondary">↩ Back to List</a>
+<div class="max-w-2xl">
+    <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden">
+        <div class="px-6 py-4 border-b border-slate-200 bg-gradient-to-r from-red-600 to-red-700">
+            <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center">
+                    <i data-lucide="shield" class="w-5 h-5 text-white"></i>
+                </div>
+                <div>
+                    <h2 class="font-semibold text-white">Edit Administrator</h2>
+                    <p class="text-sm text-red-100">Update the details below</p>
+                </div>
+            </div>
         </div>
 
-        @if(session('success'))
-            <div class="alert alert-success">{{ session('success') }}</div>
-        @endif
-
-        @if ($errors->any())
-            <div class="alert alert-danger">
-                <strong>Please fix the errors below.</strong>
-            </div>
-        @endif
-
-        <form action="{{ route('admin.update', $admin) }}" method="POST">
+        <form action="{{ route('admin.update', $admin) }}" method="POST" class="p-6 space-y-6">
             @csrf
             @method('PUT')
 
-            <div class="mb-3">
-                <label class="form-label">Name</label>
-                <input type="text" name="name" value="{{ old('name', $admin->name) }}" class="form-control" required>
-                @error('name') <small class="text-danger">{{ $message }}</small> @enderror
+            <div>
+                <label for="name" class="block text-sm font-medium text-slate-700 mb-2">Name <span class="text-red-500">*</span></label>
+                <input type="text" name="name" id="name" value="{{ old('name', $admin->name) }}" class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 outline-none @error('name') border-red-500 @enderror" placeholder="Enter name" required>
+                @error('name')<p class="mt-1 text-sm text-red-600">{{ $message }}</p>@enderror
             </div>
 
-            <div class="mb-3">
-                <label class="form-label">Email</label>
-                <input type="email" name="email" value="{{ old('email', $admin->email) }}" class="form-control" required>
-                @error('email') <small class="text-danger">{{ $message }}</small> @enderror
+            <div>
+                <label for="email" class="block text-sm font-medium text-slate-700 mb-2">Email <span class="text-red-500">*</span></label>
+                <input type="email" name="email" id="email" value="{{ old('email', $admin->email) }}" class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 outline-none @error('email') border-red-500 @enderror" placeholder="Enter email" required>
+                @error('email')<p class="mt-1 text-sm text-red-600">{{ $message }}</p>@enderror
             </div>
 
-            <div class="mb-3">
-                <label class="form-label">Mobile</label>
-                <input type="text" name="mobile" value="{{ old('mobile', $admin->mobile) }}" class="form-control">
-                @error('mobile') <small class="text-danger">{{ $message }}</small> @enderror
+            <div>
+                <label for="mobile" class="block text-sm font-medium text-slate-700 mb-2">Mobile</label>
+                <input type="text" name="mobile" id="mobile" value="{{ old('mobile', $admin->mobile) }}" class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 outline-none @error('mobile') border-red-500 @enderror" placeholder="Enter mobile number">
+                @error('mobile')<p class="mt-1 text-sm text-red-600">{{ $message }}</p>@enderror
             </div>
 
-            {{-- Keep these for future use, aligned with your reference pages --}}
-            {{--
-            <div class="mb-3">
-                <label class="form-label">Branch</label>
-                <select name="branch_id" class="form-select">
-                    <option value="">Select Branch</option>
-                    @foreach($branches as $branch)
-                        <option value="{{ $branch->id }}" {{ old('branch_id', $admin->branch_id) == $branch->id ? 'selected' : '' }}>
-                            {{ $branch->branch_name }}
-                        </option>
-                    @endforeach
-                </select>
-                @error('branch_id') <small class="text-danger">{{ $message }}</small> @enderror
+            <div>
+                <label for="password" class="block text-sm font-medium text-slate-700 mb-2">Password <span class="text-slate-400 text-xs">(leave blank to keep existing)</span></label>
+                <input type="password" name="password" id="password" class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 outline-none @error('password') border-red-500 @enderror" placeholder="Enter new password">
+                @error('password')<p class="mt-1 text-sm text-red-600">{{ $message }}</p>@enderror
             </div>
 
-            <div class="mb-3">
-                <label class="form-label">Ferryboat</label>
-                <select name="ferryboat_id" class="form-select">
-                    <option value="">Select Ferryboat</option>
-                    @foreach($ferryboats as $ferryboat)
-                        <option value="{{ $ferryboat->id }}" {{ old('ferryboat_id', $admin->ferryboat_id) == $ferryboat->id ? 'selected' : '' }}>
-                            {{ $ferryboat->name }}
-                        </option>
-                    @endforeach
-                </select>
-                @error('ferryboat_id') <small class="text-danger">{{ $message }}</small> @enderror
-            </div>
-            --}}
-
-            <div class="mb-3">
-                <label class="form-label">Password <small class="text-muted">(leave blank to keep existing)</small></label>
-                <input type="password" name="password" class="form-control">
-                @error('password') <small class="text-danger">{{ $message }}</small> @enderror
-            </div>
-
-            <div class="d-flex justify-content-end gap-2">
-                <a href="{{ route('admin.index') }}" class="btn btn-secondary">↩ Cancel</a>
-                <button type="submit" class="btn btn-primary">✔ Update</button>
+            <div class="flex items-center justify-end space-x-4 pt-4 border-t border-slate-200">
+                <a href="{{ route('admin.index') }}" class="px-6 py-2.5 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 font-medium transition-colors">Cancel</a>
+                <button type="submit" class="inline-flex items-center space-x-2 bg-primary-600 hover:bg-primary-700 text-white px-6 py-2.5 rounded-xl font-medium transition-colors">
+                    <i data-lucide="save" class="w-4 h-4"></i>
+                    <span>Update Administrator</span>
+                </button>
             </div>
         </form>
     </div>
