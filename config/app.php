@@ -4,6 +4,21 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Application Version
+    |--------------------------------------------------------------------------
+    |
+    | This value is the version of your application following semantic
+    | versioning (https://semver.org/). This is used to track releases
+    | and can be displayed in the application UI or API responses.
+    |
+    */
+
+    'version' => file_exists(base_path('VERSION')) 
+        ? trim(file_get_contents(base_path('VERSION'))) 
+        : '0.0.0',
+
+    /*
+    |--------------------------------------------------------------------------
     | Application Name
     |--------------------------------------------------------------------------
     |
