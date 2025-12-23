@@ -220,6 +220,7 @@ Route::middleware('auth:customer')->group(function () {
         ->name('customer.dashboard');
 
     Route::get('/booking', [BookingController::class, 'show'])->name('booking.form');
+    Route::get('/booking/history', [BookingController::class, 'history'])->name('booking.history');
 
     Route::post('/booking', [BookingController::class, 'submit'])->name('booking.submit');
 

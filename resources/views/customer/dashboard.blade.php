@@ -472,8 +472,8 @@ END OF OLD DESIGN
                             <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                                 <i data-lucide="calendar" class="w-5 h-5 text-gray-400"></i>
                             </div>
-                            <input type="text" disabled name="date" id="travelDate"
-                                class="input-modern w-full pl-12 pr-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-gray-600 focus:outline-none" required>
+                            <input type="date" name="date" id="travelDate"
+                                class="input-modern w-full pl-12 pr-4 py-3 rounded-xl border border-gray-200 bg-white text-gray-800 focus:outline-none cursor-pointer" required>
                         </div>
                     </div>
                 </div>
@@ -632,10 +632,13 @@ END OF OLD DESIGN
     ============================================================ */
     let rowIndex = 0;
 
-    // Set today's date
-    document.getElementById('travelDate').value = new Date().toISOString().split('T')[0];
+    // Set today's date and minimum date
+    const today = new Date().toISOString().split('T')[0];
+    const travelDateInput = document.getElementById('travelDate');
+    travelDateInput.value = today;
+    travelDateInput.min = today; // Prevent selecting past dates
 
-    // Initialize Select2
+    // Initialize Select2 and set up event handlers
     $(document).ready(function() {
         $('#fromBranch').select2({
             placeholder: 'Select departure point',
@@ -646,13 +649,18 @@ END OF OLD DESIGN
             placeholder: 'Select destination',
             allowClear: true
         });
-    });
 
-    // When FROM branch changes
-    document.getElementById('fromBranch').addEventListener('change', function() {
-        const branchId = this.value;
-        loadToBranches(branchId);
-        resetItemsAndAddFirstRow();
+        // When FROM branch changes (use Select2's event)
+        $('#fromBranch').on('select2:select select2:clear', function(e) {
+            const branchId = $(this).val();
+            if (branchId) {
+                loadToBranches(branchId);
+                resetItemsAndAddFirstRow();
+            } else {
+                // Clear destination if departure is cleared
+                $('#toBranch').empty().append('<option value="">Select destination</option>').trigger('change');
+            }
+        });
     });
 
     /* ============================================================
@@ -660,16 +668,29 @@ END OF OLD DESIGN
     ============================================================ */
     function loadToBranches(branchId) {
         const toBranchSelect = $('#toBranch');
-        toBranchSelect.empty().append('<option value="">Loading...</option>');
+        toBranchSelect.empty().append('<option value="">Loading...</option>').trigger('change');
 
         fetch(`/booking/to-branches/${branchId}`)
-            .then(response => response.json())
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
             .then(data => {
                 toBranchSelect.empty().append('<option value="">Select destination</option>');
-                data.forEach(branch => {
-                    toBranchSelect.append(new Option(branch.branch_name, branch.id));
-                });
+                if (data && data.length > 0) {
+                    data.forEach(branch => {
+                        toBranchSelect.append(new Option(branch.branch_name, branch.id));
+                    });
+                } else {
+                    toBranchSelect.append('<option value="" disabled>No destinations available</option>');
+                }
                 toBranchSelect.trigger('change');
+            })
+            .catch(error => {
+                console.error('Error loading destinations:', error);
+                toBranchSelect.empty().append('<option value="">Error loading destinations</option>').trigger('change');
             });
     }
 
