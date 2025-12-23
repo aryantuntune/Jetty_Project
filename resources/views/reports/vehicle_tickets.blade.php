@@ -1,149 +1,175 @@
-@extends('layouts.app')
+@extends('layouts.admin')
+
+@section('title', 'Vehicle-wise Ticket Report')
+@section('page-title', 'Vehicle-wise Ticket Report')
 
 @section('content')
-<style>
-   .win-card { border: 2px solid #9ec5fe; background: #f8fafc; box-shadow: 2px 2px 6px rgba(0,0,0,0.15); }
-    .win-header { background: #fff; text-align: center; font-weight: bold; color: darkred; padding: 6px; border-bottom: 1px solid #ccc; }
-    .win-table { width: 100%; border-collapse: collapse; font-size: 14px; }
-    .win-table th { background: #f0f0f0; border: 1px solid #ccc; padding: 4px; text-align: left; }
-    .win-table td { border: 1px solid #ccc; padding: 4px; }
-    .win-row { background: #eaffea; }
-    .win-row:hover { background: #1e3a8a; color: white; }
-    .win-footer { background: darkred; color: white; padding: 6px 10px; display: flex; justify-content: space-between; align-items: center; font-weight: bold; }
-    .btn-add { background: #1d4ed8; color: white; padding: 4px 10px; border-radius: 3px; text-decoration: none; font-size: 13px; }
-    .btn-small { font-size: 12px; padding: 4px 8px; }
-    .scroll-box { max-height: 450px; overflow-y: auto; }
-</style>
-
-<div class="container mx-auto p-4">
-  <div class="win-card">
-    <div class="win-header">Vehicle Wise Tickets Details</div>
-
-    {{-- Filters --}}
-    {{-- Filters (single-line) --}}
-<div class="px-2 py-3 overflow-x-auto">
-  <form method="GET" action="{{ route('reports.vehicle_tickets') }}"
-        class="flex items-center gap-2 whitespace-nowrap w-max">
-
-    <select name="branch_id"
-            class="border px-2 py-1 text-sm rounded">
-      <option value="">All Branches</option>
-      @foreach($branches as $b)
-        <option value="{{ $b->id }}" {{ $branchId == $b->id ? 'selected' : '' }}>
-          {{ $b->branch_name }}
-        </option>
-      @endforeach
-    </select>
-
-    <input type="date" name="date_from" value="{{ $dateFrom }}"
-           class="border px-2 py-1 text-sm rounded" />
-    <span class="text-sm">to</span>
-    <input type="date" name="date_to" value="{{ $dateTo }}"
-           class="border px-2 py-1 text-sm rounded" />
-
-    <input type="text" name="vehicle_no" placeholder="Vehicle No" value="{{ $vehicleNo }}"
-           class="border px-2 py-1 text-sm rounded" />
-    <input type="text" name="vehicle_name" placeholder="Vehicle Name" value="{{ $vehicleName }}"
-           class="border px-2 py-1 text-sm rounded" />
-
-    <button type="submit"
-            class="border px-3 py-1 text-sm bg-gray-200 rounded">
-      Filter
-    </button>
-
-    <a href="{{ route('reports.vehicle_tickets') }}"
-       class="border px-3 py-1 text-sm bg-gray-200 rounded">
-      Reset
-    </a>
-
-    <a href="{{ route('reports.vehicle_tickets.export', request()->query()) }}"
-       class="px-3 py-1 text-sm bg-green-500 text-white rounded">
-      Export CSV
-    </a>
-  </form>
-</div>
-
-
-    {{-- Header strip --}}
-    {{-- <div class="px-4 pb-2 text-sm text-gray-600">
-      <div>
-        <strong>Branch Name:</strong>
-        {{ optional($branches->firstWhere('id', $branchId))->branch_name ?? 'All' }}
-      </div>
-      <div>
-        <strong>Date From:</strong> {{ $dateFrom ?: '—' }} &nbsp;&nbsp;
-        <strong>To:</strong> {{ $dateTo ?: '—' }}
-      </div>
-      <div>
-        <strong>Vehicle No:</strong> {{ $vehicleNo ?: 'All' }} &nbsp;&nbsp;
-        <strong>Vehicle:</strong> {{ $vehicleName ?: 'All' }}
-      </div>
-    </div> --}}
-
-    {{-- Grid --}}
-    <div class="scroll-box">
-      <table class="win-table">
-        <thead>
-          <tr>
-            <th>Ticket Date</th>
-            <th>Ticket No</th>
-            <th>Pay Mode</th>
-            <th>Boat Name</th>
-            <th>Ferry Time</th>
-            <th>Ferry Type</th>
-            <th>Vehicle No</th>
-            <th>Vehicle Name</th>
-            <th class="text-right">Amount</th>
-          </tr>
-        </thead>
-        <tbody>
-          @forelse($tickets as $t)
-            <tr class="win-row">
-              <td>{{ $t->created_at->format('d/m/Y') }}</td>
-              <td>{{ $t->id }}</td>
-              <td>{{ $t->payment_mode }}</td>
-              <td>{{ $t->ferryBoat->name ?? '-' }}</td>
-              <td>
-                @php
-                  $ft = optional($t->ferry_time);
-                  echo $ft ? (method_exists($ft,'format') ? $ft->format('H:i:s') : $t->ferry_time) : '-';
-                @endphp
-              </td>
-              <td>{{ $t->ferry_type ?? '-' }}</td>
-              <td>{{ $t->vehicle_no_join ?? '-' }}</td>
-              <td>{{ $t->vehicle_name_join ?? '-' }}</td>
-              <td class="text-right">{{ number_format($t->total_amount, 2) }}</td>
-            </tr>
-          @empty
-            <tr>
-              <td colspan="9" class="text-center p-3">No tickets found.</td>
-            </tr>
-          @endforelse
-        </tbody>
-        <tfoot>
-          <tr>
-            <th colspan="8" class="text-right">Total (this page):</th>
-            <th class="text-right">{{ number_format($pageTotalAmount, 2) }}</th>
-          </tr>
-          {{-- <tr>
-            <th colspan="8" class="text-right">Total (all filtered):</th>
-            <th class="text-right">{{ number_format($totalAmount, 2) }}</th>
-          </tr> --}}
-        </tfoot>
-      </table>
-
-      <div class="p-3">
-        {{ $tickets->appends(request()->query())->links() }}
-      </div>
+<div class="space-y-6">
+    <!-- Header -->
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+            <h2 class="text-2xl font-bold text-slate-800">Vehicle-wise Tickets</h2>
+            <p class="text-slate-500 mt-1">View ticket records filtered by vehicle information</p>
+        </div>
+        <a href="{{ route('reports.vehicle_tickets.export', request()->query()) }}" class="inline-flex items-center justify-center px-5 py-2.5 bg-gradient-to-r from-emerald-500 to-emerald-600 text-white font-semibold rounded-xl hover:from-emerald-600 hover:to-emerald-700 transition-all duration-200 shadow-lg shadow-emerald-500/30">
+            <i data-lucide="download" class="w-5 h-5 mr-2"></i>
+            Export CSV
+        </a>
     </div>
 
-    <div class="win-footer">
-      <span>Total Records: {{ $tickets->count() }}</span>
-      <a class="px-3 py-1 bg-green-500 text-white"
-   href="{{ route('reports.vehicle_tickets.export', request()->query()) }}">
-   Export CSV
-</a>
+    <!-- Filters Card -->
+    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+        <div class="p-4 border-b border-slate-200 bg-slate-50">
+            <div class="flex items-center space-x-2">
+                <i data-lucide="filter" class="w-5 h-5 text-slate-400"></i>
+                <span class="font-semibold text-slate-700">Filters</span>
+            </div>
+        </div>
+        <form method="GET" action="{{ route('reports.vehicle_tickets') }}" class="p-4">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7 gap-4">
+                <!-- Branch -->
+                <div>
+                    <label class="block text-xs font-medium text-slate-500 mb-1">Branch</label>
+                    <select name="branch_id" class="w-full px-3 py-2 rounded-lg border border-slate-200 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 outline-none text-sm">
+                        <option value="">All Branches</option>
+                        @foreach($branches as $b)
+                        <option value="{{ $b->id }}" {{ $branchId == $b->id ? 'selected' : '' }}>
+                            {{ $b->branch_name }}
+                        </option>
+                        @endforeach
+                    </select>
+                </div>
+
+                <!-- Date From -->
+                <div>
+                    <label class="block text-xs font-medium text-slate-500 mb-1">From Date</label>
+                    <input type="date" name="date_from" value="{{ $dateFrom }}" class="w-full px-3 py-2 rounded-lg border border-slate-200 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 outline-none text-sm">
+                </div>
+
+                <!-- Date To -->
+                <div>
+                    <label class="block text-xs font-medium text-slate-500 mb-1">To Date</label>
+                    <input type="date" name="date_to" value="{{ $dateTo }}" class="w-full px-3 py-2 rounded-lg border border-slate-200 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 outline-none text-sm">
+                </div>
+
+                <!-- Vehicle No -->
+                <div>
+                    <label class="block text-xs font-medium text-slate-500 mb-1">Vehicle No</label>
+                    <input type="text" name="vehicle_no" placeholder="Enter vehicle no" value="{{ $vehicleNo }}" class="w-full px-3 py-2 rounded-lg border border-slate-200 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 outline-none text-sm">
+                </div>
+
+                <!-- Vehicle Name -->
+                <div>
+                    <label class="block text-xs font-medium text-slate-500 mb-1">Vehicle Name</label>
+                    <input type="text" name="vehicle_name" placeholder="Enter vehicle name" value="{{ $vehicleName }}" class="w-full px-3 py-2 rounded-lg border border-slate-200 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 outline-none text-sm">
+                </div>
+
+                <!-- Buttons -->
+                <div class="flex items-end space-x-2 lg:col-span-2">
+                    <button type="submit" class="px-4 py-2 bg-primary-500 text-white rounded-lg hover:bg-primary-600 transition-colors text-sm font-medium">
+                        <i data-lucide="search" class="w-4 h-4 inline mr-1"></i>
+                        Filter
+                    </button>
+                    <a href="{{ route('reports.vehicle_tickets') }}" class="px-4 py-2 border border-slate-200 text-slate-600 rounded-lg hover:bg-slate-50 transition-colors text-sm font-medium">
+                        Reset
+                    </a>
+                </div>
+            </div>
+        </form>
     </div>
-  </div>
+
+    <!-- Table Card -->
+    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="w-full">
+                <thead>
+                    <tr class="bg-slate-50 border-b border-slate-200">
+                        <th class="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Date</th>
+                        <th class="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Ticket #</th>
+                        <th class="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Pay Mode</th>
+                        <th class="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Boat</th>
+                        <th class="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Time</th>
+                        <th class="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Type</th>
+                        <th class="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Vehicle No</th>
+                        <th class="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Vehicle Name</th>
+                        <th class="px-4 py-3 text-right text-xs font-semibold text-slate-500 uppercase tracking-wider">Amount</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100">
+                    @forelse($tickets as $t)
+                    <tr class="table-row-hover transition-colors">
+                        <td class="px-4 py-3 text-sm text-slate-600">{{ $t->created_at->format('d/m/Y') }}</td>
+                        <td class="px-4 py-3">
+                            <span class="font-medium text-slate-800">#{{ $t->id }}</span>
+                        </td>
+                        <td class="px-4 py-3">
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ $t->payment_mode == 'Cash' ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700' }}">
+                                {{ $t->payment_mode }}
+                            </span>
+                        </td>
+                        <td class="px-4 py-3 text-sm text-slate-600">{{ $t->ferryBoat->name ?? '-' }}</td>
+                        <td class="px-4 py-3 text-sm text-slate-600">
+                            @php
+                                $ft = optional($t->ferry_time);
+                                echo $ft ? (method_exists($ft,'format') ? $ft->format('H:i:s') : $t->ferry_time) : '-';
+                            @endphp
+                        </td>
+                        <td class="px-4 py-3 text-sm text-slate-600">{{ $t->ferry_type ?? '-' }}</td>
+                        <td class="px-4 py-3">
+                            @if($t->vehicle_no_join)
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-lg text-xs font-medium bg-amber-100 text-amber-700">
+                                <i data-lucide="car" class="w-3 h-3 mr-1"></i>
+                                {{ $t->vehicle_no_join }}
+                            </span>
+                            @else
+                            <span class="text-slate-400">-</span>
+                            @endif
+                        </td>
+                        <td class="px-4 py-3 text-sm text-slate-600">{{ $t->vehicle_name_join ?? '-' }}</td>
+                        <td class="px-4 py-3 text-right">
+                            <span class="font-semibold text-slate-800">{{ number_format($t->total_amount, 2) }}</span>
+                        </td>
+                    </tr>
+                    @empty
+                    <tr>
+                        <td colspan="9" class="px-4 py-12 text-center">
+                            <div class="flex flex-col items-center">
+                                <div class="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center mb-4">
+                                    <i data-lucide="car" class="w-8 h-8 text-slate-400"></i>
+                                </div>
+                                <p class="text-slate-500 font-medium">No vehicle tickets found</p>
+                                <p class="text-slate-400 text-sm mt-1">Try adjusting your filters</p>
+                            </div>
+                        </td>
+                    </tr>
+                    @endforelse
+                </tbody>
+                @if($tickets->count() > 0)
+                <tfoot>
+                    <tr class="bg-slate-50 border-t-2 border-slate-200">
+                        <td colspan="8" class="px-4 py-3 text-right font-semibold text-slate-700">Total (this page):</td>
+                        <td class="px-4 py-3 text-right font-bold text-lg text-primary-600">{{ number_format($pageTotalAmount, 2) }}</td>
+                    </tr>
+                </tfoot>
+                @endif
+            </table>
+        </div>
+
+        <!-- Footer with Pagination -->
+        <div class="px-6 py-4 bg-slate-50 border-t border-slate-200 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <p class="text-sm text-slate-600">
+                Total Records: <span class="font-semibold">{{ $tickets->total() }}</span>
+            </p>
+            <div class="flex items-center space-x-2">
+                {{ $tickets->appends(request()->query())->links() }}
+            </div>
+        </div>
+    </div>
 </div>
+
+@push('scripts')
+<script>
+    lucide.createIcons();
+</script>
+@endpush
 @endsection

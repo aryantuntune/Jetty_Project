@@ -1,79 +1,112 @@
-@extends('layouts.app')
+@extends('layouts.admin')
+
+@section('title', 'Checkers')
+@section('page-title', 'Checkers')
 
 @section('content')
-<style>
-    .custom-table thead th { background: #f8f9fa; font-weight:bold; }
-    .custom-table tbody tr { background:#eafbea; }
-    .custom-table tbody tr:nth-child(even){ background:#f4fff4; }
-    .custom-table tbody tr:hover{ background:#cce5ff; }
-    .custom-table tbody tr.active{ background:#003366;color:#fff; }
-    .table-footer{ background:#800000;color:white;font-weight:bold;padding:10px; }
-    .list-window{ max-width:1120px;margin:18px auto 32px;border:1px solid #a9a9a9;
-        border-radius:6px;background:#fff;box-shadow:0 2px 10px rgba(0,0,0,.04);overflow:hidden;}
-    .list-body{ padding:16px; }
-</style>
-
-<div class="container list-window">
-    <div class="list-body">
-
-        <div class="d-flex justify-content-between mb-3">
-            <h2 class="text-danger">Checkers</h2>
-            <a href="{{ route('checker.create') }}" class="btn btn-primary">Add Checker</a>
+<div class="space-y-6">
+    <!-- Header -->
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+            <h2 class="text-2xl font-bold text-slate-800">Checkers</h2>
+            <p class="text-slate-500 mt-1">Manage all checker accounts and their branch assignments</p>
         </div>
+        <a href="{{ route('checker.create') }}" class="inline-flex items-center justify-center px-5 py-2.5 bg-gradient-to-r from-primary-500 to-primary-600 text-white font-semibold rounded-xl hover:from-primary-600 hover:to-primary-700 transition-all duration-200 shadow-lg shadow-primary-500/30 hover:shadow-primary-500/40">
+            <i data-lucide="plus" class="w-5 h-5 mr-2"></i>
+            Add Checker
+        </a>
+    </div>
 
-        @if(session('success'))
-            <div class="alert alert-success">{{ session('success') }}</div>
-        @endif
-
-        <table class="table table-bordered custom-table">
-            <thead>
-                <tr>
-                    <th>Name</th><th>Email</th><th>Mobile</th><th>Branch</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                @forelse($checkers as $checker)
-                    <tr>
-                        <td>{{ $checker->name }}</td>
-                        <td>{{ $checker->email }}</td>
-                        <td>{{ $checker->mobile ?? 'N/A' }}</td>
-                        <td>{{ $checker->branch?->branch_name ?? 'N/A' }}</td>
-
-                        <td>
-                            <a href="{{ route('checker.edit', $checker) }}" class="btn btn-warning btn-sm">Edit</a>
-
-                            <form action="{{ route('checker.destroy', $checker) }}"
-                                  method="POST" style="display:inline-block;">
-                                @csrf @method('DELETE')
-                                <button type="submit" class="btn btn-danger btn-sm"
-                                    onclick="return confirm('Delete this checker?')">
-                                    Delete
-                                </button>
-                            </form>
+    <!-- Table Card -->
+    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+        <!-- Table -->
+        <div class="overflow-x-auto">
+            <table class="w-full">
+                <thead>
+                    <tr class="bg-slate-50 border-b border-slate-200">
+                        <th class="px-6 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Name</th>
+                        <th class="px-6 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Email</th>
+                        <th class="px-6 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Mobile</th>
+                        <th class="px-6 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Branch</th>
+                        <th class="px-6 py-4 text-right text-xs font-semibold text-slate-500 uppercase tracking-wider">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100">
+                    @forelse($checkers as $checker)
+                    <tr class="table-row-hover transition-colors cursor-pointer" onclick="if(event.target.tagName !== 'BUTTON' && !event.target.closest('button') && !event.target.closest('a') && !event.target.closest('form')) this.classList.toggle('bg-primary-50')">
+                        <td class="px-6 py-4">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-10 h-10 rounded-full bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center text-white font-semibold">
+                                    {{ strtoupper(substr($checker->name, 0, 1)) }}
+                                </div>
+                                <span class="font-medium text-slate-800">{{ $checker->name }}</span>
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 text-slate-600">{{ $checker->email }}</td>
+                        <td class="px-6 py-4 text-slate-600">{{ $checker->mobile ?? 'N/A' }}</td>
+                        <td class="px-6 py-4">
+                            @if($checker->branch)
+                            <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-700">
+                                <i data-lucide="map-pin" class="w-3 h-3 mr-1"></i>
+                                {{ $checker->branch->branch_name }}
+                            </span>
+                            @else
+                            <span class="text-slate-400">N/A</span>
+                            @endif
+                        </td>
+                        <td class="px-6 py-4">
+                            <div class="flex items-center justify-end space-x-2">
+                                <a href="{{ route('checker.edit', $checker) }}" class="p-2 rounded-lg text-amber-600 hover:bg-amber-50 transition-colors" title="Edit">
+                                    <i data-lucide="edit-3" class="w-4 h-4"></i>
+                                </a>
+                                <form action="{{ route('checker.destroy', $checker) }}" method="POST" class="inline" onsubmit="return confirm('Are you sure you want to delete this checker?')">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="p-2 rounded-lg text-red-600 hover:bg-red-50 transition-colors" title="Delete">
+                                        <i data-lucide="trash-2" class="w-4 h-4"></i>
+                                    </button>
+                                </form>
+                            </div>
                         </td>
                     </tr>
-                @empty
-                    <tr><td colspan="6" class="text-center">No checkers found</td></tr>
-                @endforelse
-            </tbody>
-        </table>
-
-        <div class="table-footer d-flex justify-content-between">
-            <span>Total Checkers: {{ $checkers->total() }}</span>
-            <div>{{ $checkers->links() }}</div>
+                    @empty
+                    <tr>
+                        <td colspan="5" class="px-6 py-12 text-center">
+                            <div class="flex flex-col items-center">
+                                <div class="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center mb-4">
+                                    <i data-lucide="user-check" class="w-8 h-8 text-slate-400"></i>
+                                </div>
+                                <p class="text-slate-500 font-medium">No checkers found</p>
+                                <p class="text-slate-400 text-sm mt-1">Get started by adding your first checker</p>
+                                <a href="{{ route('checker.create') }}" class="mt-4 inline-flex items-center px-4 py-2 bg-primary-500 text-white rounded-lg hover:bg-primary-600 transition-colors">
+                                    <i data-lucide="plus" class="w-4 h-4 mr-2"></i>
+                                    Add Checker
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    @endforelse
+                </tbody>
+            </table>
         </div>
 
+        <!-- Footer with Pagination -->
+        @if($checkers->hasPages() || $checkers->total() > 0)
+        <div class="px-6 py-4 bg-slate-50 border-t border-slate-200 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <p class="text-sm text-slate-600">
+                Showing <span class="font-semibold">{{ $checkers->firstItem() ?? 0 }}</span> to <span class="font-semibold">{{ $checkers->lastItem() ?? 0 }}</span> of <span class="font-semibold">{{ $checkers->total() }}</span> checkers
+            </p>
+            <div class="flex items-center space-x-2">
+                {{ $checkers->links() }}
+            </div>
+        </div>
+        @endif
     </div>
 </div>
 
+@push('scripts')
 <script>
-document.querySelectorAll('.custom-table tbody tr').forEach(tr=>{
-    tr.addEventListener('click',function(){
-        document.querySelectorAll('.custom-table tbody tr')
-            .forEach(r=>r.classList.remove('active'));
-        this.classList.add('active');
-    });
-});
+    lucide.createIcons();
 </script>
+@endpush
 @endsection

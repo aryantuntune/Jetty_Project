@@ -1,93 +1,156 @@
-@extends('layouts.app')
+@extends('layouts.admin')
+
+@section('title', 'Add Manager')
+@section('page-title', 'Add Manager')
 
 @section('content')
-<style>
-    /* Consistent window/card container like your reference pages */
-    .list-window{
-        max-width:1120px; margin:18px auto 32px;
-        border:1px solid #a9a9a9; border-radius:6px; background:#fff;
-        box-shadow:0 2px 10px rgba(0,0,0,.04); overflow:hidden;
-    }
-    .list-body{ padding:16px; }
+<div class="max-w-2xl mx-auto">
+    <!-- Header -->
+    <div class="mb-6">
+        <a href="{{ route('manager.index') }}" class="inline-flex items-center text-slate-500 hover:text-slate-700 transition-colors mb-4">
+            <i data-lucide="arrow-left" class="w-4 h-4 mr-2"></i>
+            Back to Managers
+        </a>
+        <h2 class="text-2xl font-bold text-slate-800">Add New Manager</h2>
+        <p class="text-slate-500 mt-1">Create a new manager account with branch assignment</p>
+    </div>
 
-    /* Title uses the same red as .text-danger */
-    .page-title { color:#dc3545; margin:0; }
-
-    /* Form consistency */
-    .form-label { font-weight:600; }
-</style>
-
-<div class="container list-window">
-    <div class="list-body">
-        <div class="d-flex justify-content-between align-items-center mb-3">
-            <h2 class="page-title">Add Manager</h2>
-            <a href="{{ route('manager.index') }}" class="btn btn-secondary">↩ Back to List</a>
-        </div>
-
-        @if ($errors->any())
-            <div class="alert alert-danger">
-                <strong>Please fix the errors below.</strong>
-            </div>
-        @endif
-
-        <form action="{{ route('manager.store') }}" method="POST">
+    <!-- Form Card -->
+    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+        <form action="{{ route('manager.store') }}" method="POST" class="p-6 space-y-6">
             @csrf
 
-            <div class="mb-3">
-                <label class="form-label">Name</label>
-                <input type="text" name="name" class="form-control" required value="{{ old('name') }}">
-                @error('name') <small class="text-danger">{{ $message }}</small> @enderror
+            <!-- Name Field -->
+            <div>
+                <label for="name" class="block text-sm font-semibold text-slate-700 mb-2">
+                    Full Name <span class="text-red-500">*</span>
+                </label>
+                <div class="relative">
+                    <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                        <i data-lucide="user" class="w-5 h-5 text-slate-400"></i>
+                    </div>
+                    <input type="text" name="name" id="name" value="{{ old('name') }}" required
+                        class="w-full pl-12 pr-4 py-3 rounded-xl border border-slate-200 focus:border-primary-500 focus:ring-4 focus:ring-primary-500/10 outline-none transition-all @error('name') border-red-300 @enderror"
+                        placeholder="Enter manager's full name">
+                </div>
+                @error('name')
+                <p class="mt-2 text-sm text-red-600 flex items-center">
+                    <i data-lucide="alert-circle" class="w-4 h-4 mr-1"></i>
+                    {{ $message }}
+                </p>
+                @enderror
             </div>
 
-            <div class="mb-3">
-                <label class="form-label">Email</label>
-                <input type="email" name="email" class="form-control" required value="{{ old('email') }}">
-                @error('email') <small class="text-danger">{{ $message }}</small> @enderror
+            <!-- Email Field -->
+            <div>
+                <label for="email" class="block text-sm font-semibold text-slate-700 mb-2">
+                    Email Address <span class="text-red-500">*</span>
+                </label>
+                <div class="relative">
+                    <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                        <i data-lucide="mail" class="w-5 h-5 text-slate-400"></i>
+                    </div>
+                    <input type="email" name="email" id="email" value="{{ old('email') }}" required
+                        class="w-full pl-12 pr-4 py-3 rounded-xl border border-slate-200 focus:border-primary-500 focus:ring-4 focus:ring-primary-500/10 outline-none transition-all @error('email') border-red-300 @enderror"
+                        placeholder="manager@example.com">
+                </div>
+                @error('email')
+                <p class="mt-2 text-sm text-red-600 flex items-center">
+                    <i data-lucide="alert-circle" class="w-4 h-4 mr-1"></i>
+                    {{ $message }}
+                </p>
+                @enderror
             </div>
 
-            <div class="mb-3">
-                <label class="form-label">Password</label>
-                <input type="password" name="password" class="form-control" required>
-                @error('password') <small class="text-danger">{{ $message }}</small> @enderror
+            <!-- Password Field -->
+            <div>
+                <label for="password" class="block text-sm font-semibold text-slate-700 mb-2">
+                    Password <span class="text-red-500">*</span>
+                </label>
+                <div class="relative">
+                    <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                        <i data-lucide="lock" class="w-5 h-5 text-slate-400"></i>
+                    </div>
+                    <input type="password" name="password" id="password" required
+                        class="w-full pl-12 pr-4 py-3 rounded-xl border border-slate-200 focus:border-primary-500 focus:ring-4 focus:ring-primary-500/10 outline-none transition-all @error('password') border-red-300 @enderror"
+                        placeholder="Create a secure password">
+                </div>
+                @error('password')
+                <p class="mt-2 text-sm text-red-600 flex items-center">
+                    <i data-lucide="alert-circle" class="w-4 h-4 mr-1"></i>
+                    {{ $message }}
+                </p>
+                @enderror
             </div>
 
-            <div class="mb-3">
-                <label class="form-label">Mobile</label>
-                <input type="text" name="mobile" class="form-control" value="{{ old('mobile') }}">
-                @error('mobile') <small class="text-danger">{{ $message }}</small> @enderror
+            <!-- Mobile Field -->
+            <div>
+                <label for="mobile" class="block text-sm font-semibold text-slate-700 mb-2">
+                    Mobile Number
+                </label>
+                <div class="relative">
+                    <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                        <i data-lucide="phone" class="w-5 h-5 text-slate-400"></i>
+                    </div>
+                    <input type="text" name="mobile" id="mobile" value="{{ old('mobile') }}"
+                        class="w-full pl-12 pr-4 py-3 rounded-xl border border-slate-200 focus:border-primary-500 focus:ring-4 focus:ring-primary-500/10 outline-none transition-all @error('mobile') border-red-300 @enderror"
+                        placeholder="Enter mobile number">
+                </div>
+                @error('mobile')
+                <p class="mt-2 text-sm text-red-600 flex items-center">
+                    <i data-lucide="alert-circle" class="w-4 h-4 mr-1"></i>
+                    {{ $message }}
+                </p>
+                @enderror
             </div>
 
-            <div class="mb-3">
-                <label class="form-label">Branch</label>
-                <select name="branch_id" class="form-select">
-                    <option value="">-- Select Branch --</option>
-                    @foreach($branches as $branch)
+            <!-- Branch Field -->
+            <div>
+                <label for="branch_id" class="block text-sm font-semibold text-slate-700 mb-2">
+                    Assigned Branch
+                </label>
+                <div class="relative">
+                    <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                        <i data-lucide="map-pin" class="w-5 h-5 text-slate-400"></i>
+                    </div>
+                    <select name="branch_id" id="branch_id"
+                        class="w-full pl-12 pr-10 py-3 rounded-xl border border-slate-200 focus:border-primary-500 focus:ring-4 focus:ring-primary-500/10 outline-none transition-all appearance-none bg-white @error('branch_id') border-red-300 @enderror">
+                        <option value="">-- Select Branch --</option>
+                        @foreach($branches as $branch)
                         <option value="{{ $branch->id }}" {{ old('branch_id') == $branch->id ? 'selected' : '' }}>
                             {{ $branch->branch_name }}
                         </option>
-                    @endforeach
-                </select>
-                @error('branch_id') <small class="text-danger">{{ $message }}</small> @enderror
+                        @endforeach
+                    </select>
+                    <div class="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none">
+                        <i data-lucide="chevron-down" class="w-5 h-5 text-slate-400"></i>
+                    </div>
+                </div>
+                @error('branch_id')
+                <p class="mt-2 text-sm text-red-600 flex items-center">
+                    <i data-lucide="alert-circle" class="w-4 h-4 mr-1"></i>
+                    {{ $message }}
+                </p>
+                @enderror
             </div>
 
-            {{-- <div class="mb-3">
-                <label class="form-label">Ferryboat</label>
-                <select name="ferryboat_id" class="form-select">
-                    <option value="">-- Select Ferryboat --</option>
-                    @foreach($ferryboats as $ferryboat)
-                        <option value="{{ $ferryboat->id }}" {{ old('ferryboat_id') == $ferryboat->id ? 'selected' : '' }}>
-                            {{ $ferryboat->name }}
-                        </option>
-                    @endforeach
-                </select>
-                @error('ferryboat_id') <small class="text-danger">{{ $message }}</small> @enderror
-            </div> --}}
-
-            <div class="d-flex justify-content-end gap-2">
-                <a href="{{ route('manager.index') }}" class="btn btn-secondary">↩ Cancel</a>
-                <button type="submit" class="btn btn-primary">💾 Save</button>
+            <!-- Action Buttons -->
+            <div class="flex items-center justify-end space-x-3 pt-6 border-t border-slate-200">
+                <a href="{{ route('manager.index') }}" class="px-5 py-2.5 rounded-xl border border-slate-200 text-slate-600 font-medium hover:bg-slate-50 transition-colors">
+                    Cancel
+                </a>
+                <button type="submit" class="px-5 py-2.5 bg-gradient-to-r from-primary-500 to-primary-600 text-white font-semibold rounded-xl hover:from-primary-600 hover:to-primary-700 transition-all duration-200 shadow-lg shadow-primary-500/30 hover:shadow-primary-500/40 flex items-center">
+                    <i data-lucide="save" class="w-4 h-4 mr-2"></i>
+                    Save Manager
+                </button>
             </div>
         </form>
     </div>
 </div>
+
+@push('scripts')
+<script>
+    lucide.createIcons();
+</script>
+@endpush
 @endsection
