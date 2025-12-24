@@ -114,6 +114,13 @@
             transform: translateX(0);
         }
 
+        /* Show sidebar on desktop */
+        @media (min-width: 1024px) {
+            .mobile-sidebar {
+                transform: translateX(0);
+            }
+        }
+
         /* Table hover effect */
         .table-row-hover:hover {
             background: linear-gradient(90deg, #eff6ff 0%, #f8fafc 100%);
