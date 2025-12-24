@@ -181,9 +181,9 @@
 
             <!-- Navigation -->
             @php
-                $currentRoute = Route::currentRouteName();
+                $currentRoute = Route::currentRouteName() ?? '';
             @endphp
-            <nav class="flex-1 px-4 py-6 space-y-1 sidebar-scroll overflow-y-auto">
+            <nav class="px-4 py-4 space-y-1 sidebar-scroll overflow-y-auto">
                 <!-- Counter Options -->
                 <a href="{{ route('ticket-entry.create') }}" class="flex items-center space-x-3 px-3 py-2.5 rounded-lg transition-colors group {{ $currentRoute == 'ticket-entry.create' ? 'nav-link-active' : 'text-white/70 hover:bg-sidebar-hover hover:text-white' }}">
                     <i data-lucide="ticket" class="w-5 h-5"></i>
@@ -236,7 +236,8 @@
 
                 <!-- Transfer -->
                 @if(in_array(auth()->user()->role_id, [1,2]))
-                <a href="{{ route('employees.transfer.index') }}" class="flex items-center space-x-3 px-3 py-2.5 rounded-lg transition-colors group {{ Str::startsWith($currentRoute, 'employees.transfer.') ? 'nav-link-active' : 'text-white/70 hover:bg-sidebar-hover hover:text-white' }}">
+                @php $isTransferActive = Str::contains($currentRoute, 'transfer'); @endphp
+                <a href="{{ route('employees.transfer.index') }}" class="flex items-center space-x-3 px-3 py-2.5 rounded-lg transition-colors group {{ $isTransferActive ? 'nav-link-active' : 'text-white/70 hover:bg-sidebar-hover hover:text-white' }}">
                     <i data-lucide="arrow-right-left" class="w-5 h-5"></i>
                     <span class="font-medium">Transfer</span>
                 </a>
@@ -244,7 +245,8 @@
 
                 <!-- Verify Ticket -->
                 @if(in_array(auth()->user()->role_id, [1,2,5]))
-                <a href="{{ route('verify.index') }}" class="flex items-center space-x-3 px-3 py-2.5 rounded-lg transition-colors group {{ Str::startsWith($currentRoute, 'verify.') ? 'nav-link-active' : 'text-white/70 hover:bg-sidebar-hover hover:text-white' }}">
+                @php $isVerifyActive = Str::contains($currentRoute, 'verify'); @endphp
+                <a href="{{ route('verify.index') }}" class="flex items-center space-x-3 px-3 py-2.5 rounded-lg transition-colors group {{ $isVerifyActive ? 'nav-link-active' : 'text-white/70 hover:bg-sidebar-hover hover:text-white' }}">
                     <i data-lucide="check-circle" class="w-5 h-5"></i>
                     <span class="font-medium">Verify Ticket</span>
                 </a>
@@ -277,6 +279,9 @@
                 </div>
                 @endif
             </nav>
+
+            <!-- Spacer to push user section to bottom -->
+            <div class="flex-1"></div>
 
             <!-- User Section -->
             <div class="p-4 border-t border-white/10">
