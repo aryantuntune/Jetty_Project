@@ -1,207 +1,138 @@
-@extends('layouts.app')
+@extends('layouts.admin')
+
+@section('title', 'Item Rate Slabs')
+@section('page-title', 'Item Rate Slabs')
 
 @section('content')
-<style>
-  :root{
-    --win-border:#a9a9a9;
-    --title-red:#b22222;
-    --panel-bg:#f5f7fa;
-    --strip-bg:#eef2f6;
-    --grid-bg:#ecfff1;         /* pale green like screenshot */
-    --grid-alt:#e2ffe9;
-    --grid-border:#cdd9c5;
-    --grid-head:#f0f0f0;
-    --blue-select:#0b61d6;     /* row highlight blue */
-    --footer-red:#b3262e;
-    --add-green:#49aa3d;
-  }
-  .irs-window{
-    max-width: 1120px;
-    margin: 18px auto 32px;
-    border: 1px solid var(--win-border);
-    border-radius: 6px;
-    background: #fff;
-    box-shadow: 0 1px 0 #fff inset, 0 2px 10px rgba(0,0,0,.04);
-    overflow: hidden;
-  }
-  .irs-title{
-    text-align:center;
-    font-weight:700;
-    font-size:20px;
-    color:var(--title-red);
-    padding:12px 14px 10px;
-    border-bottom:1px solid var(--win-border);
-    background:#fff;
-  }
-  .irs-strip{
-    background: var(--panel-bg);
-    border-bottom:1px solid var(--win-border);
-    padding: 14px 16px;
-  }
-  .irs-row{
-    display:grid;
-    grid-template-columns: 140px 1fr 120px 120px;
-    gap:10px;
-    align-items:center;
-  }
-  .irs-label{font-size:13px;color:#444;}
-  .irs-input, .irs-select{
-    width:100%;
-    border:1px solid #c9c9c9;
-    border-radius:4px;
-    background:#fff;
-    padding:8px 10px;
-    font-size:14px;
-  }
-  .irs-grid-wrap{
-    max-height: 520px; /* scroll like desktop app */
-    overflow:auto;
-    border-top:1px solid var(--win-border);
-    border-bottom:1px solid var(--win-border);
-  }
-  table.irs-grid{
-    width:100%;
-    border-collapse:collapse;
-    background: var(--grid-bg);
-  }
-  .irs-grid thead th{
-    position: sticky; top:0;
-    background: var(--grid-head);
-    font-size:13px; font-weight:700; color:#3a3a3a;
-    border-bottom:1px solid var(--grid-border);
-    padding:8px 10px;
-    text-transform:none;
-  }
-  .irs-grid tbody td{
-    border-bottom:1px solid var(--grid-border);
-    padding:8px 10px;
-    font-size:13px; color:#222;
-    white-space:nowrap;
-  }
-  .irs-grid tbody tr:nth-child(even){ background: var(--grid-alt); }
-  .irs-grid tbody tr:hover{ outline:2px solid var(--blue-select); outline-offset:-2px; }
-  .irs-footer{
-    display:flex; align-items:center; justify-content:space-between;
-    background: var(--footer-red);
-    padding:10px 12px;
-  }
-  .btn-add{
-    background: var(--add-green);
-    color:#fff; font-weight:600; font-size:13px;
-    border:none; border-radius:4px; padding:8px 12px;
-  }
-  .btn-add:hover{ filter:brightness(0.95); }
-  .btn-ghost{
-    background: rgba(255,255,255,.85);
-    border:1px solid rgba(0,0,0,.15);
-    border-radius:6px;
-    width:34px;height:28px; display:inline-flex; align-items:center; justify-content:center;
-  }
-  .btn-small{ padding:4px 8px; font-size:12px; }
-  .text-end{ text-align:right; }
-</style>
-
-<div class="irs-window">
-  <div class="irs-title">Item Rate Slabs</div>
-
-  {{-- Top strip (Branch Name dropdown + Branch ID display) --}}
-  <div class="irs-strip">
-    <form method="get">
-      <div class="irs-row">
-        <div class="irs-label">Branch Name :</div>
+<div class="space-y-6">
+    <!-- Header -->
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-         <select class="irs-select" name="branch_id" onchange="this.form.submit()">
-    @if(in_array(auth()->user()->role_id, [1,2]))
-        <option value="">— All Branches —</option>
-    @endif
-    @foreach($branches as $b)
-        <option value="{{ $b->id }}" @selected(request('branch_id')==$b->id)>{{ $b->branch_name }}</option>
-    @endforeach
-</select>
-
-
+            <h2 class="text-2xl font-bold text-slate-800">Item Rate Slabs</h2>
+            <p class="text-slate-500 mt-1">Manage pricing slabs for ferry items</p>
         </div>
-        {{-- <div class="irs-label text-end">Branch ID :</div>
-        <div>
-          <input class="irs-input" value="{{ request('branch_id') ?? ($branches?->firstWhere('id', request('branch_id'))?->id ?? '') }}" readonly>
-        </div> --}}
-      </div>
-    </form>
-  </div>
-
-  {{-- Grid --}}
-  <div class="irs-grid-wrap">
-    <table class="irs-grid">
-     <thead>
-  <tr>
-    <th style="width:140px">Starting Date</th>
-    <th>Item Id</th>
-    <th>Item Name</th>
-    <th>Item Category Name</th>
-    <th>Branch Name</th>
-    <th style="width:120px" class="text-end">Item Rate</th>
-    <th style="width:120px" class="text-end">Item Levy</th>
-      @if(in_array(auth()->user()->role_id, [1,2]))
-    <th style="width:120px" class="text-center">Actions</th> 
-    @endif
-  </tr>
-</thead>
-<tbody>
-  @forelse($itemRates as $r)
-    <tr>
-      <td>{{ $r->starting_date?->format('d/m/Y') }}</td>
-      <td>{{ $r->item_id }}</td>
-      <td class="fw-semibold">{{ strtoupper($r->item_name) }}</td>
-      <td>{{ strtoupper($r->category->category_name ?? '—') }}</td>     
-      <td>{{ strtoupper($r->branch->branch_name ?? '—') }}</td>
-      <td class="text-end">{{ number_format($r->item_rate,2) }}</td>
-      <td class="text-end">{{ number_format($r->item_lavy,2) }}</td>
-      @if(in_array(auth()->user()->role_id, [1,2]))
-      <td class="text-center">
-          {{-- Edit Button --}}
-          <a href="{{ route('item-rates.edit', $r) }}" 
-             class="btn-small" 
-             style="background:#0b61d6;color:#fff;border-radius:4px;padding:5px 10px;text-decoration:none;margin-right:4px;">
-             Edit
-          </a>
-
-          {{-- Delete Button --}}
-          <form action="{{ route('item-rates.destroy', $r) }}" method="POST" style="display:inline;">
-            @csrf
-            @method('DELETE')
-            <button type="submit" 
-                    onclick="return confirm('Are you sure you want to delete this item rate?')" 
-                    class="btn-small" 
-                    style="background:#b3262e;color:#fff;border-radius:4px;padding:5px 10px;border:none;">
-              Delete
-            </button>
-          </form>
+        @if(in_array(auth()->user()->role_id, [1,2]))
+        <a href="{{ route('item-rates.create') }}" class="inline-flex items-center justify-center px-5 py-2.5 bg-gradient-to-r from-primary-500 to-primary-600 text-white font-semibold rounded-xl hover:from-primary-600 hover:to-primary-700 transition-all duration-200 shadow-lg shadow-primary-500/30">
+            <i data-lucide="plus" class="w-5 h-5 mr-2"></i>
+            Add New Rate Slab
+        </a>
         @endif
-      </td>
-    </tr>
-  @empty
-    <tr><td colspan="8" style="text-align:center;padding:20px;">No records found.</td></tr>
-  @endforelse
-</tbody>
+    </div>
 
+    <!-- Filters Card -->
+    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+        <div class="p-4 border-b border-slate-200 bg-slate-50">
+            <div class="flex items-center space-x-2">
+                <i data-lucide="filter" class="w-5 h-5 text-slate-400"></i>
+                <span class="font-semibold text-slate-700">Filters</span>
+            </div>
+        </div>
+        <form method="GET" class="p-4">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div class="lg:col-span-2">
+                    <label class="block text-xs font-medium text-slate-500 mb-1">Branch</label>
+                    <select name="branch_id" onchange="this.form.submit()" class="w-full px-3 py-2 rounded-lg border border-slate-200 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 outline-none text-sm">
+                        @if(in_array(auth()->user()->role_id, [1,2]))
+                        <option value="">All Branches</option>
+                        @endif
+                        @foreach($branches as $b)
+                        <option value="{{ $b->id }}" @selected(request('branch_id')==$b->id)>{{ $b->branch_name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+            </div>
+        </form>
+    </div>
 
-    </table>
-  </div>
+    <!-- Table Card -->
+    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="w-full">
+                <thead>
+                    <tr class="bg-slate-50 border-b border-slate-200">
+                        <th class="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Starting Date</th>
+                        <th class="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Item ID</th>
+                        <th class="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Item Name</th>
+                        <th class="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Category</th>
+                        <th class="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Branch</th>
+                        <th class="px-4 py-3 text-right text-xs font-semibold text-slate-500 uppercase tracking-wider">Rate</th>
+                        <th class="px-4 py-3 text-right text-xs font-semibold text-slate-500 uppercase tracking-wider">Levy</th>
+                        @if(in_array(auth()->user()->role_id, [1,2]))
+                        <th class="px-4 py-3 text-center text-xs font-semibold text-slate-500 uppercase tracking-wider">Actions</th>
+                        @endif
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100">
+                    @forelse($itemRates as $r)
+                    <tr class="table-row-hover transition-colors">
+                        <td class="px-4 py-3 text-sm text-slate-600">{{ $r->starting_date?->format('d/m/Y') }}</td>
+                        <td class="px-4 py-3">
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-700">
+                                #{{ $r->item_id }}
+                            </span>
+                        </td>
+                        <td class="px-4 py-3">
+                            <span class="font-medium text-slate-800">{{ strtoupper($r->item_name) }}</span>
+                        </td>
+                        <td class="px-4 py-3 text-sm text-slate-600">{{ strtoupper($r->category->category_name ?? '-') }}</td>
+                        <td class="px-4 py-3">
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-lg text-xs font-medium bg-blue-50 text-blue-700">
+                                {{ strtoupper($r->branch->branch_name ?? '-') }}
+                            </span>
+                        </td>
+                        <td class="px-4 py-3 text-right">
+                            <span class="font-semibold text-slate-800">{{ number_format($r->item_rate, 2) }}</span>
+                        </td>
+                        <td class="px-4 py-3 text-right text-sm text-slate-600">{{ number_format($r->item_lavy, 2) }}</td>
+                        @if(in_array(auth()->user()->role_id, [1,2]))
+                        <td class="px-4 py-3">
+                            <div class="flex items-center justify-center space-x-2">
+                                <a href="{{ route('item-rates.edit', $r) }}" class="p-2 rounded-lg text-amber-600 hover:bg-amber-50 transition-colors" title="Edit">
+                                    <i data-lucide="edit-3" class="w-4 h-4"></i>
+                                </a>
+                                <form action="{{ route('item-rates.destroy', $r) }}" method="POST" class="inline" onsubmit="return confirm('Delete this item rate?')">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="p-2 rounded-lg text-red-600 hover:bg-red-50 transition-colors" title="Delete">
+                                        <i data-lucide="trash-2" class="w-4 h-4"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+                        @endif
+                    </tr>
+                    @empty
+                    <tr>
+                        <td colspan="{{ in_array(auth()->user()->role_id, [1,2]) ? 8 : 7 }}" class="px-4 py-12 text-center">
+                            <div class="flex flex-col items-center">
+                                <div class="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center mb-4">
+                                    <i data-lucide="tag" class="w-8 h-8 text-slate-400"></i>
+                                </div>
+                                <p class="text-slate-500 font-medium">No rate slabs found</p>
+                                <p class="text-slate-400 text-sm mt-1">Add your first item rate slab</p>
+                            </div>
+                        </td>
+                    </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
 
-  {{-- Footer bar with Add button and a small icon button on right --}}
-  <div class="irs-footer">
-    @if(in_array(auth()->user()->role_id, [1,2]))
-    <a href="{{ route('item-rates.create') }}" class="btn-add">Add New Rate Slab</a>
-    <button type="button" class="btn-ghost" title="Options">
-      {{-- simple icon (i) --}}
-      <span style="font-weight:700;">i</span>
-    </button>
-    @endif
-  </div>
+        <!-- Footer with Pagination -->
+        <div class="px-6 py-4 bg-slate-50 border-t border-slate-200 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <p class="text-sm text-slate-600">
+                Total Records: <span class="font-semibold">{{ $itemRates->total() }}</span>
+            </p>
+            <div class="flex items-center space-x-2">
+                {{ $itemRates->links() }}
+            </div>
+        </div>
+    </div>
 </div>
 
-{{-- pagination (outside the window) --}}
-<div style="max-width:1120px;margin:10px auto 0;">
-  {{ $itemRates->links() }}
-</div>
+@push('scripts')
+<script>
+    lucide.createIcons();
+</script>
+@endpush
 @endsection

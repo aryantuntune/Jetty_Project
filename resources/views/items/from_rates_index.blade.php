@@ -1,220 +1,137 @@
-@extends('layouts.app')
+@extends('layouts.admin')
+
+@section('title', 'Items')
+@section('page-title', 'Items')
 
 @section('content')
-<style>
-:root {
-    --win-border: #a9a9a9;
-    --title-red: #b22222;
-    --panel-bg: #f5f7fa;
-    --grid-bg: #ecfff1;
-    --grid-alt: #e2ffe9;
-    --grid-border: #cdd9c5;
-    --grid-head: #f0f0f0;
-    --blue-select: #0b61d6;
-    --footer-red: #b3262e;
-    --add-green: #49aa3d;
-}
+<div class="space-y-6">
+    <!-- Header -->
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+            <h2 class="text-2xl font-bold text-slate-800">Items (From Item Rates)</h2>
+            <p class="text-slate-500 mt-1">View items derived from item rate slabs</p>
+        </div>
+        @if(in_array(auth()->user()->role_id, [1,2,3]))
+        <a href="{{ route('item-rates.create') }}" class="inline-flex items-center justify-center px-5 py-2.5 bg-gradient-to-r from-primary-500 to-primary-600 text-white font-semibold rounded-xl hover:from-primary-600 hover:to-primary-700 transition-all duration-200 shadow-lg shadow-primary-500/30">
+            <i data-lucide="plus" class="w-5 h-5 mr-2"></i>
+            Add Item Rate Slab
+        </a>
+        @endif
+    </div>
 
-.irs-window {
-    max-width: 1120px;
-    margin: 18px auto 32px;
-    border: 1px solid var(--win-border);
-    border-radius: 6px;
-    background: #fff;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, .04);
-    overflow: hidden;
-}
-
-.irs-title {
-    text-align: center;
-    font-weight: 700;
-    font-size: 20px;
-    color: var(--title-red);
-    padding: 12px 14px 10px;
-    border-bottom: 1px solid var(--win-border);
-}
-
-.irs-strip {
-    background: var(--panel-bg);
-    border-bottom: 1px solid var(--win-border);
-    padding: 14px 16px;
-}
-
-.irs-row {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
-    align-items: center;
-    margin-bottom: 10px;
-}
-
-.irs-label {
-    font-size: 13px;
-    color: #444;
-    min-width: 80px;
-}
-
-.irs-input {
-    flex: 1 1 auto;
-    min-width: 180px;
-    border: 1px solid #c9c9c9;
-    border-radius: 4px;
-    background: #fff;
-    padding: 8px 10px;
-    font-size: 14px;
-}
-
-.irs-grid-wrap {
-    max-height: 520px;
-    overflow: auto;
-    border-top: 1px solid var(--win-border);
-    border-bottom: 1px solid var(--win-border);
-}
-
-table.irs-grid {
-    width: 100%;
-    border-collapse: collapse;
-    background: var(--grid-bg);
-}
-
-.irs-grid thead th {
-    position: sticky;
-    top: 0;
-    background: var(--grid-head);
-    font-size: 13px;
-    font-weight: 700;
-    color: #3a3a3a;
-    border-bottom: 1px solid var(--grid-border);
-    padding: 8px 10px;
-}
-
-.irs-grid tbody td {
-    border-bottom: 1px solid var(--grid-border);
-    padding: 8px 10px;
-    font-size: 13px;
-    color: #222;
-    white-space: nowrap;
-}
-
-.irs-grid tbody tr:nth-child(even) {
-    background: var(--grid-alt);
-}
-
-.irs-grid tbody tr:hover {
-    outline: 2px solid var(--blue-select);
-    outline-offset: -2px;
-}
-
-.irs-footer {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    background: var(--footer-red);
-    padding: 10px 12px;
-}
-
-.btn-add {
-    background: var(--add-green);
-    color: #fff;
-    font-weight: 600;
-    font-size: 13px;
-    border: none;
-    border-radius: 4px;
-    padding: 8px 12px;
-}
-
-.btn-light {
-    background: #fff;
-    border: 1px solid rgba(0, 0, 0, .15);
-    border-radius: 4px;
-    padding: 8px 12px;
-    cursor: pointer;
-}
-
-.pagination-wrap {
-    max-width: 1120px;
-    margin: 10px auto 0;
-}
-</style>
-
-<div class="irs-window">
-    <div class="irs-title">Items (From Item Rates)</div>
-
-    {{-- Search strip --}}
-    <div class="irs-strip">
-        <form method="get">
-            {{-- Row 1 --}}
-            <div class="irs-row">
-                <div class="irs-label">Item ID :</div>
-                <input type="number" name="id" value="{{ request('id') }}" class="irs-input" placeholder="e.g. 1">
+    <!-- Filters Card -->
+    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+        <div class="p-4 border-b border-slate-200 bg-slate-50">
+            <div class="flex items-center space-x-2">
+                <i data-lucide="filter" class="w-5 h-5 text-slate-400"></i>
+                <span class="font-semibold text-slate-700">Search & Filter</span>
             </div>
+        </div>
+        <form method="GET" class="p-4">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <!-- Item ID -->
+                <div>
+                    <label class="block text-xs font-medium text-slate-500 mb-1">Item ID</label>
+                    <input type="number" name="id" value="{{ request('id') }}" placeholder="e.g. 1" class="w-full px-3 py-2 rounded-lg border border-slate-200 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 outline-none text-sm">
+                </div>
 
-            {{-- Row 2 --}}
-            <div class="irs-row">
-                <div class="irs-label">Item Name :</div>
-                <input type="text" name="name" value="{{ request('name') }}" class="irs-input" placeholder="Search item name…">
-            </div>
+                <!-- Item Name -->
+                <div>
+                    <label class="block text-xs font-medium text-slate-500 mb-1">Item Name</label>
+                    <input type="text" name="name" value="{{ request('name') }}" placeholder="Search item name..." class="w-full px-3 py-2 rounded-lg border border-slate-200 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 outline-none text-sm">
+                </div>
 
-            {{-- Row 3 --}}
-            <div class="irs-row">
-                <div class="irs-label">Branch :</div>
-                <select name="branch_id" class="irs-input">
-                     @if(in_array(auth()->user()->role_id, [1,2]))
+                <!-- Branch -->
+                <div>
+                    <label class="block text-xs font-medium text-slate-500 mb-1">Branch</label>
+                    <select name="branch_id" class="w-full px-3 py-2 rounded-lg border border-slate-200 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 outline-none text-sm">
+                        @if(in_array(auth()->user()->role_id, [1,2]))
                         <option value="">All Branches</option>
-                    @endif
-                    @foreach($branches as $branch)
+                        @endif
+                        @foreach($branches as $branch)
                         <option value="{{ $branch->id }}" {{ request('branch_id') == $branch->id ? 'selected' : '' }}>
                             {{ $branch->branch_name }}
                         </option>
-                    @endforeach
-                </select>
-            </div>
+                        @endforeach
+                    </select>
+                </div>
 
-            {{-- Row 4: Buttons --}}
-            <div class="irs-row text-end">
-                <button class="btn-light" type="submit">Search</button>
-                <a class="btn-light" href="{{ route('items.from_rates.index') }}">Reset</a>
+                <!-- Action Buttons -->
+                <div class="flex items-end gap-2">
+                    <button type="submit" class="flex-1 px-4 py-2 bg-slate-800 text-white text-sm font-medium rounded-lg hover:bg-slate-700 transition-colors">
+                        <i data-lucide="search" class="w-4 h-4 inline mr-1"></i>
+                        Search
+                    </button>
+                    <a href="{{ route('items.from_rates.index') }}" class="px-4 py-2 border border-slate-200 text-slate-600 text-sm font-medium rounded-lg hover:bg-slate-50 transition-colors">
+                        Reset
+                    </a>
+                </div>
             </div>
         </form>
     </div>
 
-    {{-- Grid --}}
-    <div class="irs-grid-wrap">
-        <table class="irs-grid">
-            <thead>
-                <tr>
-                    <th>Id</th>
-                    <th>Item Name</th>
-                    <th>Item Category Name</th>
-                    <th>Branch</th>
-                </tr>
-            </thead>
-            <tbody>
-                @forelse($items as $row)
-                    <tr>
-                        <td>{{ $row->item_id }}</td>
-                        <td>{{ $row->item_name }}</td>
-                        <td>{{ $row->category_name ?? '—' }}</td>
-                        <td>{{ $row->branch_name ?? '—' }}</td>
+    <!-- Table Card -->
+    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="w-full">
+                <thead>
+                    <tr class="bg-slate-50 border-b border-slate-200">
+                        <th class="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">ID</th>
+                        <th class="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Item Name</th>
+                        <th class="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Category</th>
+                        <th class="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Branch</th>
                     </tr>
-                @empty
-                    <tr>
-                        <td colspan="4" style="text-align:center;padding:20px;">No items found.</td>
+                </thead>
+                <tbody class="divide-y divide-slate-100">
+                    @forelse($items as $row)
+                    <tr class="table-row-hover transition-colors">
+                        <td class="px-4 py-3">
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-700">
+                                #{{ $row->item_id }}
+                            </span>
+                        </td>
+                        <td class="px-4 py-3">
+                            <span class="font-medium text-slate-800">{{ strtoupper($row->item_name) }}</span>
+                        </td>
+                        <td class="px-4 py-3 text-sm text-slate-600">{{ $row->category_name ?? '—' }}</td>
+                        <td class="px-4 py-3">
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-lg text-xs font-medium bg-blue-50 text-blue-700">
+                                {{ strtoupper($row->branch_name ?? '—') }}
+                            </span>
+                        </td>
                     </tr>
-                @endforelse
-            </tbody>
-        </table>
-    </div>
+                    @empty
+                    <tr>
+                        <td colspan="4" class="px-4 py-12 text-center">
+                            <div class="flex flex-col items-center">
+                                <div class="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center mb-4">
+                                    <i data-lucide="package" class="w-8 h-8 text-slate-400"></i>
+                                </div>
+                                <p class="text-slate-500 font-medium">No items found</p>
+                                <p class="text-slate-400 text-sm mt-1">Items will appear here from item rate slabs</p>
+                            </div>
+                        </td>
+                    </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
 
-    <div class="irs-footer">
-        <span style="color:#fff;font-weight:600;">Derived from Item Rates</span>
-           @if(in_array(auth()->user()->role_id, [1,2,3]))
-        <a href="{{ route('item-rates.create') }}" class="btn-add">Add Item Rate Slab</a>
-        @endif
+        <!-- Footer with Pagination -->
+        <div class="px-6 py-4 bg-slate-50 border-t border-slate-200 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <p class="text-sm text-slate-600">
+                Total Records: <span class="font-semibold">{{ $items->total() }}</span>
+            </p>
+            <div class="flex items-center space-x-2">
+                {{ $items->links() }}
+            </div>
+        </div>
     </div>
 </div>
 
-<div class="pagination-wrap">
-    {{ $items->onEachSide(1)->links('pagination::bootstrap-5') }}
-</div>
+@push('scripts')
+<script>
+    lucide.createIcons();
+</script>
+@endpush
 @endsection

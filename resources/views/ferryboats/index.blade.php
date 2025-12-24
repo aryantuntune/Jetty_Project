@@ -1,11 +1,4 @@
-{{-- OLD DESIGN COMMENTED OUT
-@extends('layouts.app')
-@section('content')
-<style>.win-card{...}</style>
-<div class="flex justify-center items-center min-h-screen bg-gray-200 container p-4">...</div>
-@endsection
---}}
-
+{{-- Old Bootstrap design removed - using modern TailwindCSS admin layout --}}
 @extends('layouts.admin')
 
 @section('title', 'Ferry Boats')
