@@ -1,81 +1,117 @@
-{{--
-================================================================================
-OLD DESIGN - COMMENTED OUT (Bootstrap Version)
-================================================================================
-@extends('layouts.app')
-
-@section('content')
-<div class="container">
-    <div class="row justify-content-center">
-        <div class="col-md-8">
-            <div class="card">
-                <div class="card-header">{{ __('Dashboard') }}</div>
-
-                <div class="card-body">
-                    @if (session('status'))
-                        <div class="alert alert-success" role="alert">
-                            {{ session('status') }}
-                        </div>
-                    @endif
-
-                    {{ __('You are logged in!') }}
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-@endsection
-================================================================================
-END OF OLD DESIGN
-================================================================================
---}}
-
-{{-- NEW DESIGN - Modern TailwindCSS Admin Dashboard --}}
 @extends('layouts.admin')
 
 @section('title', 'Dashboard')
 @section('page-title', 'Dashboard')
 
 @section('content')
-<!-- Welcome Banner -->
+<!-- Welcome Banner with Date Filter -->
 <div class="bg-gradient-to-r from-primary-600 to-primary-700 rounded-2xl p-6 md:p-8 mb-8 text-white shadow-lg">
-    <div class="flex flex-col md:flex-row md:items-center md:justify-between">
+    <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
         <div>
             <h1 class="text-2xl md:text-3xl font-bold mb-2">Welcome back, {{ Auth::user()->name }}!</h1>
-            <p class="text-primary-100">Here's what's happening with your ferry operations today.</p>
+            <p class="text-primary-100">Viewing metrics for <span class="font-semibold">{{ $periodLabel }}</span></p>
         </div>
-        <div class="mt-4 md:mt-0">
-            <a href="{{ route('ticket-entry.create') }}" class="inline-flex items-center space-x-2 bg-white text-primary-700 px-6 py-3 rounded-xl font-semibold hover:bg-primary-50 transition-colors shadow-md">
-                <i data-lucide="plus" class="w-5 h-5"></i>
-                <span>New Ticket</span>
+
+        <!-- Date Filter Controls -->
+        <div class="flex flex-col sm:flex-row gap-3">
+            <!-- View Mode Toggle -->
+            <div class="flex bg-white/20 rounded-lg p-1">
+                <a href="{{ route('home', ['view' => 'day', 'date' => $selectedDate]) }}"
+                   class="px-4 py-2 rounded-md text-sm font-medium transition-all {{ $viewMode === 'day' ? 'bg-white text-primary-700' : 'text-white hover:bg-white/10' }}">
+                    Daily
+                </a>
+                <a href="{{ route('home', ['view' => 'month', 'month' => $selectedMonth]) }}"
+                   class="px-4 py-2 rounded-md text-sm font-medium transition-all {{ $viewMode === 'month' ? 'bg-white text-primary-700' : 'text-white hover:bg-white/10' }}">
+                    Monthly
+                </a>
+            </div>
+
+            <!-- Date/Month Picker -->
+            @if($viewMode === 'day')
+            <div class="flex items-center gap-2">
+                <a href="{{ route('home', ['view' => 'day', 'date' => $date->copy()->subDay()->format('Y-m-d')]) }}"
+                   class="p-2 bg-white/20 hover:bg-white/30 rounded-lg transition-colors">
+                    <i data-lucide="chevron-left" class="w-5 h-5"></i>
+                </a>
+                <input type="date" id="datePicker" value="{{ $selectedDate }}"
+                       class="bg-white/20 border-0 rounded-lg px-4 py-2 text-white placeholder-white/60 focus:ring-2 focus:ring-white/50"
+                       onchange="window.location.href='{{ route('home') }}?view=day&date=' + this.value">
+                <a href="{{ route('home', ['view' => 'day', 'date' => $date->copy()->addDay()->format('Y-m-d')]) }}"
+                   class="p-2 bg-white/20 hover:bg-white/30 rounded-lg transition-colors {{ $date->isToday() ? 'opacity-50 pointer-events-none' : '' }}">
+                    <i data-lucide="chevron-right" class="w-5 h-5"></i>
+                </a>
+            </div>
+            @else
+            <div class="flex items-center gap-2">
+                <a href="{{ route('home', ['view' => 'month', 'month' => $monthStart->copy()->subMonth()->format('Y-m')]) }}"
+                   class="p-2 bg-white/20 hover:bg-white/30 rounded-lg transition-colors">
+                    <i data-lucide="chevron-left" class="w-5 h-5"></i>
+                </a>
+                <input type="month" id="monthPicker" value="{{ $selectedMonth }}"
+                       class="bg-white/20 border-0 rounded-lg px-4 py-2 text-white placeholder-white/60 focus:ring-2 focus:ring-white/50"
+                       onchange="window.location.href='{{ route('home') }}?view=month&month=' + this.value">
+                <a href="{{ route('home', ['view' => 'month', 'month' => $monthStart->copy()->addMonth()->format('Y-m')]) }}"
+                   class="p-2 bg-white/20 hover:bg-white/30 rounded-lg transition-colors {{ $monthStart->format('Y-m') === now()->format('Y-m') ? 'opacity-50 pointer-events-none' : '' }}">
+                    <i data-lucide="chevron-right" class="w-5 h-5"></i>
+                </a>
+            </div>
+            @endif
+
+            <!-- Today/This Month Button -->
+            @if($viewMode === 'day' && !$date->isToday())
+            <a href="{{ route('home', ['view' => 'day']) }}" class="px-4 py-2 bg-white text-primary-700 rounded-lg font-medium hover:bg-primary-50 transition-colors text-center">
+                Today
             </a>
+            @elseif($viewMode === 'month' && $monthStart->format('Y-m') !== now()->format('Y-m'))
+            <a href="{{ route('home', ['view' => 'month']) }}" class="px-4 py-2 bg-white text-primary-700 rounded-lg font-medium hover:bg-primary-50 transition-colors text-center">
+                This Month
+            </a>
+            @endif
         </div>
     </div>
 </div>
 
 <!-- Quick Stats -->
 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-    <!-- Today's Tickets -->
+    <!-- Tickets -->
     <div class="card-hover bg-white rounded-2xl p-6 border border-slate-200">
         <div class="flex items-center justify-between mb-4">
             <div class="w-12 h-12 rounded-xl bg-blue-100 flex items-center justify-center">
                 <i data-lucide="ticket" class="w-6 h-6 text-blue-600"></i>
             </div>
-            <span class="text-xs font-medium text-green-600 bg-green-100 px-2 py-1 rounded-full">Today</span>
+            @if($ticketsChange != 0)
+            <span class="text-xs font-medium {{ $ticketsChange >= 0 ? 'text-green-600 bg-green-100' : 'text-red-600 bg-red-100' }} px-2 py-1 rounded-full flex items-center gap-1">
+                <i data-lucide="{{ $ticketsChange >= 0 ? 'trending-up' : 'trending-down' }}" class="w-3 h-3"></i>
+                {{ abs($ticketsChange) }}%
+            </span>
+            @else
+            <span class="text-xs font-medium text-slate-500 bg-slate-100 px-2 py-1 rounded-full">
+                {{ $viewMode === 'day' ? 'Today' : 'This Month' }}
+            </span>
+            @endif
         </div>
-        <h3 class="text-2xl font-bold text-slate-800">--</h3>
+        <h3 class="text-2xl font-bold text-slate-800">{{ number_format($ticketsCount) }}</h3>
         <p class="text-sm text-slate-500 mt-1">Tickets Issued</p>
     </div>
 
-    <!-- Today's Revenue -->
+    <!-- Revenue -->
     <div class="card-hover bg-white rounded-2xl p-6 border border-slate-200">
         <div class="flex items-center justify-between mb-4">
             <div class="w-12 h-12 rounded-xl bg-green-100 flex items-center justify-center">
                 <i data-lucide="indian-rupee" class="w-6 h-6 text-green-600"></i>
             </div>
-            <span class="text-xs font-medium text-green-600 bg-green-100 px-2 py-1 rounded-full">Today</span>
+            @if($revenueChange != 0)
+            <span class="text-xs font-medium {{ $revenueChange >= 0 ? 'text-green-600 bg-green-100' : 'text-red-600 bg-red-100' }} px-2 py-1 rounded-full flex items-center gap-1">
+                <i data-lucide="{{ $revenueChange >= 0 ? 'trending-up' : 'trending-down' }}" class="w-3 h-3"></i>
+                {{ abs($revenueChange) }}%
+            </span>
+            @else
+            <span class="text-xs font-medium text-slate-500 bg-slate-100 px-2 py-1 rounded-full">
+                {{ $viewMode === 'day' ? 'Today' : 'This Month' }}
+            </span>
+            @endif
         </div>
-        <h3 class="text-2xl font-bold text-slate-800">--</h3>
+        <h3 class="text-2xl font-bold text-slate-800">Rs. {{ number_format($totalRevenue, 2) }}</h3>
         <p class="text-sm text-slate-500 mt-1">Revenue</p>
     </div>
 
@@ -87,7 +123,7 @@ END OF OLD DESIGN
             </div>
             <span class="text-xs font-medium text-purple-600 bg-purple-100 px-2 py-1 rounded-full">Active</span>
         </div>
-        <h3 class="text-2xl font-bold text-slate-800">--</h3>
+        <h3 class="text-2xl font-bold text-slate-800">{{ number_format($ferryBoatsCount) }}</h3>
         <p class="text-sm text-slate-500 mt-1">Ferry Boats</p>
     </div>
 
@@ -97,14 +133,16 @@ END OF OLD DESIGN
             <div class="w-12 h-12 rounded-xl bg-amber-100 flex items-center justify-center">
                 <i data-lucide="clock" class="w-6 h-6 text-amber-600"></i>
             </div>
-            <span class="text-xs font-medium text-amber-600 bg-amber-100 px-2 py-1 rounded-full">Pending</span>
+            <span class="text-xs font-medium {{ $pendingVerifications > 0 ? 'text-amber-600 bg-amber-100' : 'text-green-600 bg-green-100' }} px-2 py-1 rounded-full">
+                {{ $pendingVerifications > 0 ? 'Pending' : 'All Done' }}
+            </span>
         </div>
-        <h3 class="text-2xl font-bold text-slate-800">--</h3>
-        <p class="text-sm text-slate-500 mt-1">Verifications</p>
+        <h3 class="text-2xl font-bold text-slate-800">{{ number_format($pendingVerifications) }}</h3>
+        <p class="text-sm text-slate-500 mt-1">Pending Verifications</p>
     </div>
 </div>
 
-<!-- Quick Actions -->
+<!-- Quick Actions & Recent Activity -->
 <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
     <!-- Quick Actions Card -->
     <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden">
@@ -147,27 +185,35 @@ END OF OLD DESIGN
     <!-- Recent Activity -->
     <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden">
         <div class="px-6 py-4 border-b border-slate-200 flex items-center justify-between">
-            <h2 class="text-lg font-semibold text-slate-800">Recent Activity</h2>
+            <h2 class="text-lg font-semibold text-slate-800">Recent Tickets</h2>
             <a href="{{ route('reports.tickets') }}" class="text-sm text-primary-600 hover:text-primary-700 font-medium">View All</a>
         </div>
         <div class="p-6">
-            <div class="space-y-4">
-                <div class="flex items-center space-x-4 p-3 rounded-xl bg-slate-50">
-                    <div class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
-                        <i data-lucide="ticket" class="w-5 h-5 text-blue-600"></i>
+            @if($recentTickets->count() > 0)
+            <div class="space-y-3">
+                @foreach($recentTickets as $ticket)
+                <div class="flex items-center space-x-4 p-3 rounded-xl bg-slate-50 hover:bg-slate-100 transition-colors">
+                    <div class="w-10 h-10 rounded-full {{ $ticket->verified_at ? 'bg-green-100' : 'bg-blue-100' }} flex items-center justify-center flex-shrink-0">
+                        <i data-lucide="{{ $ticket->verified_at ? 'check-circle' : 'ticket' }}" class="w-5 h-5 {{ $ticket->verified_at ? 'text-green-600' : 'text-blue-600' }}"></i>
                     </div>
                     <div class="flex-1 min-w-0">
-                        <p class="text-sm font-medium text-slate-800">Dashboard loaded successfully</p>
-                        <p class="text-xs text-slate-500">Welcome to the Jetty Admin Panel</p>
+                        <p class="text-sm font-medium text-slate-800 truncate">
+                            Ticket #{{ $ticket->id }} - Rs. {{ number_format($ticket->total_amount, 2) }}
+                        </p>
+                        <p class="text-xs text-slate-500">
+                            {{ $ticket->ferryBoat->name ?? 'N/A' }} | {{ $ticket->user->name ?? 'Unknown' }}
+                        </p>
                     </div>
-                    <span class="text-xs text-slate-400">Just now</span>
+                    <span class="text-xs text-slate-400">{{ $ticket->created_at->diffForHumans() }}</span>
                 </div>
-
-                <div class="text-center py-8 text-slate-400">
-                    <i data-lucide="inbox" class="w-12 h-12 mx-auto mb-3 opacity-50"></i>
-                    <p class="text-sm">Activity will appear here</p>
-                </div>
+                @endforeach
             </div>
+            @else
+            <div class="text-center py-8 text-slate-400">
+                <i data-lucide="inbox" class="w-12 h-12 mx-auto mb-3 opacity-50"></i>
+                <p class="text-sm">No tickets found for this period</p>
+            </div>
+            @endif
         </div>
     </div>
 </div>
@@ -185,10 +231,21 @@ END OF OLD DESIGN
             </div>
         </div>
         <div class="mt-4 md:mt-0 flex items-center space-x-4 text-sm text-slate-500">
-            <span>Branch: {{ Auth::user()->branch->branch_name ?? 'N/A' }}</span>
+            <span>Branch: {{ Auth::user()->branch->branch_name ?? 'All Branches' }}</span>
             <span class="hidden md:inline">|</span>
-            <span>Role: {{ Auth::user()->role_id == 1 ? 'Administrator' : (Auth::user()->role_id == 2 ? 'Manager' : 'Operator') }}</span>
+            <span>Role: {{ Auth::user()->role_id == 1 ? 'Administrator' : (Auth::user()->role_id == 2 ? 'Manager' : (Auth::user()->role_id == 3 ? 'Operator' : 'Staff')) }}</span>
         </div>
     </div>
 </div>
 @endsection
+
+@push('styles')
+<style>
+    /* Custom date input styling for webkit browsers */
+    input[type="date"]::-webkit-calendar-picker-indicator,
+    input[type="month"]::-webkit-calendar-picker-indicator {
+        filter: invert(1);
+        cursor: pointer;
+    }
+</style>
+@endpush
