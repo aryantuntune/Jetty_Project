@@ -54,44 +54,25 @@
 
     <style>
         /* Scrollbar styling */
-        ::-webkit-scrollbar {
-            width: 6px;
-            height: 6px;
-        }
-        ::-webkit-scrollbar-track {
-            background: #f1f5f9;
-        }
-        ::-webkit-scrollbar-thumb {
-            background: #cbd5e1;
-            border-radius: 3px;
-        }
-        ::-webkit-scrollbar-thumb:hover {
-            background: #94a3b8;
-        }
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #f1f5f9; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
 
         /* Sidebar scrollbar */
-        .sidebar-scroll::-webkit-scrollbar {
-            width: 4px;
-        }
-        .sidebar-scroll::-webkit-scrollbar-track {
-            background: transparent;
-        }
-        .sidebar-scroll::-webkit-scrollbar-thumb {
-            background: rgba(255,255,255,0.1);
-            border-radius: 2px;
-        }
+        .sidebar-scroll::-webkit-scrollbar { width: 4px; }
+        .sidebar-scroll::-webkit-scrollbar-track { background: transparent; }
+        .sidebar-scroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 2px; }
 
-        /* Dropdown animation */
-        .dropdown-menu {
-            transform: translateY(-10px);
-            opacity: 0;
-            visibility: hidden;
-            transition: all 0.2s ease;
+        /* Collapsible submenu - hidden by default */
+        .submenu {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.25s ease-out;
         }
-        .dropdown:hover .dropdown-menu {
-            transform: translateY(0);
-            opacity: 1;
-            visibility: visible;
+        .submenu.open {
+            max-height: 500px;
+            transition: max-height 0.3s ease-in;
         }
 
         /* Mobile sidebar */
@@ -105,7 +86,6 @@
             opacity: 1;
             visibility: visible;
         }
-
         .mobile-sidebar {
             transform: translateX(-100%);
             transition: transform 0.3s ease;
@@ -113,8 +93,6 @@
         .mobile-sidebar.active {
             transform: translateX(0);
         }
-
-        /* Show sidebar on desktop */
         @media (min-width: 1024px) {
             .mobile-sidebar {
                 transform: translateX(0);
@@ -135,23 +113,72 @@
             box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
         }
 
-        /* Active nav link */
-        .nav-link-active {
-            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
-            color: white !important;
-            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+        /* Navigation styles - clean, tight, cohesive */
+        .nav-item {
+            display: flex;
+            align-items: center;
+            padding: 10px 12px;
+            margin: 2px 0;
+            border-radius: 8px;
+            color: rgba(148, 163, 184, 1);
+            transition: all 0.15s ease;
+            cursor: pointer;
         }
-        .nav-link-active i {
-            color: white !important;
+        .nav-item:hover {
+            background: rgba(51, 65, 85, 0.5);
+            color: #e2e8f0;
+        }
+        .nav-item.active {
+            background: rgba(99, 102, 241, 0.9);
+            color: #ffffff;
+        }
+        .nav-item.active i { color: #ffffff; }
+        .nav-item i {
+            width: 20px;
+            height: 20px;
+            margin-right: 12px;
+            flex-shrink: 0;
+        }
+        .nav-item .chevron {
+            margin-left: auto;
+            width: 16px;
+            height: 16px;
+            margin-right: 0;
+            transition: transform 0.2s ease;
+        }
+        .nav-item.open .chevron {
+            transform: rotate(180deg);
         }
 
-        /* Active dropdown item */
-        .dropdown-item-active {
-            background: rgba(59, 130, 246, 0.2);
-            color: white !important;
-            border-left: 3px solid #3b82f6;
-            margin-left: -3px;
-            padding-left: calc(0.75rem + 3px);
+        /* Submenu items */
+        .submenu-item {
+            display: block;
+            padding: 8px 12px 8px 44px;
+            margin: 1px 0;
+            border-radius: 6px;
+            color: rgba(148, 163, 184, 0.9);
+            font-size: 13px;
+            transition: all 0.15s ease;
+        }
+        .submenu-item:hover {
+            background: rgba(51, 65, 85, 0.4);
+            color: #e2e8f0;
+        }
+        .submenu-item.active {
+            background: rgba(99, 102, 241, 0.25);
+            color: #a5b4fc;
+            border-left: 2px solid #818cf8;
+            padding-left: 42px;
+        }
+
+        /* Section header */
+        .nav-section-header {
+            padding: 16px 12px 8px 12px;
+            font-size: 11px;
+            font-weight: 600;
+            color: rgba(100, 116, 139, 0.8);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
         }
     </style>
 
@@ -182,106 +209,90 @@
             <!-- Navigation -->
             @php
                 $currentRoute = Route::currentRouteName() ?? '';
+                $isReportsActive = Str::startsWith($currentRoute, 'reports.');
+                $masterRoutes = ['items.from_rates.index', 'item_categories.index', 'item_categories.create', 'item_categories.edit', 'item-rates.index', 'item-rates.create', 'item-rates.edit', 'item-rates.show', 'ferryboats.index', 'ferryboats.create', 'ferryboats.edit', 'ferry_schedules.index', 'ferry_schedules.create', 'ferry_schedules.edit', 'guests.index', 'guests.create', 'guests.edit', 'guest_categories.index', 'guest_categories.create', 'branches.index', 'branches.create', 'branches.edit', 'special-charges.index', 'special-charges.create', 'special-charges.edit'];
+                $isMastersActive = in_array($currentRoute, $masterRoutes);
+                $isTransferActive = Str::contains($currentRoute, 'transfer');
+                $isVerifyActive = Str::contains($currentRoute, 'verify');
+                $adminRoutes = ['admin.index', 'admin.create', 'admin.edit', 'admin.show', 'manager.index', 'manager.create', 'manager.edit', 'manager.show', 'operator.index', 'operator.create', 'operator.edit', 'operator.show', 'checker.index', 'checker.create', 'checker.edit', 'checker.show'];
+                $isAdminActive = in_array($currentRoute, $adminRoutes);
             @endphp
-            <nav class="px-4 py-4 space-y-1 sidebar-scroll overflow-y-auto">
+            <nav class="flex-1 px-3 py-4 sidebar-scroll overflow-y-auto">
                 <!-- Counter Options -->
-                <a href="{{ route('ticket-entry.create') }}" class="flex items-center space-x-3 px-3 py-2.5 rounded-lg transition-colors group {{ $currentRoute == 'ticket-entry.create' ? 'nav-link-active' : 'text-white/70 hover:bg-sidebar-hover hover:text-white' }}">
-                    <i data-lucide="ticket" class="w-5 h-5"></i>
-                    <span class="font-medium">Counter Options</span>
+                <a href="{{ route('ticket-entry.create') }}" class="nav-item {{ $currentRoute == 'ticket-entry.create' ? 'active' : '' }}">
+                    <i data-lucide="ticket"></i>
+                    <span>Counter Options</span>
                 </a>
 
                 <!-- Reports -->
-                @php $isReportsActive = Str::startsWith($currentRoute, 'reports.'); @endphp
-                <div class="dropdown">
-                    <button class="flex items-center justify-between w-full px-3 py-2.5 rounded-lg transition-colors group {{ $isReportsActive ? 'nav-link-active' : 'text-white/70 hover:bg-sidebar-hover hover:text-white' }}">
-                        <div class="flex items-center space-x-3">
-                            <i data-lucide="bar-chart-3" class="w-5 h-5"></i>
-                            <span class="font-medium">Reports</span>
-                        </div>
-                        <i data-lucide="chevron-down" class="w-4 h-4"></i>
-                    </button>
-                    <div class="dropdown-menu pl-11 mt-1 space-y-1">
-                        <a href="{{ route('reports.tickets') }}" class="block px-3 py-2 rounded-lg text-sm {{ $currentRoute == 'reports.tickets' ? 'dropdown-item-active' : 'text-white/60 hover:bg-sidebar-hover hover:text-white' }}">Ticket Details</a>
-                        <a href="{{ route('reports.vehicle_tickets') }}" class="block px-3 py-2 rounded-lg text-sm {{ $currentRoute == 'reports.vehicle_tickets' ? 'dropdown-item-active' : 'text-white/60 hover:bg-sidebar-hover hover:text-white' }}">Vehicle-wise Details</a>
+                <div class="nav-group">
+                    <div class="nav-item {{ $isReportsActive ? 'active open' : '' }}" onclick="toggleSubmenu(this)">
+                        <i data-lucide="bar-chart-3"></i>
+                        <span>Reports</span>
+                        <i data-lucide="chevron-down" class="chevron"></i>
+                    </div>
+                    <div class="submenu {{ $isReportsActive ? 'open' : '' }}">
+                        <a href="{{ route('reports.tickets') }}" class="submenu-item {{ $currentRoute == 'reports.tickets' ? 'active' : '' }}">Ticket Details</a>
+                        <a href="{{ route('reports.vehicle_tickets') }}" class="submenu-item {{ $currentRoute == 'reports.vehicle_tickets' ? 'active' : '' }}">Vehicle-wise Details</a>
                     </div>
                 </div>
 
                 <!-- Masters -->
-                @php
-                    $masterRoutes = ['items.from_rates.index', 'item_categories.index', 'item_categories.create', 'item_categories.edit', 'item-rates.index', 'item-rates.create', 'item-rates.edit', 'item-rates.show', 'ferryboats.index', 'ferryboats.create', 'ferryboats.edit', 'ferry_schedules.index', 'ferry_schedules.create', 'ferry_schedules.edit', 'guests.index', 'guests.create', 'guests.edit', 'guest_categories.index', 'guest_categories.create', 'branches.index', 'branches.create', 'branches.edit', 'special-charges.index', 'special-charges.create', 'special-charges.edit'];
-                    $isMastersActive = in_array($currentRoute, $masterRoutes);
-                @endphp
-                <div class="dropdown">
-                    <button class="flex items-center justify-between w-full px-3 py-2.5 rounded-lg transition-colors group {{ $isMastersActive ? 'nav-link-active' : 'text-white/70 hover:bg-sidebar-hover hover:text-white' }}">
-                        <div class="flex items-center space-x-3">
-                            <i data-lucide="database" class="w-5 h-5"></i>
-                            <span class="font-medium">Masters</span>
-                        </div>
-                        <i data-lucide="chevron-down" class="w-4 h-4"></i>
-                    </button>
-                    <div class="dropdown-menu pl-11 mt-1 space-y-1">
-                        <a href="{{ route('items.from_rates.index') }}" class="block px-3 py-2 rounded-lg text-sm {{ $currentRoute == 'items.from_rates.index' ? 'dropdown-item-active' : 'text-white/60 hover:bg-sidebar-hover hover:text-white' }}">Items</a>
-                        <a href="{{ route('item_categories.index') }}" class="block px-3 py-2 rounded-lg text-sm {{ Str::startsWith($currentRoute, 'item_categories.') ? 'dropdown-item-active' : 'text-white/60 hover:bg-sidebar-hover hover:text-white' }}">Item Categories</a>
-                        <a href="{{ route('item-rates.index') }}" class="block px-3 py-2 rounded-lg text-sm {{ Str::startsWith($currentRoute, 'item-rates.') ? 'dropdown-item-active' : 'text-white/60 hover:bg-sidebar-hover hover:text-white' }}">Item Rate Slabs</a>
-                        <a href="{{ route('ferryboats.index') }}" class="block px-3 py-2 rounded-lg text-sm {{ Str::startsWith($currentRoute, 'ferryboats.') ? 'dropdown-item-active' : 'text-white/60 hover:bg-sidebar-hover hover:text-white' }}">Ferry Boats</a>
-                        <a href="{{ route('ferry_schedules.index') }}" class="block px-3 py-2 rounded-lg text-sm {{ Str::startsWith($currentRoute, 'ferry_schedules.') ? 'dropdown-item-active' : 'text-white/60 hover:bg-sidebar-hover hover:text-white' }}">Ferry Schedules</a>
-                        <a href="{{ route('guests.index') }}" class="block px-3 py-2 rounded-lg text-sm {{ Str::startsWith($currentRoute, 'guests.') ? 'dropdown-item-active' : 'text-white/60 hover:bg-sidebar-hover hover:text-white' }}">Guests</a>
-                        <a href="{{ route('guest_categories.index') }}" class="block px-3 py-2 rounded-lg text-sm {{ Str::startsWith($currentRoute, 'guest_categories.') ? 'dropdown-item-active' : 'text-white/60 hover:bg-sidebar-hover hover:text-white' }}">Guest Categories</a>
-                        <a href="{{ route('branches.index') }}" class="block px-3 py-2 rounded-lg text-sm {{ Str::startsWith($currentRoute, 'branches.') ? 'dropdown-item-active' : 'text-white/60 hover:bg-sidebar-hover hover:text-white' }}">Branches</a>
+                <div class="nav-group">
+                    <div class="nav-item {{ $isMastersActive ? 'active open' : '' }}" onclick="toggleSubmenu(this)">
+                        <i data-lucide="database"></i>
+                        <span>Masters</span>
+                        <i data-lucide="chevron-down" class="chevron"></i>
+                    </div>
+                    <div class="submenu {{ $isMastersActive ? 'open' : '' }}">
+                        <a href="{{ route('items.from_rates.index') }}" class="submenu-item {{ $currentRoute == 'items.from_rates.index' ? 'active' : '' }}">Items</a>
+                        <a href="{{ route('item_categories.index') }}" class="submenu-item {{ Str::startsWith($currentRoute, 'item_categories.') ? 'active' : '' }}">Item Categories</a>
+                        <a href="{{ route('item-rates.index') }}" class="submenu-item {{ Str::startsWith($currentRoute, 'item-rates.') ? 'active' : '' }}">Item Rate Slabs</a>
+                        <a href="{{ route('ferryboats.index') }}" class="submenu-item {{ Str::startsWith($currentRoute, 'ferryboats.') ? 'active' : '' }}">Ferry Boats</a>
+                        <a href="{{ route('ferry_schedules.index') }}" class="submenu-item {{ Str::startsWith($currentRoute, 'ferry_schedules.') ? 'active' : '' }}">Ferry Schedules</a>
+                        <a href="{{ route('guests.index') }}" class="submenu-item {{ Str::startsWith($currentRoute, 'guests.') ? 'active' : '' }}">Guests</a>
+                        <a href="{{ route('guest_categories.index') }}" class="submenu-item {{ Str::startsWith($currentRoute, 'guest_categories.') ? 'active' : '' }}">Guest Categories</a>
+                        <a href="{{ route('branches.index') }}" class="submenu-item {{ Str::startsWith($currentRoute, 'branches.') ? 'active' : '' }}">Branches</a>
                         @if(in_array(auth()->user()->role_id, [1,2]))
-                        <a href="{{ route('special-charges.index') }}" class="block px-3 py-2 rounded-lg text-sm {{ Str::startsWith($currentRoute, 'special-charges.') ? 'dropdown-item-active' : 'text-white/60 hover:bg-sidebar-hover hover:text-white' }}">Special Charges</a>
+                        <a href="{{ route('special-charges.index') }}" class="submenu-item {{ Str::startsWith($currentRoute, 'special-charges.') ? 'active' : '' }}">Special Charges</a>
                         @endif
                     </div>
                 </div>
 
                 <!-- Transfer -->
                 @if(in_array(auth()->user()->role_id, [1,2]))
-                @php $isTransferActive = Str::contains($currentRoute, 'transfer'); @endphp
-                <a href="{{ route('employees.transfer.index') }}" class="flex items-center space-x-3 px-3 py-2.5 rounded-lg transition-colors group {{ $isTransferActive ? 'nav-link-active' : 'text-white/70 hover:bg-sidebar-hover hover:text-white' }}">
-                    <i data-lucide="arrow-right-left" class="w-5 h-5"></i>
-                    <span class="font-medium">Transfer</span>
+                <a href="{{ route('employees.transfer.index') }}" class="nav-item {{ $isTransferActive ? 'active' : '' }}">
+                    <i data-lucide="arrow-right-left"></i>
+                    <span>Transfer</span>
                 </a>
                 @endif
 
                 <!-- Verify Ticket -->
                 @if(in_array(auth()->user()->role_id, [1,2,5]))
-                @php $isVerifyActive = Str::contains($currentRoute, 'verify'); @endphp
-                <a href="{{ route('verify.index') }}" class="flex items-center space-x-3 px-3 py-2.5 rounded-lg transition-colors group {{ $isVerifyActive ? 'nav-link-active' : 'text-white/70 hover:bg-sidebar-hover hover:text-white' }}">
-                    <i data-lucide="check-circle" class="w-5 h-5"></i>
-                    <span class="font-medium">Verify Ticket</span>
+                <a href="{{ route('verify.index') }}" class="nav-item {{ $isVerifyActive ? 'active' : '' }}">
+                    <i data-lucide="check-circle"></i>
+                    <span>Verify Ticket</span>
                 </a>
                 @endif
 
                 <!-- Admin Section -->
                 @if(in_array(auth()->user()->role_id, [1,2]))
-                @php
-                    $adminRoutes = ['admin.index', 'admin.create', 'admin.edit', 'admin.show', 'manager.index', 'manager.create', 'manager.edit', 'manager.show', 'operator.index', 'operator.create', 'operator.edit', 'operator.show', 'checker.index', 'checker.create', 'checker.edit', 'checker.show'];
-                    $isAdminActive = in_array($currentRoute, $adminRoutes);
-                @endphp
-                <div class="pt-4 mt-4 border-t border-white/10">
-                    <p class="px-3 mb-2 text-xs font-semibold text-white/40 uppercase tracking-wider">Administration</p>
-
-                    <div class="dropdown">
-                        <button class="flex items-center justify-between w-full px-3 py-2.5 rounded-lg transition-colors group {{ $isAdminActive ? 'nav-link-active' : 'text-white/70 hover:bg-sidebar-hover hover:text-white' }}">
-                            <div class="flex items-center space-x-3">
-                                <i data-lucide="users" class="w-5 h-5"></i>
-                                <span class="font-medium">User Management</span>
-                            </div>
-                            <i data-lucide="chevron-down" class="w-4 h-4"></i>
-                        </button>
-                        <div class="dropdown-menu pl-11 mt-1 space-y-1">
-                            <a href="{{ route('admin.index') }}" class="block px-3 py-2 rounded-lg text-sm {{ Str::startsWith($currentRoute, 'admin.') ? 'dropdown-item-active' : 'text-white/60 hover:bg-sidebar-hover hover:text-white' }}">Administrators</a>
-                            <a href="{{ route('manager.index') }}" class="block px-3 py-2 rounded-lg text-sm {{ Str::startsWith($currentRoute, 'manager.') ? 'dropdown-item-active' : 'text-white/60 hover:bg-sidebar-hover hover:text-white' }}">Managers</a>
-                            <a href="{{ route('operator.index') }}" class="block px-3 py-2 rounded-lg text-sm {{ Str::startsWith($currentRoute, 'operator.') ? 'dropdown-item-active' : 'text-white/60 hover:bg-sidebar-hover hover:text-white' }}">Operators</a>
-                            <a href="{{ route('checker.index') }}" class="block px-3 py-2 rounded-lg text-sm {{ Str::startsWith($currentRoute, 'checker.') ? 'dropdown-item-active' : 'text-white/60 hover:bg-sidebar-hover hover:text-white' }}">Checkers</a>
-                        </div>
+                <div class="nav-section-header">Administration</div>
+                <div class="nav-group">
+                    <div class="nav-item {{ $isAdminActive ? 'active open' : '' }}" onclick="toggleSubmenu(this)">
+                        <i data-lucide="users"></i>
+                        <span>User Management</span>
+                        <i data-lucide="chevron-down" class="chevron"></i>
+                    </div>
+                    <div class="submenu {{ $isAdminActive ? 'open' : '' }}">
+                        <a href="{{ route('admin.index') }}" class="submenu-item {{ Str::startsWith($currentRoute, 'admin.') ? 'active' : '' }}">Administrators</a>
+                        <a href="{{ route('manager.index') }}" class="submenu-item {{ Str::startsWith($currentRoute, 'manager.') ? 'active' : '' }}">Managers</a>
+                        <a href="{{ route('operator.index') }}" class="submenu-item {{ Str::startsWith($currentRoute, 'operator.') ? 'active' : '' }}">Operators</a>
+                        <a href="{{ route('checker.index') }}" class="submenu-item {{ Str::startsWith($currentRoute, 'checker.') ? 'active' : '' }}">Checkers</a>
                     </div>
                 </div>
                 @endif
             </nav>
-
-            <!-- Spacer to push user section to bottom -->
-            <div class="flex-1"></div>
 
             <!-- User Section -->
             <div class="p-4 border-t border-white/10">
@@ -393,12 +404,22 @@
     <script>
         lucide.createIcons();
 
-        // Toggle Sidebar
+        // Toggle Sidebar (mobile)
         function toggleSidebar() {
             const sidebar = document.getElementById('sidebar');
             const overlay = document.getElementById('sidebar-overlay');
             sidebar.classList.toggle('active');
             overlay.classList.toggle('active');
+        }
+
+        // Toggle Submenu (click-based collapsible)
+        function toggleSubmenu(element) {
+            const submenu = element.nextElementSibling;
+            const isOpen = submenu.classList.contains('open');
+
+            // Toggle current submenu
+            element.classList.toggle('open');
+            submenu.classList.toggle('open');
         }
 
         // Close sidebar on window resize (if moving to desktop)
