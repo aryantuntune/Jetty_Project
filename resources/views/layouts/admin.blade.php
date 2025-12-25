@@ -209,6 +209,15 @@
             <!-- Navigation -->
             @php
                 $currentRoute = Route::currentRouteName() ?? '';
+                $userRole = auth()->user()->role_id;
+                // Role IDs: 1=Super Admin, 2=Admin, 3=Manager, 4=Operator, 5=Checker
+                $isSuperAdmin = $userRole == 1;
+                $isAdmin = $userRole == 2;
+                $isManager = $userRole == 3;
+                $isOperator = $userRole == 4;
+                $isChecker = $userRole == 5;
+
+                $isDashboardActive = $currentRoute == 'home';
                 $isReportsActive = Str::startsWith($currentRoute, 'reports.');
                 $masterRoutes = ['items.from_rates.index', 'item_categories.index', 'item_categories.create', 'item_categories.edit', 'item-rates.index', 'item-rates.create', 'item-rates.edit', 'item-rates.show', 'ferryboats.index', 'ferryboats.create', 'ferryboats.edit', 'ferry_schedules.index', 'ferry_schedules.create', 'ferry_schedules.edit', 'guests.index', 'guests.create', 'guests.edit', 'guest_categories.index', 'guest_categories.create', 'branches.index', 'branches.create', 'branches.edit', 'special-charges.index', 'special-charges.create', 'special-charges.edit'];
                 $isMastersActive = in_array($currentRoute, $masterRoutes);
@@ -218,13 +227,24 @@
                 $isAdminActive = in_array($currentRoute, $adminRoutes);
             @endphp
             <nav class="flex-1 px-3 py-4 sidebar-scroll overflow-y-auto">
-                <!-- Counter Options -->
+                {{-- Dashboard - visible to Super Admin, Admin, Manager, Operator --}}
+                @if($isSuperAdmin || $isAdmin || $isManager || $isOperator)
+                <a href="{{ route('home') }}" class="nav-item {{ $isDashboardActive ? 'active' : '' }}">
+                    <i data-lucide="layout-dashboard"></i>
+                    <span>Dashboard</span>
+                </a>
+                @endif
+
+                {{-- Counter Options - visible to Super Admin, Admin, Manager, Operator (not Checker) --}}
+                @if($isSuperAdmin || $isAdmin || $isManager || $isOperator)
                 <a href="{{ route('ticket-entry.create') }}" class="nav-item {{ $currentRoute == 'ticket-entry.create' ? 'active' : '' }}">
                     <i data-lucide="ticket"></i>
                     <span>Counter Options</span>
                 </a>
+                @endif
 
-                <!-- Reports -->
+                {{-- Reports - visible to Super Admin, Admin, Manager, Operator --}}
+                @if($isSuperAdmin || $isAdmin || $isManager || $isOperator)
                 <div class="nav-group">
                     <div class="nav-item {{ $isReportsActive ? 'active open' : '' }}" onclick="toggleSubmenu(this)">
                         <i data-lucide="bar-chart-3"></i>
@@ -236,8 +256,10 @@
                         <a href="{{ route('reports.vehicle_tickets') }}" class="submenu-item {{ $currentRoute == 'reports.vehicle_tickets' ? 'active' : '' }}">Vehicle-wise Details</a>
                     </div>
                 </div>
+                @endif
 
-                <!-- Masters -->
+                {{-- Masters - visible to Super Admin and Admin only --}}
+                @if($isSuperAdmin || $isAdmin)
                 <div class="nav-group">
                     <div class="nav-item {{ $isMastersActive ? 'active open' : '' }}" onclick="toggleSubmenu(this)">
                         <i data-lucide="database"></i>
@@ -253,30 +275,29 @@
                         <a href="{{ route('guests.index') }}" class="submenu-item {{ Str::startsWith($currentRoute, 'guests.') ? 'active' : '' }}">Guests</a>
                         <a href="{{ route('guest_categories.index') }}" class="submenu-item {{ Str::startsWith($currentRoute, 'guest_categories.') ? 'active' : '' }}">Guest Categories</a>
                         <a href="{{ route('branches.index') }}" class="submenu-item {{ Str::startsWith($currentRoute, 'branches.') ? 'active' : '' }}">Branches</a>
-                        @if(in_array(auth()->user()->role_id, [1,2]))
                         <a href="{{ route('special-charges.index') }}" class="submenu-item {{ Str::startsWith($currentRoute, 'special-charges.') ? 'active' : '' }}">Special Charges</a>
-                        @endif
                     </div>
                 </div>
+                @endif
 
-                <!-- Transfer -->
-                @if(in_array(auth()->user()->role_id, [1,2]))
+                {{-- Transfer - visible to Super Admin and Admin only --}}
+                @if($isSuperAdmin || $isAdmin)
                 <a href="{{ route('employees.transfer.index') }}" class="nav-item {{ $isTransferActive ? 'active' : '' }}">
                     <i data-lucide="arrow-right-left"></i>
                     <span>Transfer</span>
                 </a>
                 @endif
 
-                <!-- Verify Ticket -->
-                @if(in_array(auth()->user()->role_id, [1,2,5]))
+                {{-- Verify Ticket - visible to Super Admin, Admin, and Checker --}}
+                @if($isSuperAdmin || $isAdmin || $isChecker)
                 <a href="{{ route('verify.index') }}" class="nav-item {{ $isVerifyActive ? 'active' : '' }}">
                     <i data-lucide="check-circle"></i>
                     <span>Verify Ticket</span>
                 </a>
                 @endif
 
-                <!-- Admin Section -->
-                @if(in_array(auth()->user()->role_id, [1,2]))
+                {{-- User Management - Super Admin sees all, Admin sees all except Super Admin --}}
+                @if($isSuperAdmin || $isAdmin)
                 <div class="nav-section-header">Administration</div>
                 <div class="nav-group">
                     <div class="nav-item {{ $isAdminActive ? 'active open' : '' }}" onclick="toggleSubmenu(this)">
@@ -285,7 +306,10 @@
                         <i data-lucide="chevron-down" class="chevron"></i>
                     </div>
                     <div class="submenu {{ $isAdminActive ? 'open' : '' }}">
+                        {{-- Only Super Admin can see Administrators (which includes Super Admins) --}}
+                        @if($isSuperAdmin)
                         <a href="{{ route('admin.index') }}" class="submenu-item {{ Str::startsWith($currentRoute, 'admin.') ? 'active' : '' }}">Administrators</a>
+                        @endif
                         <a href="{{ route('manager.index') }}" class="submenu-item {{ Str::startsWith($currentRoute, 'manager.') ? 'active' : '' }}">Managers</a>
                         <a href="{{ route('operator.index') }}" class="submenu-item {{ Str::startsWith($currentRoute, 'operator.') ? 'active' : '' }}">Operators</a>
                         <a href="{{ route('checker.index') }}" class="submenu-item {{ Str::startsWith($currentRoute, 'checker.') ? 'active' : '' }}">Checkers</a>

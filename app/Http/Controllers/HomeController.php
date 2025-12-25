@@ -23,11 +23,23 @@ class HomeController extends Controller
     /**
      * Show the application dashboard.
      *
+     * Role-based access:
+     * - Super Admin (1): Sees all data across all branches and routes
+     * - Admin (2): Sees all data across all branches and routes
+     * - Manager (3): Sees data for their assigned ferry route only
+     * - Operator (4): Sees data for their branch only
+     * - Checker (5): Redirected to verify page (no dashboard access)
+     *
      * @return \Illuminate\Contracts\Support\Renderable
      */
     public function index(Request $request)
     {
         $user = Auth::user();
+
+        // Checker should only see verify page
+        if ($user->role_id == 5) {
+            return redirect()->route('verify.index');
+        }
 
         // Get date filter parameters
         $viewMode = $request->get('view', 'day'); // 'day' or 'month'
@@ -39,12 +51,9 @@ class HomeController extends Controller
         $monthStart = Carbon::parse($selectedMonth . '-01')->startOfMonth();
         $monthEnd = Carbon::parse($selectedMonth . '-01')->endOfMonth();
 
-        // Build base query with branch filter for non-admins
+        // Build base query with role-based filtering
         $ticketQuery = Ticket::query();
-        if (!in_array($user->role_id, [1, 2])) {
-            // Operators only see their branch data
-            $ticketQuery->where('branch_id', $user->branch_id);
-        }
+        $this->applyRoleFilter($ticketQuery, $user);
 
         // Apply date filter based on view mode
         if ($viewMode === 'month') {
@@ -60,18 +69,21 @@ class HomeController extends Controller
         $totalRevenue = (clone $ticketQuery)->sum('total_amount');
         $pendingVerifications = (clone $ticketQuery)->whereNull('verified_at')->count();
 
-        // Get ferry boats count
+        // Get ferry boats count with role-based filtering
         $ferryBoatsQuery = FerryBoat::query();
-        if (!in_array($user->role_id, [1, 2])) {
+        if ($user->role_id == 3 && $user->ferry_boat_id) {
+            // Manager sees only their assigned ferry
+            $ferryBoatsQuery->where('id', $user->ferry_boat_id);
+        } elseif ($user->role_id == 4 && $user->branch_id) {
+            // Operator sees only ferries in their branch
             $ferryBoatsQuery->where('branch_id', $user->branch_id);
         }
         $ferryBoatsCount = $ferryBoatsQuery->count();
 
         // Get recent tickets for activity feed
-        $recentTickets = Ticket::with(['user', 'ferryBoat', 'branch'])
-            ->when(!in_array($user->role_id, [1, 2]), function($q) use ($user) {
-                $q->where('branch_id', $user->branch_id);
-            })
+        $recentTicketsQuery = Ticket::with(['user', 'ferryBoat', 'branch']);
+        $this->applyRoleFilter($recentTicketsQuery, $user);
+        $recentTickets = $recentTicketsQuery
             ->orderBy('created_at', 'desc')
             ->limit(5)
             ->get();
@@ -86,9 +98,7 @@ class HomeController extends Controller
         }
 
         $prevTicketQuery = Ticket::query();
-        if (!in_array($user->role_id, [1, 2])) {
-            $prevTicketQuery->where('branch_id', $user->branch_id);
-        }
+        $this->applyRoleFilter($prevTicketQuery, $user);
 
         if ($viewMode === 'month') {
             $prevTicketQuery->whereBetween('created_at', [$prevStart, $prevEnd]);
@@ -107,6 +117,16 @@ class HomeController extends Controller
             ? round((($totalRevenue - $prevRevenue) / $prevRevenue) * 100, 1)
             : ($totalRevenue > 0 ? 100 : 0);
 
+        // Get role name for display
+        $roleNames = [
+            1 => 'Super Admin',
+            2 => 'Administrator',
+            3 => 'Manager',
+            4 => 'Operator',
+            5 => 'Checker'
+        ];
+        $roleName = $roleNames[$user->role_id] ?? 'Staff';
+
         return view('home', compact(
             'ticketsCount',
             'totalRevenue',
@@ -120,7 +140,40 @@ class HomeController extends Controller
             'ticketsChange',
             'revenueChange',
             'date',
-            'monthStart'
+            'monthStart',
+            'roleName'
         ));
+    }
+
+    /**
+     * Apply role-based filtering to a ticket query
+     */
+    private function applyRoleFilter($query, $user)
+    {
+        switch ($user->role_id) {
+            case 1: // Super Admin - sees everything
+            case 2: // Admin - sees everything
+                // No filter needed
+                break;
+
+            case 3: // Manager - sees only their ferry route
+                if ($user->ferry_boat_id) {
+                    $query->where('ferry_boat_id', $user->ferry_boat_id);
+                }
+                break;
+
+            case 4: // Operator - sees only their branch
+                if ($user->branch_id) {
+                    $query->where('branch_id', $user->branch_id);
+                }
+                break;
+
+            default:
+                // Unknown role - show nothing for safety
+                $query->whereRaw('1 = 0');
+                break;
+        }
+
+        return $query;
     }
 }

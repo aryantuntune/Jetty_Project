@@ -230,10 +230,30 @@
                 <p class="text-xs text-slate-500">All systems operational</p>
             </div>
         </div>
-        <div class="mt-4 md:mt-0 flex items-center space-x-4 text-sm text-slate-500">
-            <span>Branch: {{ Auth::user()->branch->branch_name ?? 'All Branches' }}</span>
+        <div class="mt-4 md:mt-0 flex flex-wrap items-center gap-2 md:gap-4 text-sm text-slate-500">
+            @if(Auth::user()->role_id == 3 && Auth::user()->ferryboat)
+            <span class="flex items-center gap-1">
+                <i data-lucide="ship" class="w-4 h-4"></i>
+                Route: {{ Auth::user()->ferryboat->name ?? 'N/A' }}
+            </span>
             <span class="hidden md:inline">|</span>
-            <span>Role: {{ Auth::user()->role_id == 1 ? 'Administrator' : (Auth::user()->role_id == 2 ? 'Manager' : (Auth::user()->role_id == 3 ? 'Operator' : 'Staff')) }}</span>
+            @elseif(Auth::user()->role_id == 4 && Auth::user()->branch)
+            <span class="flex items-center gap-1">
+                <i data-lucide="map-pin" class="w-4 h-4"></i>
+                Branch: {{ Auth::user()->branch->branch_name ?? 'N/A' }}
+            </span>
+            <span class="hidden md:inline">|</span>
+            @elseif(in_array(Auth::user()->role_id, [1, 2]))
+            <span class="flex items-center gap-1">
+                <i data-lucide="globe" class="w-4 h-4"></i>
+                All Branches
+            </span>
+            <span class="hidden md:inline">|</span>
+            @endif
+            <span class="flex items-center gap-1">
+                <i data-lucide="shield" class="w-4 h-4"></i>
+                Role: {{ $roleName }}
+            </span>
         </div>
     </div>
 </div>
