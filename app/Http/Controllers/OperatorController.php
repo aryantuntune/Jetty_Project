@@ -7,33 +7,82 @@ use App\Models\Branch;
 use App\Models\FerryBoat;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Auth;
 
 class OperatorController extends Controller
 {
     public function __construct()
     {
-        // Protect all actions
-        $this->middleware(['auth', 'role:1,2']);
+        // Allow Super Admin (1), Admin (2), and Manager (3)
+        $this->middleware(['auth', 'role:1,2,3']);
     }
+
+    /**
+     * Get the base query filtered by role
+     * - Super Admin/Admin: see all operators
+     * - Manager: see only operators on their ferry route
+     */
+    private function getFilteredQuery()
+    {
+        $user = Auth::user();
+        $query = User::where('role_id', 4)->with(['branch', 'ferryboat']);
+
+        // Manager can only see operators assigned to their ferry route
+        if ($user->role_id == 3) {
+            $query->where('ferry_boat_id', $user->ferry_boat_id);
+        }
+
+        return $query;
+    }
+
+    /**
+     * Check if current user can manage this operator
+     */
+    private function canManage(User $operator)
+    {
+        $user = Auth::user();
+
+        // Super Admin and Admin can manage any operator
+        if (in_array($user->role_id, [1, 2])) {
+            return true;
+        }
+
+        // Manager can only manage operators on their route
+        if ($user->role_id == 3) {
+            return $operator->ferry_boat_id == $user->ferry_boat_id;
+        }
+
+        return false;
+    }
+
     public function index()
     {
-        $operators = User::where('role_id', 4)
-            ->with(['branch', 'ferryboat'])
-            ->paginate(10);
+        $operators = $this->getFilteredQuery()->paginate(10);
+        $isManager = Auth::user()->role_id == 3;
 
-        return view('operator.index', compact('operators'));
+        return view('operator.index', compact('operators', 'isManager'));
     }
 
     public function create()
     {
-        $branches = Branch::all();
-        $ferryboats = FerryBoat::all();
+        $user = Auth::user();
+
+        if ($user->role_id == 3) {
+            // Manager can only create operators for their route
+            $branches = Branch::all();
+            $ferryboats = FerryBoat::where('id', $user->ferry_boat_id)->get();
+        } else {
+            $branches = Branch::all();
+            $ferryboats = FerryBoat::all();
+        }
 
         return view('operator.create', compact('branches', 'ferryboats'));
     }
 
     public function store(Request $request)
     {
+        $user = Auth::user();
+
         $request->validate([
             'name'        => 'required|string|max:255',
             'email'       => 'required|email|unique:users,email',
@@ -43,13 +92,19 @@ class OperatorController extends Controller
             'ferry_boat_id' => 'nullable|exists:ferryboats,id',
         ]);
 
+        // Manager can only create operators for their route
+        $ferryBoatId = $request->ferryboat_id;
+        if ($user->role_id == 3) {
+            $ferryBoatId = $user->ferry_boat_id;
+        }
+
         User::create([
             'name'        => $request->name,
             'email'       => $request->email,
             'password'    => Hash::make($request->password),
             'mobile'      => $request->mobile,
             'branch_id'   => $request->branch_id,
-            'ferry_boat_id' => $request->ferryboat_id,
+            'ferry_boat_id' => $ferryBoatId,
             'role_id'     => 4, // Operator role
         ]);
 
@@ -59,15 +114,26 @@ class OperatorController extends Controller
     public function show(User $operator)
     {
         abort_if($operator->role_id != 4, 404);
+        abort_if(!$this->canManage($operator), 403);
+
         return view('operator.show', compact('operator'));
     }
 
     public function edit(User $operator)
     {
         abort_if($operator->role_id != 4, 404);
+        abort_if(!$this->canManage($operator), 403);
 
-        $branches = Branch::all();
-        $ferryboats = FerryBoat::all();
+        $user = Auth::user();
+
+        if ($user->role_id == 3) {
+            // Manager can only assign to their route
+            $branches = Branch::all();
+            $ferryboats = FerryBoat::where('id', $user->ferry_boat_id)->get();
+        } else {
+            $branches = Branch::all();
+            $ferryboats = FerryBoat::all();
+        }
 
         return view('operator.edit', compact('operator', 'branches', 'ferryboats'));
     }
@@ -75,6 +141,9 @@ class OperatorController extends Controller
     public function update(Request $request, User $operator)
     {
         abort_if($operator->role_id != 4, 404);
+        abort_if(!$this->canManage($operator), 403);
+
+        $user = Auth::user();
 
         $request->validate([
             'name'        => 'required|string|max:255',
@@ -85,12 +154,18 @@ class OperatorController extends Controller
             'ferry_boat_id' => 'nullable|exists:ferryboats,id',
         ]);
 
+        // Manager can only assign to their route
+        $ferryBoatId = $request->ferryboat_id;
+        if ($user->role_id == 3) {
+            $ferryBoatId = $user->ferry_boat_id;
+        }
+
         $operator->update([
             'name'        => $request->name,
             'email'       => $request->email,
             'mobile'      => $request->mobile,
             'branch_id'   => $request->branch_id,
-            'ferry_boat_id' => $request->ferryboat_id,
+            'ferry_boat_id' => $ferryBoatId,
             'role_id'     => 4,
         ]);
 
@@ -106,6 +181,7 @@ class OperatorController extends Controller
     public function destroy(User $operator)
     {
         abort_if($operator->role_id != 4, 404);
+        abort_if(!$this->canManage($operator), 403);
 
         $operator->delete();
 

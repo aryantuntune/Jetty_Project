@@ -296,9 +296,12 @@
                 </a>
                 @endif
 
-                {{-- User Management - Super Admin sees all, Admin sees all except Super Admin --}}
-                @if($isSuperAdmin || $isAdmin)
-                <div class="nav-section-header">Administration</div>
+                {{-- User Management --}}
+                {{-- Super Admin: sees all users including Administrators --}}
+                {{-- Admin: sees Managers, Operators, Checkers (not Super Admin/Administrators) --}}
+                {{-- Manager: sees only Operators and Checkers on their route --}}
+                @if($isSuperAdmin || $isAdmin || $isManager)
+                <div class="nav-section-header">{{ $isManager ? 'My Team' : 'Administration' }}</div>
                 <div class="nav-group">
                     <div class="nav-item {{ $isAdminActive ? 'active open' : '' }}" onclick="toggleSubmenu(this)">
                         <i data-lucide="users"></i>
@@ -310,8 +313,13 @@
                         @if($isSuperAdmin)
                         <a href="{{ route('admin.index') }}" class="submenu-item {{ Str::startsWith($currentRoute, 'admin.') ? 'active' : '' }}">Administrators</a>
                         @endif
+                        {{-- Only Super Admin and Admin can see/manage Managers --}}
+                        @if($isSuperAdmin || $isAdmin)
                         <a href="{{ route('manager.index') }}" class="submenu-item {{ Str::startsWith($currentRoute, 'manager.') ? 'active' : '' }}">Managers</a>
+                        @endif
+                        {{-- Super Admin, Admin, and Manager can see Operators --}}
                         <a href="{{ route('operator.index') }}" class="submenu-item {{ Str::startsWith($currentRoute, 'operator.') ? 'active' : '' }}">Operators</a>
+                        {{-- Super Admin, Admin, and Manager can see Checkers --}}
                         <a href="{{ route('checker.index') }}" class="submenu-item {{ Str::startsWith($currentRoute, 'checker.') ? 'active' : '' }}">Checkers</a>
                     </div>
                 </div>
