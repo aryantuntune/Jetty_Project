@@ -155,4 +155,29 @@ class BookingController extends Controller
 
         return redirect('/booking')->with('error', 'Payment Failed!');
     }
+
+    /**
+     * Show booking history for the logged-in customer
+     */
+    public function history()
+    {
+        $customer = auth()->guard('customer')->user();
+
+        $bookings = Booking::where('customer_id', $customer->id)
+            ->orderBy('created_at', 'desc')
+            ->get()
+            ->map(function ($booking) {
+                // Get branch names
+                $fromBranch = Branch::find($booking->from_branch);
+                $toBranch = Branch::find($booking->to_branch);
+
+                $booking->from_branch_name = $fromBranch ? $fromBranch->branch_name : 'N/A';
+                $booking->to_branch_name = $toBranch ? $toBranch->branch_name : 'N/A';
+                $booking->items_decoded = json_decode($booking->items, true) ?? [];
+
+                return $booking;
+            });
+
+        return view('customer.history', compact('bookings'));
+    }
 }

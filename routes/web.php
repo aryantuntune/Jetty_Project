@@ -178,7 +178,7 @@ Route::get('/clear-config', function () {
 // Customer Register
 // Customer Register
 // Customer Authentication Routes
-Route::middleware(['admin.guest', 'customer.guest'])->group(function () {
+Route::middleware(['customer.guest'])->group(function () {
 
     Route::get('customer/register', [RegisterController::class, 'showRegisterForm'])
         ->name('customer.register');
@@ -220,6 +220,7 @@ Route::middleware('auth:customer')->group(function () {
         ->name('customer.dashboard');
 
     Route::get('/booking', [BookingController::class, 'show'])->name('booking.form');
+    Route::get('/booking/history', [BookingController::class, 'history'])->name('booking.history');
 
     Route::post('/booking', [BookingController::class, 'submit'])->name('booking.submit');
 

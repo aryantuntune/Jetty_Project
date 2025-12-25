@@ -1,181 +1,126 @@
-@extends('layouts.app')
+{{-- OLD DESIGN COMMENTED OUT --}}
+
+@extends('layouts.admin')
+
+@section('title', 'Guests')
+@section('page-title', 'Guests')
 
 @section('content')
-<style>
-    :root {
-        --win-border: #a9a9a9;
-        --title-red: #b22222;
-        --panel-bg: #f8fafc;
-        --grid-bg: #ecfff1;
-        --grid-alt: #e2ffe9;
-        --grid-border: #cdd9c5;
-        --grid-head: #f0f0f0;
-        --blue-select: #0b61d6;
-        --footer-red: #b3262e;
-        --add-green: #49aa3d;
-    }
+<div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-8">
+    <div>
+        <h1 class="text-2xl font-bold text-slate-800">Guests</h1>
+        <p class="mt-1 text-sm text-slate-500">Manage registered guests</p>
+    </div>
+    @if(in_array($user->role_id, [1,2]))
+    <div class="mt-4 sm:mt-0">
+        <a href="{{ route('guests.create') }}" class="inline-flex items-center space-x-2 bg-primary-600 hover:bg-primary-700 text-white px-5 py-2.5 rounded-xl font-medium transition-colors shadow-sm">
+            <i data-lucide="plus" class="w-5 h-5"></i>
+            <span>Add Guest</span>
+        </a>
+    </div>
+    @endif
+</div>
 
-    .irs-window {
-        max-width: 1120px;
-        margin: 18px auto 32px;
-        border: 1px solid var(--win-border);
-        border-radius: 6px;
-        background: #fff;
-        box-shadow: 0 1px 0 #fff inset, 0 2px 10px rgba(0,0,0,.04);
-        overflow: hidden;
-    }
-    .irs-title {
-        text-align: center;
-        font-weight: 700;
-        font-size: 20px;
-        color: var(--title-red);
-        padding: 12px 14px 10px;
-        border-bottom: 1px solid var(--win-border);
-        background: #fff;
-    }
-    .irs-strip {
-        background: var(--panel-bg);
-        border-bottom: 1px solid var(--win-border);
-        padding: 14px 16px;
-    }
-    .irs-row {
-        display: flex;
-        gap: 10px;
-        align-items: center;
-    }
-    .irs-label { font-size: 13px; color: #444; }
-    .irs-select {
-        width: 200px;
-        border: 1px solid #c9c9c9;
-        border-radius: 4px;
-        background: #fff;
-        padding: 6px 10px;
-        font-size: 14px;
-    }
-    .irs-grid-wrap {
-        max-height: 520px;
-        overflow: auto;
-        border-top: 1px solid var(--win-border);
-        border-bottom: 1px solid var(--win-border);
-    }
-    table.irs-grid {
-        width: 100%;
-        border-collapse: collapse;
-        background: var(--grid-bg);
-    }
-    .irs-grid thead th {
-        position: sticky;
-        top: 0;
-        background: var(--grid-head);
-        font-size: 13px;
-        font-weight: 700;
-        color: #3a3a3a;
-        border-bottom: 1px solid var(--grid-border);
-        padding: 8px 10px;
-        text-transform: none;
-    }
-    .irs-grid tbody td {
-        border-bottom: 1px solid var(--grid-border);
-        padding: 8px 10px;
-        font-size: 13px;
-        color: #222;
-        white-space: nowrap;
-    }
-    .irs-grid tbody tr:nth-child(even) { background: var(--grid-alt); }
-    .irs-grid tbody tr:hover { outline:2px solid var(--blue-select); outline-offset:-2px; }
-    .irs-footer {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        background: var(--footer-red);
-        padding: 10px 12px;
-    }
-    .btn-add {
-        background: var(--add-green);
-        color: #fff;
-        font-weight: 600;
-        font-size: 13px;
-        border: none;
-        border-radius: 4px;
-        padding: 8px 12px;
-        text-decoration: none;
-    }
-    .btn-add:hover { filter: brightness(0.95); }
-    .btn-small {
-        padding: 4px 8px;
-        font-size: 12px;
-    }
-    .text-end { text-align: right; }
-</style>
-
-<div class="irs-window">
-    <!-- Title -->
-    <div class="irs-title">Guest List</div>
-
-    <!-- Filter -->
-    <div class="irs-strip">
-        <form method="GET" action="{{ route('guests.index') }}">
-            <div class="irs-row">
-                <div class="irs-label">Branch:</div>
-                <select name="branch_id" class="irs-select" onchange="this.form.submit()">
+<div class="bg-white rounded-2xl border border-slate-200 mb-6 overflow-hidden">
+    <div class="px-6 py-4 border-b border-slate-200 bg-slate-50">
+        <h2 class="font-semibold text-slate-700 flex items-center space-x-2">
+            <i data-lucide="filter" class="w-4 h-4"></i>
+            <span>Filters</span>
+        </h2>
+    </div>
+    <form method="GET" action="{{ route('guests.index') }}" class="p-6">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div>
+                <label class="block text-sm font-medium text-slate-700 mb-2">Branch</label>
+                <select name="branch_id" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 outline-none text-sm">
                     @if(in_array($user->role_id, [1,2]))
-                        <option value="">— All Branches —</option>
+                    <option value="">All Branches</option>
                     @endif
                     @foreach($branches as $branch)
-                        <option value="{{ $branch->id }}" {{ $branchId == $branch->id ? 'selected' : '' }}>
-                            {{ $branch->branch_name }}
-                        </option>
+                        <option value="{{ $branch->id }}" {{ $branchId == $branch->id ? 'selected' : '' }}>{{ $branch->branch_name }}</option>
                     @endforeach
                 </select>
             </div>
-        </form>
+            <div class="flex items-end space-x-2">
+                <button type="submit" class="inline-flex items-center space-x-2 bg-slate-800 hover:bg-slate-900 text-white px-5 py-2.5 rounded-xl font-medium transition-colors">
+                    <i data-lucide="search" class="w-4 h-4"></i>
+                    <span>Filter</span>
+                </button>
+                <a href="{{ route('guests.index') }}" class="px-5 py-2.5 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 font-medium transition-colors">
+                    <i data-lucide="x" class="w-4 h-4"></i>
+                </a>
+            </div>
+        </div>
+    </form>
+</div>
+
+<div class="bg-white rounded-2xl border border-slate-200 overflow-hidden">
+    <div class="px-6 py-4 border-b border-slate-200 flex items-center space-x-3">
+        <div class="w-10 h-10 rounded-xl bg-orange-100 flex items-center justify-center">
+            <i data-lucide="users" class="w-5 h-5 text-orange-600"></i>
+        </div>
+        <div>
+            <h2 class="font-semibold text-slate-800">All Guests</h2>
+            <p class="text-sm text-slate-500">Total: {{ $total }} guests</p>
+        </div>
     </div>
 
-    <!-- Table -->
-    <div class="irs-grid-wrap">
-        <table class="irs-grid">
-            <thead>
+    <div class="overflow-x-auto">
+        <table class="w-full">
+            <thead class="bg-slate-50 border-b border-slate-200">
                 <tr>
-                    <th style="width:5%">#</th>
-                    <th style="width:30%">Name</th>
-                    <th style="width:30%">Category</th>
-                    <th style="width:25%">Branch</th>
-                     @if(in_array($user->role_id, [1,2]))
-                    <th style="width:10%">Actions</th>
+                    <th class="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">#</th>
+                    <th class="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">Name</th>
+                    <th class="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">Category</th>
+                    <th class="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">Branch</th>
+                    @if(in_array($user->role_id, [1,2]))
+                    <th class="px-6 py-4 text-right text-xs font-semibold text-slate-600 uppercase tracking-wider">Actions</th>
                     @endif
                 </tr>
             </thead>
-            <tbody>
+            <tbody class="divide-y divide-slate-100">
                 @forelse($guests as $guest)
-                    <tr>
-                        <td>{{ $loop->iteration }}</td>
-                        <td>{{ $guest->name }}</td>
-                        <td>{{ $guest->category->name ?? 'N/A' }}</td>
-                        <td>{{ $guest->branch->branch_name ?? '-' }}</td>
-                        @if(in_array($user->role_id, [1,2]))
-                        <td class="text-center">
-                                <a href="{{ route('guests.edit', $guest->id) }}" class="btn btn-sm btn-primary">Edit</a>
-
-                                <form action="{{ route('guests.destroy', $guest->id) }}" method="POST" style="display:inline;">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure?')">Delete</button>
-                                </form>
-                            @endif
-                        </td>
-
-                    </tr>
+                <tr class="table-row-hover">
+                    <td class="px-6 py-4"><span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-slate-100 text-slate-700">{{ $loop->iteration }}</span></td>
+                    <td class="px-6 py-4">
+                        <div class="flex items-center space-x-3">
+                            <div class="w-9 h-9 rounded-lg bg-gradient-to-br from-orange-400 to-orange-600 flex items-center justify-center text-white font-semibold text-sm">
+                                {{ strtoupper(substr($guest->name, 0, 1)) }}
+                            </div>
+                            <span class="font-medium text-slate-800">{{ $guest->name }}</span>
+                        </div>
+                    </td>
+                    <td class="px-6 py-4"><span class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-medium bg-purple-50 text-purple-700">{{ $guest->category->name ?? 'N/A' }}</span></td>
+                    <td class="px-6 py-4"><span class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-medium bg-blue-50 text-blue-700">{{ $guest->branch->branch_name ?? '-' }}</span></td>
+                    @if(in_array($user->role_id, [1,2]))
+                    <td class="px-6 py-4">
+                        <div class="flex items-center justify-end space-x-2">
+                            <a href="{{ route('guests.edit', $guest->id) }}" class="w-9 h-9 rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-100 transition-colors flex items-center justify-center" title="Edit"><i data-lucide="pencil" class="w-4 h-4"></i></a>
+                            <form action="{{ route('guests.destroy', $guest->id) }}" method="POST" class="inline" onsubmit="return confirm('Delete this guest?')">
+                                @csrf @method('DELETE')
+                                <button type="submit" class="w-9 h-9 rounded-lg bg-red-50 text-red-600 hover:bg-red-100 transition-colors flex items-center justify-center" title="Delete"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                            </form>
+                        </div>
+                    </td>
+                    @endif
+                </tr>
                 @empty
-                    <tr><td colspan="5" class="text-center">No guests found.</td></tr>
+                <tr>
+                    <td colspan="{{ in_array($user->role_id, [1,2]) ? 5 : 4 }}" class="px-6 py-12 text-center">
+                        <div class="flex flex-col items-center">
+                            <div class="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center mb-4"><i data-lucide="users" class="w-8 h-8 text-slate-400"></i></div>
+                            <h3 class="text-lg font-medium text-slate-800 mb-1">No guests found</h3>
+                            <p class="text-sm text-slate-500">Try adjusting your filter or add a new guest.</p>
+                        </div>
+                    </td>
+                </tr>
                 @endforelse
             </tbody>
         </table>
     </div>
 
-    <!-- Footer -->
-    <div class="irs-footer">
-        <span>Total: {{ $total }}</span>
-        <a href="{{ route('guests.create') }}" class="btn-add">Add New Guest</a>
+    <div class="px-6 py-4 border-t border-slate-200 bg-slate-50">
+        <p class="text-sm text-slate-600">Showing <span class="font-medium">{{ count($guests) }}</span> of <span class="font-medium">{{ $total }}</span> guests</p>
     </div>
 </div>
 @endsection

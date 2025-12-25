@@ -1,106 +1,58 @@
-@extends('layouts.app')
+{{-- OLD DESIGN COMMENTED OUT --}}
+
+@extends('layouts.admin')
+
+@section('title', 'Edit Ferry Schedule')
+@section('page-title', 'Edit Ferry Schedule')
 
 @section('content')
-<style>
-    .win-card {
-        border: 2px solid #9ec5fe;
-        background: #f8fafc;
-        box-shadow: 2px 2px 6px rgba(0,0,0,0.15);
-    }
+<div class="mb-8">
+    <a href="{{ route('ferry_schedules.index') }}" class="inline-flex items-center space-x-2 text-slate-600 hover:text-slate-800 transition-colors">
+        <i data-lucide="arrow-left" class="w-4 h-4"></i>
+        <span>Back to Schedules</span>
+    </a>
+</div>
 
-    .win-header {
-        background: #ffffff;
-        text-align: center;
-        font-weight: bold;
-        color: darkred;
-        padding: 10px;
-        font-size: 18px;
-        border-bottom: 1px solid #ccc;
-    }
-
-    .form-label {
-        display: block;
-        font-weight: bold;
-        margin-bottom: 6px;
-    }
-
-    .form-input {
-        width: 100%;
-        padding: 8px 10px;
-        font-size: 14px;
-        border: 1px solid #ccc;
-        border-radius: 4px;
-        margin-bottom: 16px;
-    }
-
-    .form-footer {
-        background: darkred;
-        padding: 10px;
-        display: flex;
-        justify-content: space-between;
-    }
-
-    .btn {
-        padding: 6px 14px;
-        font-size: 14px;
-        border: none;
-        border-radius: 4px;
-        cursor: pointer;
-        color: white;
-    }
-
-    .btn-secondary {
-        background-color: #6b7280; /* Gray */
-    }
-
-    .btn-secondary:hover {
-        background-color: #4b5563;
-    }
-
-    .btn-primary {
-        background-color: #1d4ed8; /* Blue */
-    }
-
-    .btn-primary:hover {
-        background-color: #1e40af;
-    }
-
-    .text-danger {
-        color: red;
-        font-size: 13px;
-        margin-top: -10px;
-        margin-bottom: 10px;
-    }
-</style>
-
-<div class="flex justify-center items-center min-h-screen bg-gray-100 p-4">
-    <div class="win-card w-1/2">
-
-        <!-- Header -->
-        <div class="win-header">
-            Edit Ferry Time
+<div class="max-w-2xl">
+    <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden">
+        <div class="px-6 py-4 border-b border-slate-200 bg-gradient-to-r from-emerald-600 to-emerald-700">
+            <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center">
+                    <i data-lucide="clock" class="w-5 h-5 text-white"></i>
+                </div>
+                <div>
+                    <h2 class="font-semibold text-white">Edit Ferry Schedule</h2>
+                    <p class="text-sm text-emerald-100">Update the details below</p>
+                </div>
+            </div>
         </div>
 
-        <!-- Form -->
-        <form method="POST" action="{{ route('ferry_schedules.update', $ferry_schedule) }}" class="p-4">
+        <form action="{{ route('ferry_schedules.update', $ferry_schedule) }}" method="POST" class="p-6 space-y-6">
             @csrf
             @method('PUT')
 
-            <label for="hour" class="form-label">Hour (0-23)</label>
-            <input type="number" name="hour" id="hour" class="form-input" min="0" max="23" required value="{{ old('hour', $ferry_schedule->hour) }}">
-            @error('hour') <div class="text-danger">{{ $message }}</div> @enderror
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label for="hour" class="block text-sm font-medium text-slate-700 mb-2">Hour (0-23) <span class="text-red-500">*</span></label>
+                    <input type="number" name="hour" id="hour" value="{{ old('hour', $ferry_schedule->hour) }}" min="0" max="23" class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 outline-none" placeholder="0-23" required>
+                    @error('hour')<p class="mt-1 text-sm text-red-600">{{ $message }}</p>@enderror
+                </div>
 
-            <label for="minute" class="form-label">Minute (0-59)</label>
-            <input type="number" name="minute" id="minute" class="form-input" min="0" max="59" required value="{{ old('minute', $ferry_schedule->minute) }}">
-            @error('minute') <div class="text-danger">{{ $message }}</div> @enderror
+                <div>
+                    <label for="minute" class="block text-sm font-medium text-slate-700 mb-2">Minute (0-59) <span class="text-red-500">*</span></label>
+                    <input type="number" name="minute" id="minute" value="{{ old('minute', $ferry_schedule->minute) }}" min="0" max="59" class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 outline-none" placeholder="0-59" required>
+                    @error('minute')<p class="mt-1 text-sm text-red-600">{{ $message }}</p>@enderror
+                </div>
+            </div>
 
-            <!-- Footer Buttons -->
-            <div class="form-footer">
-                <a href="{{ route('ferry_schedules.index') }}" class="btn btn-secondary">Back</a>
-                <button type="submit" class="btn btn-primary">Update</button>
+            <div class="flex items-center justify-end space-x-4 pt-4 border-t border-slate-200">
+                <a href="{{ route('ferry_schedules.index') }}" class="px-6 py-2.5 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 font-medium transition-colors">Cancel</a>
+                <button type="submit" class="inline-flex items-center space-x-2 bg-primary-600 hover:bg-primary-700 text-white px-6 py-2.5 rounded-xl font-medium transition-colors">
+                    <i data-lucide="save" class="w-4 h-4"></i>
+                    <span>Update Schedule</span>
+                </button>
             </div>
         </form>
-
     </div>
 </div>
 @endsection

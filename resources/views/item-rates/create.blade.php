@@ -1,186 +1,176 @@
-@extends('layouts.app')
+@extends('layouts.admin')
+
+@section('title', 'Add Item Rate Slab')
+@section('page-title', 'Add Item Rate Slab')
 
 @section('content')
-
-<!-- Bootstrap 5 + Bootstrap-Select CSS/JS -->
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-select@1.14.0-beta3/dist/css/bootstrap-select.min.css">
-
-<script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap-select@1.14.0-beta3/dist/js/bootstrap-select.min.js"></script>
-
-<style>
-  :root{
-    --win-border:#a9a9a9;
-    --title-red:#b22222;
-    --panel-bg:#f5f7fa;
-    --strip-bg:#eef2f6;
-    --grid-bg:#ecfff1;
-    --grid-border:#cdd9c5;
-    --grid-head:#f0f0f0;
-    --footer-red:#b3262e;
-    --add-green:#49aa3d;
-  }
-  .irs-window{
-    max-width: 1120px; margin: 18px auto 32px;
-    border:1px solid var(--win-border); border-radius:6px; background:#fff;
-    box-shadow:0 2px 10px rgba(0,0,0,.04); overflow:hidden;
-  }
-  .irs-title{
-    text-align:center; font-weight:700; font-size:20px; color:var(--title-red);
-    padding:12px 14px 10px; border-bottom:1px solid var(--win-border);
-  }
-  .irs-form-wrap{ background:var(--grid-bg); border-top:1px solid var(--win-border); border-bottom:1px solid var(--win-border); }
-  .irs-form{
-    padding: 12px 14px;
-    display:grid; grid-template-columns: 1fr 1fr 1fr; gap:14px;
-  }
-  .irs-field{ background:#fff; border:1px solid var(--grid-border); border-radius:6px; padding:10px 10px 8px; }
-  .irs-field label{ display:block; font-size:12px; color:#333; margin-bottom:6px; font-weight:700; }
-  .irs-field .hint{ font-size:11px; color:#666; margin-top:4px; }
-  .irs-errors{ padding:10px 16px; color:#721c24; background:#f8d7da; border-bottom:1px solid #f5c6cb; }
-  .irs-footer{ display:flex; align-items:center; justify-content:space-between; background:var(--footer-red); padding:10px 12px; }
-  .btn-save{ background:var(--add-green); color:#fff; font-weight:700; border:none; border-radius:4px; padding:9px 14px; }
-  .btn-cancel{ background:#fff; border:1px solid rgba(0,0,0,.15); border-radius:4px; padding:8px 12px; }
-</style>
-
-<div class="irs-window">
-  <div class="irs-title">Add Item Rate Slab</div>
-
-  {{-- validation messages --}}
-  @if ($errors->any())
-    <div class="irs-errors">
-      <strong>Fix the following:</strong>
-      <ul class="mb-0">
-        @foreach ($errors->all() as $e) <li>{{ $e }}</li> @endforeach
-      </ul>
+<div class="max-w-4xl mx-auto">
+    <!-- Header -->
+    <div class="mb-6">
+        <a href="{{ route('item-rates.index') }}" class="inline-flex items-center text-slate-500 hover:text-slate-700 transition-colors mb-4">
+            <i data-lucide="arrow-left" class="w-4 h-4 mr-2"></i>
+            Back to Item Rates
+        </a>
+        <h2 class="text-2xl font-bold text-slate-800">Add Item Rate Slab</h2>
+        <p class="text-slate-500 mt-1">Create a new pricing slab for ferry items</p>
     </div>
-  @endif
 
-  {{-- FORM AREA --}}
-  <form method="post" action="{{ route('item-rates.store') }}">
-    @csrf
-
-    {{-- Branch Multi-Select --}}
-   <div class="mb-3 row">
-    <label class="col-sm-2 col-form-label">Route :</label>
-    <div class="col-sm-10">
-        <select id="routeSelect" name="route_id" class="form-control" required>
-            <option value="">-- Select Route --</option>
-            @foreach($routes as $r)
-                <option value="{{ $r->route_id }}" data-branches="{{ $r->branch_ids }}">
-                    {{ $r->branch_names }}
-                </option>
-            @endforeach
-        </select>
-        {{-- <input type="hidden" name="branch_id[]" id="branchHidden"> --}}
-    </div>
-</div>
-
-
-    <div class="irs-form-wrap">
-        <div class="irs-form">
-            {{-- Item Name --}}
-            <div class="irs-field" style="grid-column: span 2;">
-                <label>Item Name</label>
-                <input type="text" name="item_name" class="irs-input form-control"
-                       value="{{ old('item_name') }}" required>
-            </div>
-
-            {{-- Item ID --}}
-            <div class="irs-field">
-                <label>Item ID</label>
-                <input type="number" name="item_id" class="irs-input form-control" 
-                       value="{{ old('item_id') }}" required min="1">
-                <div class="hint">Enter the numeric ID of the item (e.g., 1, 2, 3...)</div>
-            </div>
-
-            {{-- Category --}}
-            <div class="irs-field">
-                <label>Item Category</label>
-                <select name="item_category_id" class="irs-select form-control">
-                  <option value="">— Select —</option>
-                  @foreach($categories ?? [] as $c)
-                    <option value="{{ $c->id }}" @selected(old('item_category_id')==$c->id)>
-                      {{ $c->category_name }}
-                    </option>
-                  @endforeach
-                </select>
-            </div>
-
-            {{-- Item Rate --}}
-            <div class="irs-field">
-                <label>Item Rate</label>
-                <input type="number" step="0.01" min="0" name="item_rate" class="irs-input form-control"
-                       value="{{ old('item_rate',0) }}" required>
-            </div>
-
-            {{-- Item Levy --}}
-            <div class="irs-field">
-                <label>Item Levy</label>
-                <input type="number" step="0.01" min="0" name="item_lavy" class="irs-input form-control"
-                       value="{{ old('item_lavy',0) }}" required>
-            </div>
-
-            {{-- Starting Date --}}
-            <div class="irs-field">
-                <label>Starting Date</label>
-                <input type="date" name="starting_date" class="irs-input form-control"
-                       value="{{ old('starting_date') }}" required>
-                <div class="hint">Date from which this slab becomes effective.</div>
-            </div>
-
-            {{-- Ending Date --}}
-            <div class="irs-field">
-                <label>Ending Date (optional)</label>
-                <input type="date" name="ending_date" class="irs-input form-control"
-                       value="{{ old('ending_date') }}">
-                <div class="hint">Leave blank if still effective.</div>
+    <!-- Form Card -->
+    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+        @if ($errors->any())
+        <div class="p-4 bg-red-50 border-b border-red-100">
+            <div class="flex items-start space-x-3">
+                <i data-lucide="alert-circle" class="w-5 h-5 text-red-500 mt-0.5"></i>
+                <div>
+                    <p class="font-medium text-red-800">Please fix the following errors:</p>
+                    <ul class="mt-1 text-sm text-red-600 list-disc list-inside">
+                        @foreach ($errors->all() as $e) <li>{{ $e }}</li> @endforeach
+                    </ul>
+                </div>
             </div>
         </div>
-    </div>
+        @endif
 
-    <div class="irs-footer">
-        <a href="{{ route('item-rates.index') }}" class="btn-cancel">Cancel</a>
-        <button class="btn-save" type="submit">Save Rate Slab</button>
-    </div>
-    <div id="branchHiddenContainer"></div>
+        <form method="POST" action="{{ route('item-rates.store') }}" class="p-6 space-y-6">
+            @csrf
 
-  </form>
+            <!-- Route Selection -->
+            <div>
+                <label class="block text-sm font-semibold text-slate-700 mb-2">
+                    Route <span class="text-red-500">*</span>
+                </label>
+                <div class="relative">
+                    <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                        <i data-lucide="route" class="w-5 h-5 text-slate-400"></i>
+                    </div>
+                    <select id="routeSelect" name="route_id" required class="w-full pl-12 pr-10 py-3 rounded-xl border border-slate-200 focus:border-primary-500 focus:ring-4 focus:ring-primary-500/10 outline-none transition-all appearance-none bg-white">
+                        <option value="">-- Select Route --</option>
+                        @foreach($routes as $r)
+                        <option value="{{ $r->route_id }}" data-branches="{{ $r->branch_ids }}">{{ $r->branch_names }}</option>
+                        @endforeach
+                    </select>
+                    <div class="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none">
+                        <i data-lucide="chevron-down" class="w-5 h-5 text-slate-400"></i>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Item Name -->
+                <div class="lg:col-span-2">
+                    <label class="block text-sm font-semibold text-slate-700 mb-2">
+                        Item Name <span class="text-red-500">*</span>
+                    </label>
+                    <input type="text" name="item_name" value="{{ old('item_name') }}" required class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-primary-500 focus:ring-4 focus:ring-primary-500/10 outline-none transition-all" placeholder="Enter item name">
+                </div>
+
+                <!-- Item ID -->
+                <div>
+                    <label class="block text-sm font-semibold text-slate-700 mb-2">
+                        Item ID <span class="text-red-500">*</span>
+                    </label>
+                    <input type="number" name="item_id" value="{{ old('item_id') }}" required min="1" class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-primary-500 focus:ring-4 focus:ring-primary-500/10 outline-none transition-all" placeholder="e.g. 1, 2, 3">
+                    <p class="mt-1 text-xs text-slate-500">Numeric ID of the item</p>
+                </div>
+
+                <!-- Category -->
+                <div>
+                    <label class="block text-sm font-semibold text-slate-700 mb-2">Item Category</label>
+                    <select name="item_category_id" class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-primary-500 focus:ring-4 focus:ring-primary-500/10 outline-none transition-all appearance-none bg-white">
+                        <option value="">-- Select --</option>
+                        @foreach($categories ?? [] as $c)
+                        <option value="{{ $c->id }}" @selected(old('item_category_id')==$c->id)>{{ $c->category_name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+
+                <!-- Item Rate -->
+                <div>
+                    <label class="block text-sm font-semibold text-slate-700 mb-2">
+                        Item Rate <span class="text-red-500">*</span>
+                    </label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                            <span class="text-slate-400 font-medium">₹</span>
+                        </div>
+                        <input type="number" step="0.01" min="0" name="item_rate" value="{{ old('item_rate', 0) }}" required class="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 focus:border-primary-500 focus:ring-4 focus:ring-primary-500/10 outline-none transition-all">
+                    </div>
+                </div>
+
+                <!-- Item Levy -->
+                <div>
+                    <label class="block text-sm font-semibold text-slate-700 mb-2">
+                        Item Levy <span class="text-red-500">*</span>
+                    </label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                            <span class="text-slate-400 font-medium">₹</span>
+                        </div>
+                        <input type="number" step="0.01" min="0" name="item_lavy" value="{{ old('item_lavy', 0) }}" required class="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 focus:border-primary-500 focus:ring-4 focus:ring-primary-500/10 outline-none transition-all">
+                    </div>
+                </div>
+
+                <!-- Starting Date -->
+                <div>
+                    <label class="block text-sm font-semibold text-slate-700 mb-2">
+                        Starting Date <span class="text-red-500">*</span>
+                    </label>
+                    <input type="date" name="starting_date" value="{{ old('starting_date') }}" required class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-primary-500 focus:ring-4 focus:ring-primary-500/10 outline-none transition-all">
+                    <p class="mt-1 text-xs text-slate-500">Effective from this date</p>
+                </div>
+
+                <!-- Ending Date -->
+                <div>
+                    <label class="block text-sm font-semibold text-slate-700 mb-2">Ending Date</label>
+                    <input type="date" name="ending_date" value="{{ old('ending_date') }}" class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-primary-500 focus:ring-4 focus:ring-primary-500/10 outline-none transition-all">
+                    <p class="mt-1 text-xs text-slate-500">Leave blank if still effective</p>
+                </div>
+            </div>
+
+            <div id="branchHiddenContainer"></div>
+
+            <!-- Action Buttons -->
+            <div class="flex items-center justify-end space-x-3 pt-6 border-t border-slate-200">
+                <a href="{{ route('item-rates.index') }}" class="px-5 py-2.5 rounded-xl border border-slate-200 text-slate-600 font-medium hover:bg-slate-50 transition-colors">
+                    Cancel
+                </a>
+                <button type="submit" class="px-5 py-2.5 bg-gradient-to-r from-primary-500 to-primary-600 text-white font-semibold rounded-xl hover:from-primary-600 hover:to-primary-700 transition-all duration-200 shadow-lg shadow-primary-500/30 flex items-center">
+                    <i data-lucide="save" class="w-4 h-4 mr-2"></i>
+                    Save Rate Slab
+                </button>
+            </div>
+        </form>
+    </div>
 </div>
+
+@push('scripts')
+<script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
 <script>
-    $(document).ready(function () {
-        // Initialize bootstrap-select
-        $('.selectpicker').selectpicker();
-    });
-  document.addEventListener("DOMContentLoaded", function () {
-    let routeSelect = document.getElementById('routeSelect');
+    lucide.createIcons();
 
-    function populateBranches() {
-        let selected = routeSelect.options[routeSelect.selectedIndex];
-        let branchIds = selected.getAttribute('data-branches'); // e.g. "1,2"
+    document.addEventListener("DOMContentLoaded", function () {
+        let routeSelect = document.getElementById('routeSelect');
 
-        // Clear previous hidden inputs
-        document.querySelectorAll('#branchHiddenContainer input').forEach(e => e.remove());
+        function populateBranches() {
+            let selected = routeSelect.options[routeSelect.selectedIndex];
+            let branchIds = selected.getAttribute('data-branches');
 
-        if (branchIds) {
-            branchIds.split(',').forEach(id => {
-                let input = document.createElement('input');
-                input.type = 'hidden';
-                input.name = 'branch_id[]';
-                input.value = id;
-                document.getElementById('branchHiddenContainer').appendChild(input);
-            });
+            document.querySelectorAll('#branchHiddenContainer input').forEach(e => e.remove());
+
+            if (branchIds) {
+                branchIds.split(',').forEach(id => {
+                    let input = document.createElement('input');
+                    input.type = 'hidden';
+                    input.name = 'branch_id[]';
+                    input.value = id;
+                    document.getElementById('branchHiddenContainer').appendChild(input);
+                });
+            }
         }
-    }
 
-    // Run once on load (covers case when route is preselected or old() has a value)
-    populateBranches();
-
-    // Run again whenever the dropdown changes
-    routeSelect.addEventListener('change', populateBranches);
-});
+        populateBranches();
+        routeSelect.addEventListener('change', populateBranches);
+    });
 </script>
-
+@endpush
 @endsection

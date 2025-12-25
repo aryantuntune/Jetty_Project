@@ -1,96 +1,48 @@
-@extends('layouts.app')
+{{-- OLD DESIGN COMMENTED OUT --}}
+
+@extends('layouts.admin')
+
+@section('title', 'Edit Item Category')
+@section('page-title', 'Edit Item Category')
 
 @section('content')
-<style>
-    .win-card {
-        border: 2px solid #9ec5fe;   /* light blue border */
-        background: #f8fafc;         /* soft background */
-        box-shadow: 2px 2px 6px rgba(0,0,0,0.15);
-    }
-    .win-header {
-        background: #fff;
-        text-align: center;
-        font-weight: bold;
-        color: darkred;
-        padding: 8px;
-        border-bottom: 1px solid #ccc;
-        font-size: 18px;
-    }
-    .form-row {
-        display: flex;
-        flex-direction: column;
-        margin-bottom: 12px;
-    }
-    .form-row label {
-        font-weight: 600;
-        margin-bottom: 4px;
-    }
-    .form-row input {
-        border: 1px solid #c9c9c9;
-        border-radius: 4px;
-        padding: 8px;
-        font-size: 14px;
-    }
-    .win-footer {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        background: darkred;
-        color: #fff;
-        padding: 10px 12px;
-        font-weight: bold;
-        border-radius: 0 0 6px 6px;
-    }
-    .btn-add {
-        background: #1d4ed8;
-        color: white;
-        padding: 6px 12px;
-        border-radius: 4px;
-        text-decoration: none;
-        font-size: 13px;
-    }
-    .btn-cancel {
-        background: #6b7280;
-        color: white;
-        padding: 6px 12px;
-        border-radius: 4px;
-        text-decoration: none;
-        font-size: 13px;
-    }
-</style>
+<div class="mb-8">
+    <a href="{{ route('item_categories.index') }}" class="inline-flex items-center space-x-2 text-slate-600 hover:text-slate-800 transition-colors">
+        <i data-lucide="arrow-left" class="w-4 h-4"></i>
+        <span>Back to Categories</span>
+    </a>
+</div>
 
-<div class="flex justify-center items-center min-h-screen bg-gray-200 container mx-auto p-4">
-    <div class="win-card w-1/2">
-        <!-- Header -->
-        <div class="win-header">
-            Edit Item Category
+<div class="max-w-2xl">
+    <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden">
+        <div class="px-6 py-4 border-b border-slate-200 bg-gradient-to-r from-indigo-600 to-indigo-700">
+            <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center">
+                    <i data-lucide="tag" class="w-5 h-5 text-white"></i>
+                </div>
+                <div>
+                    <h2 class="font-semibold text-white">Edit Item Category</h2>
+                    <p class="text-sm text-indigo-100">Update the details below</p>
+                </div>
+            </div>
         </div>
 
-        <!-- Form -->
-        <form action="{{ route('item_categories.update', $itemCategory) }}" method="POST" class="p-4">
+        <form action="{{ route('item_categories.update', $itemCategory) }}" method="POST" class="p-6 space-y-6">
             @csrf
             @method('PUT')
 
-            <div class="form-row">
-                <label>Category Name</label>
-                <input type="text" name="category_name" value="{{ old('category_name', $itemCategory->category_name) }}" required>
-                @error('category_name')
-                    <span class="text-red-600 text-sm">{{ $message }}</span>
-                @enderror
+            <div>
+                <label for="category_name" class="block text-sm font-medium text-slate-700 mb-2">Category Name <span class="text-red-500">*</span></label>
+                <input type="text" name="category_name" id="category_name" value="{{ old('category_name', $itemCategory->category_name) }}" class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 outline-none @error('category_name') border-red-500 @enderror" placeholder="Enter category name" required>
+                @error('category_name')<p class="mt-1 text-sm text-red-600">{{ $message }}</p>@enderror
             </div>
 
-            {{-- <div class="form-row">
-                <label>Levy</label>
-                <input type="number" name="levy" value="{{ old('levy', $itemCategory->levy) }}" step="0.01" required>
-                @error('levy')
-                    <span class="text-red-600 text-sm">{{ $message }}</span>
-                @enderror
-            </div> --}}
-
-            <!-- Footer Buttons -->
-            <div class="win-footer">
-                <a href="{{ route('item_categories.index') }}" class="btn-cancel">Cancel</a>
-                <button type="submit" class="btn-add">Update Category</button>
+            <div class="flex items-center justify-end space-x-4 pt-4 border-t border-slate-200">
+                <a href="{{ route('item_categories.index') }}" class="px-6 py-2.5 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 font-medium transition-colors">Cancel</a>
+                <button type="submit" class="inline-flex items-center space-x-2 bg-primary-600 hover:bg-primary-700 text-white px-6 py-2.5 rounded-xl font-medium transition-colors">
+                    <i data-lucide="save" class="w-4 h-4"></i>
+                    <span>Update Category</span>
+                </button>
             </div>
         </form>
     </div>
