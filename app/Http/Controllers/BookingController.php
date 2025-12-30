@@ -2,10 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\BookingConfirmationMail;
 use App\Models\Booking;
 use App\Models\Branch;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 use Razorpay\Api\Api;
 
 class BookingController extends Controller
@@ -86,28 +90,33 @@ class BookingController extends Controller
     // ----------------------------------------------------------------
     public function createOrder(Request $request)
     {
-
+        // ✅ Store everything in session FIRST
+        session([
+            'from_branch'   => $request->from_branch,
+            'to_branch'     => $request->to_branch,
+            'items'         => $request->items,
+            'grand_total'   => $request->grand_total,
+            'booking_date'  => now()->toDateString(), // OR pass from form
+            'departure_time' => now()->format('H:i:s'), // OR actual ferry time
+        ]);
 
         $api = new Api(env('RAZORPAY_KEY'), env('RAZORPAY_SECRET'));
 
-        $amount = $request->grand_total * 100; // Razorpay uses paise
-
-        // Create Razorpay Order
         $order = $api->order->create([
-            'receipt' => 'RCPT_' . time(),
-            'amount' => $amount,
+            'receipt'  => 'RCPT_' . time(),
+            'amount'   => $request->grand_total * 100,
             'currency' => 'INR',
         ]);
 
         return response()->json([
-            'order_id'   => $order['id'],
-            'amount'     => $amount,
-            'key'        => env('RAZORPAY_KEY'),
-            'customer'   => auth()->guard('customer')->user(),
+            'order_id' => $order['id'],
+            'amount'   => $order['amount'],
+            'key'      => env('RAZORPAY_KEY'),
+            'customer' => auth()->guard('customer')->user(),
         ]);
     }
 
-    public function verifyPayment(Request $request)
+    public function verifyPayment1(Request $request)
     {
         $signatureStatus = false;
 
@@ -138,22 +147,57 @@ class BookingController extends Controller
                 ];
             });
 
-            Booking::create([
-                'customer_id'   => auth()->guard('customer')->id(),
-                'from_branch'   => session('from_branch'),
-                'to_branch'     => session('to_branch'),
-                'items'         => json_encode($items),
-                'total_amount'  => session('grand_total'),
-                'payment_id'    => $request->razorpay_payment_id,
-                'booking_source' => 'web',
+            $ticketNo = null;
 
-                'status' => 'success'
+            do {
+                $ticketNo = $this->generateTicketNo();
+            } while (Booking::where('ticket_id', $ticketNo)->exists());
+
+            $booking =    Booking::create([
+                'ticket_id'       => $ticketNo, // OR proper ticket number
+                'customer_id'     => auth()->guard('customer')->id(),
+                'ferry_id'        => 1, // TEMP or actual ferry ID
+
+                'from_branch'     => session('from_branch'),
+                'to_branch'       => session('to_branch'),
+
+                'booking_date'    => session('booking_date'),
+                'departure_time'  => session('departure_time'),
+
+                'items'           => json_encode(session('items')),
+                'total_amount'    => session('grand_total'),
+
+                'payment_id'      => $request->razorpay_payment_id,
+                'booking_source'  => 'web',
+                'status'          => 'success',
             ]);
+
+            $booking->load(['customer', 'fromBranch', 'toBranch']);
+
+            //  SEND BOOKING CONFIRMATION EMAIL
+            try {
+                Mail::to($booking->customer->email)
+                    ->send(new BookingConfirmationMail($booking));
+            } catch (\Exception $e) {
+                Log::error('Booking mail failed', [
+                    'booking_id' => $booking->id,
+                    'error' => $e->getMessage()
+                ]);
+            }
 
             return redirect('/booking')->with('success', 'Payment successful & booking confirmed!');
         }
 
         return redirect('/booking')->with('error', 'Payment Failed!');
+    }
+
+    private function generateTicketNo()
+    {
+        $year   = Carbon::now()->format('Y');
+        $date   = Carbon::now()->format('md'); // MMDD
+        $random = random_int(100000, 999999);
+
+        return "{$year}{$date}{$random}";
     }
 
     /**
@@ -179,5 +223,11 @@ class BookingController extends Controller
             });
 
         return view('customer.history', compact('bookings'));
+    }
+
+    public function view($ticket_id)
+    {
+        $booking = Booking::where('ticket_id', $ticket_id)->with(['customer', 'fromBranch', 'toBranch'])->firstOrFail();
+        return view('tickets.view', compact('booking'));
     }
 }

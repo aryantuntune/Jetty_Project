@@ -662,7 +662,7 @@ class ApiController extends Controller
 
         do {
             $ticketNo = $this->generateTicketNo();
-        } while (Booking::where('ticket_no', $ticketNo)->exists());
+        } while (Booking::where('ticket_id', $ticketNo)->exists());
 
 
         $booking = Booking::create([
@@ -677,7 +677,7 @@ class ApiController extends Controller
             'qr_code' => $qrCode,
             'status' => 'confirmed',
             'booking_source' => 'mobile_app',
-            'ticket_no'      => $ticketNo,
+            'ticket_id'      => $ticketNo,
         ]);
 
 

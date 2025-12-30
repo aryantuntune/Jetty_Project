@@ -21,7 +21,8 @@ class Booking extends Model
         'booking_source',
         'verified_at',
         'verified_by',
-        'ticket_id'
+        'ticket_id',
+
     ];
 
     protected $casts = [

@@ -1,55 +1,83 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <meta charset="UTF-8">
-    <title>Booking Confirmation</title>
+<meta charset="UTF-8">
+<title>Booking Confirmation</title>
 </head>
-<body style="font-family: Arial, sans-serif">
 
-    <h2>🚢 Booking Confirmed!</h2>
+<body style="margin:0;background:#f3f4f6;font-family:Arial,sans-serif">
 
-    <p>Dear {{ $booking->customer->first_name }} {{ $booking->customer->last_name }},</p>
+<table width="100%" cellpadding="0" cellspacing="0">
+<tr><td align="center">
 
-    <p>Your jetty booking has been <strong>successfully confirmed</strong>.</p>
+<table width="600" style="background:#fff;margin:30px;border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,.1)">
+<tr>
+<td style="background:#0d6efd;color:#fff;padding:20px;text-align:center">
+<h2>🚢 Jetty Booking Confirmed</h2>
+<p>Your ticket & QR code are ready</p>
+</td>
+</tr>
 
-    <hr>
+<tr><td style="padding:25px">
 
-    <h3>📄 Booking Details</h3>
+<p>Dear <strong>{{ $booking->customer->first_name }} {{ $booking->customer->last_name }}</strong>,</p>
 
-    <p><strong>Booking ID:</strong> {{ $booking->id }}</p>
-    <p><strong>Booking Date:</strong> {{ $booking->booking_date }}</p>
-    <p><strong>Departure Time:</strong> {{ $booking->departure_time }}</p>
-    <p><strong>Status:</strong> {{ ucfirst($booking->status) }}</p>
+<p>Your booking has been <strong style="color:green">successfully confirmed</strong>.</p>
 
-    <p><strong>From Branch:</strong> {{ $booking->fromBranch->branch_name ?? 'N/A' }}</p>
-    <p><strong>To Branch:</strong> {{ $booking->toBranch->branch_name ?? 'N/A' }}</p>
+<hr>
 
-    <p><strong>Total Amount:</strong> ₹{{ number_format($booking->total_amount, 2) }}</p>
+<h3>📄 Booking Details</h3>
+<table width="100%">
+<tr><td>Booking ID</td><td>{{ $booking->ticket_id }}</td></tr>
+<tr><td>Date</td><td>{{ $booking->booking_date }}</td></tr>
+<tr><td>Time</td><td>{{ $booking->departure_time }}</td></tr>
+<tr><td>From</td><td>{{ $booking->fromBranch->branch_name }}</td></tr>
+<tr><td>To</td><td>{{ $booking->toBranch->branch_name }}</td></tr>
+<tr><td><strong>Total</strong></td><td><strong>₹{{ number_format($booking->total_amount,2) }}</strong></td></tr>
+</table>
 
-    <p><strong>QR Code:</strong> {{ $booking->qr_code }}</p>
+<hr>
 
-    <hr>
+<h3>🧾 Items</h3>
 
-    <h3>🧾 Items</h3>
-    <ul>
-        @foreach(json_decode($booking->items, true) as $item)
-            <li>
-                {{ $item['item_name'] ?? '' }} —
-                Qty: {{ $item['quantity'] ?? '' }}
-            </li>
-        @endforeach
-    </ul>
+@php use App\Models\ItemRate; @endphp
 
-    <hr>
+<table width="100%" border="1" cellspacing="0" cellpadding="6" style="border-collapse:collapse">
+<tr style="background:#f1f5f9">
+<th>Item</th><th>Qty</th><th>Rate</th><th>Levy</th><th>Total</th>
+</tr>
 
-    <p>Please carry this confirmation and QR code while boarding.</p>
+@foreach(json_decode($booking->items,true) as $item)
+@php $rate = ItemRate::find($item['item_rate_id']); @endphp
+<tr>
+<td>{{ $rate->item_name ?? 'Item' }}</td>
+<td align="center">{{ $item['quantity'] }}</td>
+<td align="right">₹{{ $item['rate'] }}</td>
+<td align="right">₹{{ $item['lavy'] }}</td>
+<td align="right"><strong>₹{{ $item['total'] }}</strong></td>
+</tr>
+@endforeach
+</table>
 
-    <p>Thank you for choosing <strong>Jetty Booking Service</strong>.</p>
+<hr>
 
-    <br>
 
-    <p>Regards,<br>
-    <strong>Jetty Team</strong></p>
 
+<p>PDF ticket is attached with this email.</p>
+
+<p>Regards,<br><strong>Jetty Team</strong></p>
+
+</td></tr>
+
+<tr>
+<td style="background:#f8fafc;text-align:center;font-size:12px;padding:10px">
+© {{ date('Y') }} Jetty Booking Service
+</td>
+</tr>
+
+</table>
+
+</td></tr>
+</table>
 </body>
 </html>

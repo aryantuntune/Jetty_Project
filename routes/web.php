@@ -2,6 +2,7 @@
 
 use \App\Http\Controllers\CheckerController;
 use App\Http\Controllers\AdministratorController;
+use App\Http\Controllers\Api\CheckerAuthController;
 use App\Http\Controllers\BookingController;
 use App\Http\Controllers\BranchController;
 use App\Http\Controllers\CustomerAuth\ForgotPasswordController;
@@ -26,6 +27,7 @@ use App\Http\Controllers\TicketVerifyController;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
+
 
 
 
@@ -234,5 +236,11 @@ Route::middleware('auth:customer')->group(function () {
     Route::post('/payment/create-order', [BookingController::class, 'createOrder'])->name('payment.createOrder');
 
     // Payment Success Callback
-    Route::post('/payment/verify', [BookingController::class, 'verifyPayment'])->name('payment.verify');
+    Route::post('/payment/verify1', [BookingController::class, 'verifyPayment1'])->name('payment.verify');
+
+    // Customer-facing route to view ticket
+    Route::get('/ticket/view/{ticket_id}', [BookingController::class, 'view'])->name('ticket.view');
+
+    Route::get('/scan-ticket/{ticket_id}', [CheckerAuthController::class, 'scanTicket']);
+
 });

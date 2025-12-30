@@ -221,4 +221,14 @@ class CheckerAuthController extends Controller
             'data' => $responseData,
         ]);
     }
+
+    public function scanTicket($ticket_id, Request $request)
+    {
+        // Create a fake request to reuse existing logic
+        $request->merge([
+            'ticket_id' => $ticket_id
+        ]);
+
+        return $this->verifyTicket($request);
+    }
 }
