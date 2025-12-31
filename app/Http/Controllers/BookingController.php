@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Controller;
 use App\Mail\BookingConfirmationMail;
 use App\Models\Booking;
 use App\Models\Branch;
@@ -229,5 +230,23 @@ class BookingController extends Controller
     {
         $booking = Booking::where('ticket_id', $ticket_id)->with(['customer', 'fromBranch', 'toBranch'])->firstOrFail();
         return view('tickets.view', compact('booking'));
+    }
+
+    public function sendTicket($bookingId, \App\Services\TicketPdfService $pdfService)
+    {
+        $booking = Booking::with([
+            'customer',
+            'fromBranch',
+            'toBranch'
+        ])->findOrFail($bookingId);
+
+        $pdf = $pdfService->generate($booking);
+
+        Mail::to($booking->customer->email)
+            ->send(new BookingTicketMail($booking, $pdf));
+
+        return response()->json([
+            'status' => 'Ticket sent successfully'
+        ]);
     }
 }

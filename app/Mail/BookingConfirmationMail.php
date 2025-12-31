@@ -3,10 +3,10 @@
 namespace App\Mail;
 
 use App\Models\Booking;
+use App\Services\TicketPdfService;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
 use Illuminate\Queue\SerializesModels;
-use Barryvdh\DomPDF\Facade\Pdf;
 
 class BookingConfirmationMail extends Mailable
 {
@@ -21,9 +21,8 @@ class BookingConfirmationMail extends Mailable
 
     public function build()
     {
-        $pdf = Pdf::loadView('pdf.booking_ticket', [
-            'booking' => $this->booking
-        ]);
+        // ✅ Resolve service here (SAFE)
+        $pdf = app(TicketPdfService::class)->generate($this->booking);
 
         return $this->subject('Jetty Booking Confirmation')
             ->view('emails.booking_confirmation')

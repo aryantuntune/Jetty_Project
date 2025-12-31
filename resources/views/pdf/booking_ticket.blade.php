@@ -55,11 +55,7 @@
 </style>
 </head>
 <body>
-@php
-use SimpleSoftwareIO\QrCode\Facades\QrCode;
 
-
-@endphp
 <div class="ticket">
 
     <!-- HEADER -->
@@ -123,15 +119,17 @@ use SimpleSoftwareIO\QrCode\Facades\QrCode;
 
     
 <!-- QR CODE -->
+
+
 <div style="text-align:center;margin-top:15px">
-    <div style="display:inline-block;width:120px;height:120px;">
-        {!! QrCode::format('svg')
-            ->size(120)
-            ->margin(1)
-            ->generate(url('/scan-ticket/' . $booking->ticket_id)) !!}
-    </div>
-    <p>Scan QR to verify ticket</p>
+  {{-- <img src="{{ $qrPath }}" width="150" alt="QR Code"> --}}
+   <img src="{{ storage_path('app/public/'.$qrImage) }}" width="150">
+
+<p>Scan QR to verify ticket</p>
+
 </div>
+
+
 
 
 
