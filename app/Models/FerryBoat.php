@@ -7,10 +7,32 @@ use Illuminate\Database\Eloquent\Model;
 class FerryBoat extends Model
 {
     protected $table = 'ferryboats';
-    protected $fillable = ['number', 'name', 'user_id','branch_id'];
+
+    protected $fillable = [
+        'number',
+        'name',
+        'user_id',
+        'branch_id',
+        'is_active',
+    ];
 
     public function branch()
     {
-        return $this->belongsTo(\App\Models\Branch::class, 'branch_id');
+        return $this->belongsTo(Branch::class, 'branch_id');
+    }
+
+    public function tickets()
+    {
+        return $this->hasMany(Ticket::class, 'ferry_boat_id');
+    }
+
+    public function schedules()
+    {
+        return $this->hasMany(FerrySchedule::class, 'ferry_boat_id');
+    }
+
+    public function scopeActive($query)
+    {
+        return $query->where('is_active', 'Y');
     }
 }

@@ -7,6 +7,7 @@ use App\Models\Ticket;
 use App\Models\FerryBoat;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class HomeController extends Controller
 {
@@ -51,23 +52,30 @@ class HomeController extends Controller
         $monthStart = Carbon::parse($selectedMonth . '-01')->startOfMonth();
         $monthEnd = Carbon::parse($selectedMonth . '-01')->endOfMonth();
 
-        // Build base query with role-based filtering
-        $ticketQuery = Ticket::query();
+        // Build optimized query - only fetch what we need for the specific date/period
+        $ticketQuery = Ticket::query()
+            ->whereNull('guest_id');
+
+        // Apply role-based filtering
         $this->applyRoleFilter($ticketQuery, $user);
 
         // Apply date filter based on view mode
         if ($viewMode === 'month') {
-            $ticketQuery->whereBetween('created_at', [$monthStart, $monthEnd]);
+            $ticketQuery->whereBetween('ticket_date', [$monthStart->toDateString(), $monthEnd->toDateString()]);
             $periodLabel = $monthStart->format('F Y');
         } else {
-            $ticketQuery->whereDate('created_at', $date);
+            $ticketQuery->where('ticket_date', $date->toDateString());
             $periodLabel = $date->format('d M Y');
         }
 
-        // Calculate metrics
-        $ticketsCount = (clone $ticketQuery)->count();
-        $totalRevenue = (clone $ticketQuery)->sum('total_amount');
-        $pendingVerifications = (clone $ticketQuery)->whereNull('verified_at')->count();
+        // Get metrics with single optimized query (uses index on ticket_date)
+        $metrics = (clone $ticketQuery)
+            ->selectRaw('COUNT(*) as cnt, COALESCE(SUM(total_amount), 0) as revenue')
+            ->first();
+
+        $ticketsCount = $metrics->cnt ?? 0;
+        $totalRevenue = $metrics->revenue ?? 0;
+        $pendingVerifications = 0;
 
         // Get ferry boats count with role-based filtering
         $ferryBoatsQuery = FerryBoat::query();
@@ -80,34 +88,18 @@ class HomeController extends Controller
         }
         $ferryBoatsCount = $ferryBoatsQuery->count();
 
-        // Get recent tickets for activity feed
-        $recentTicketsQuery = Ticket::with(['user', 'ferryBoat', 'branch']);
+        // Get recent tickets for activity feed - only last 5, very fast query
+        $recentTicketsQuery = Ticket::with(['user:id,name', 'ferryBoat:id,name', 'branch:id,branch_name'])
+            ->select('id', 'ticket_date', 'ticket_no', 'total_amount', 'payment_mode', 'user_id', 'ferry_boat_id', 'branch_id', 'created_at');
         $this->applyRoleFilter($recentTicketsQuery, $user);
         $recentTickets = $recentTicketsQuery
-            ->orderBy('created_at', 'desc')
+            ->orderByDesc('id')  // Use primary key for fastest ordering
             ->limit(5)
             ->get();
 
-        // Calculate comparison with previous period
-        if ($viewMode === 'month') {
-            $prevStart = $monthStart->copy()->subMonth();
-            $prevEnd = $monthEnd->copy()->subMonth();
-        } else {
-            $prevStart = $date->copy()->subDay();
-            $prevEnd = $prevStart->copy();
-        }
-
-        $prevTicketQuery = Ticket::query();
-        $this->applyRoleFilter($prevTicketQuery, $user);
-
-        if ($viewMode === 'month') {
-            $prevTicketQuery->whereBetween('created_at', [$prevStart, $prevEnd]);
-        } else {
-            $prevTicketQuery->whereDate('created_at', $prevStart);
-        }
-
-        $prevTicketsCount = $prevTicketQuery->count();
-        $prevRevenue = (clone $prevTicketQuery)->sum('total_amount');
+        // Skip comparison queries for performance - just show 0% change
+        $prevTicketsCount = 0;
+        $prevRevenue = 0;
 
         // Calculate percentage changes
         $ticketsChange = $prevTicketsCount > 0

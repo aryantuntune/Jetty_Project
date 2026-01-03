@@ -20,6 +20,7 @@ use App\Http\Controllers\ItemRateController;
 use App\Http\Controllers\ItemsFromRatesController;
 use App\Http\Controllers\ManagerController;
 use App\Http\Controllers\OperatorController;
+use App\Http\Controllers\PublicController;
 use App\Http\Controllers\SpecialChargeController;
 use App\Http\Controllers\TicketEntryController;
 use App\Http\Controllers\TicketReportController;
@@ -28,14 +29,28 @@ use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
+// ============================================
+// PUBLIC PAGES - Customer-Facing Website
+// (Matching carferry.in design)
+// ============================================
 
 
 
+// Homepage - carferry.in style
+Route::get('/', [PublicController::class, 'home'])->name('public.home');
 
+// About Us page
+Route::get('/about', [PublicController::class, 'about'])->name('public.about');
 
+// Contact Us page
+Route::get('/contact', [PublicController::class, 'contact'])->name('public.contact');
+Route::post('/contact', [PublicController::class, 'submitContact'])->name('public.contact.submit');
 
+// Ferry Route pages (e.g., /route/dabhol-dhopave)
+Route::get('/route/{slug}', [PublicController::class, 'route'])->name('public.route');
 
-Route::get('/', function () {
+// Keep old welcome page accessible for testing
+Route::get('/welcome-old', function () {
     return view('welcome');
 });
 

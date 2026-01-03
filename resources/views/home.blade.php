@@ -198,13 +198,13 @@
                     </div>
                     <div class="flex-1 min-w-0">
                         <p class="text-sm font-medium text-slate-800 truncate">
-                            Ticket #{{ $ticket->id }} - Rs. {{ number_format($ticket->total_amount, 2) }}
+                            Ticket #{{ $ticket->ticket_no ?? $ticket->id }} - Rs. {{ number_format($ticket->total_amount, 2) }}
                         </p>
                         <p class="text-xs text-slate-500">
                             {{ $ticket->ferryBoat->name ?? 'N/A' }} | {{ $ticket->user->name ?? 'Unknown' }}
                         </p>
                     </div>
-                    <span class="text-xs text-slate-400">{{ $ticket->created_at->diffForHumans() }}</span>
+                    <span class="text-xs text-slate-400">{{ $ticket->ticket_date ? $ticket->ticket_date->format('d-m-Y') : $ticket->created_at->diffForHumans() }}</span>
                 </div>
                 @endforeach
             </div>

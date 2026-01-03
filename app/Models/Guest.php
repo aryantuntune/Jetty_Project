@@ -9,7 +9,13 @@ class Guest extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['name','category_id','branch_id','user_id'];
+    protected $fillable = [
+        'name',
+        'category_id',
+        'branch_id',
+        'user_id',
+        'is_active',
+    ];
 
     public function category()
     {
@@ -18,9 +24,21 @@ class Guest extends Model
 
     public function branch()
     {
-        return $this->belongsTo(Branch::class,'branch_id');
+        return $this->belongsTo(Branch::class, 'branch_id');
     }
-     public function user() {
+
+    public function user()
+    {
         return $this->belongsTo(User::class);
+    }
+
+    public function tickets()
+    {
+        return $this->hasMany(Ticket::class, 'guest_id');
+    }
+
+    public function scopeActive($query)
+    {
+        return $query->where('is_active', 'Y');
     }
 }

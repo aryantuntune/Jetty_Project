@@ -19,7 +19,8 @@ class ItemRate extends Model
         'ending_date',
         'user_id',
         'item_id',
-        'route_id'
+        'route_id',
+        'is_active',
     ];
 
     protected $casts = [
@@ -44,7 +45,7 @@ class ItemRate extends Model
         return $this->belongsTo(\App\Models\User::class, 'user_id');
     }
 
-    // Scope for “currently effective” rows
+    // Scope for "currently effective" rows
     public function scopeEffective($q, $on = null)
     {
         $on = $on ?: now()->toDateString();
@@ -52,5 +53,10 @@ class ItemRate extends Model
             ->where(function ($w) use ($on) {
                 $w->whereNull('ending_date')->orWhere('ending_date', '>=', $on);
             });
+    }
+
+    public function scopeActive($query)
+    {
+        return $query->where('is_active', 'Y');
     }
 }

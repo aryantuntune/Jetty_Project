@@ -98,9 +98,12 @@
                 <tbody class="divide-y divide-slate-100">
                     @forelse($tickets as $t)
                     <tr class="table-row-hover transition-colors">
-                        <td class="px-4 py-3 text-sm text-slate-600">{{ $t->created_at->format('d/m/Y') }}</td>
+                        <td class="px-4 py-3 text-sm text-slate-600">{{ $t->ticket_date ? $t->ticket_date->format('d-m-Y') : $t->created_at->format('d-m-Y') }}</td>
                         <td class="px-4 py-3">
-                            <span class="font-medium text-slate-800">#{{ $t->id }}</span>
+                            <span class="font-medium text-slate-800">{{ $t->ticket_no ? '#'.$t->ticket_no : '#'.$t->id }}</span>
+                            @if($t->ticket_no)
+                            <span class="text-xs text-slate-400 block">ID: {{ $t->id }}</span>
+                            @endif
                         </td>
                         <td class="px-4 py-3">
                             <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ $t->payment_mode == 'Cash' ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700' }}">
@@ -158,10 +161,24 @@
         <!-- Footer with Pagination -->
         <div class="px-6 py-4 bg-slate-50 border-t border-slate-200 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <p class="text-sm text-slate-600">
-                Total Records: <span class="font-semibold">{{ $tickets->total() }}</span>
+                Page {{ $tickets->currentPage() }} | Showing {{ $tickets->count() }} records
             </p>
             <div class="flex items-center space-x-2">
-                {{ $tickets->appends(request()->query())->links() }}
+                @if($tickets->onFirstPage())
+                    <span class="px-4 py-2 text-sm text-slate-400 bg-slate-100 rounded-lg cursor-not-allowed">« Previous</span>
+                @else
+                    <a href="{{ $tickets->appends(request()->query())->previousPageUrl() }}" class="px-4 py-2 text-sm text-slate-700 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors">« Previous</a>
+                @endif
+
+                <span class="px-4 py-2 text-sm text-slate-600 bg-white border border-slate-200 rounded-lg">
+                    Page {{ $tickets->currentPage() }}
+                </span>
+
+                @if($tickets->hasMorePages())
+                    <a href="{{ $tickets->appends(request()->query())->nextPageUrl() }}" class="px-4 py-2 text-sm text-slate-700 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors">Next »</a>
+                @else
+                    <span class="px-4 py-2 text-sm text-slate-400 bg-slate-100 rounded-lg cursor-not-allowed">Next »</span>
+                @endif
             </div>
         </div>
     </div>

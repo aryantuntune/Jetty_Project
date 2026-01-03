@@ -66,7 +66,10 @@
             <div class="flex items-center justify-between">
                 <div class="flex items-center space-x-2">
                     <i data-lucide="ticket" class="w-5 h-5 text-slate-400"></i>
-                    <span class="font-semibold text-slate-700">Ticket #{{ $ticket->id }}</span>
+                    <span class="font-semibold text-slate-700">Ticket #{{ $ticket->ticket_no ?? $ticket->id }}</span>
+                    @if($ticket->ticket_no)
+                    <span class="text-xs text-slate-400">(ID: {{ $ticket->id }})</span>
+                    @endif
                 </div>
                 @php
                     $verifiedAt = $ticket->verified_at ? \Carbon\Carbon::parse($ticket->verified_at)->timezone('Asia/Kolkata') : null;
@@ -88,7 +91,8 @@
         <div class="p-6 space-y-6">
             <!-- Ticket Info -->
             @php
-                $createdAt = $ticket->created_at ? \Carbon\Carbon::parse($ticket->created_at)->timezone('Asia/Kolkata') : null;
+                $ticketDate = $ticket->ticket_date ?? ($ticket->created_at ? \Carbon\Carbon::parse($ticket->created_at)->timezone('Asia/Kolkata') : null);
+                $ferryTime = $ticket->ferry_time ?? ($ticket->created_at ? \Carbon\Carbon::parse($ticket->created_at)->timezone('Asia/Kolkata') : null);
             @endphp
             <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <div class="bg-slate-50 rounded-xl p-4">
@@ -97,11 +101,11 @@
                 </div>
                 <div class="bg-slate-50 rounded-xl p-4">
                     <p class="text-xs text-slate-500 mb-1">Date</p>
-                    <p class="font-semibold text-slate-800">{{ $createdAt ? $createdAt->format('d-m-Y H:i') : '-' }}</p>
+                    <p class="font-semibold text-slate-800">{{ $ticketDate ? $ticketDate->format('d-m-Y') : '-' }}</p>
                 </div>
                 <div class="bg-slate-50 rounded-xl p-4">
-                    <p class="text-xs text-slate-500 mb-1">Created By</p>
-                    <p class="font-semibold text-slate-800">{{ $ticket->user->name ?? '-' }}</p>
+                    <p class="text-xs text-slate-500 mb-1">Ferry Time</p>
+                    <p class="font-semibold text-slate-800">{{ $ferryTime ? $ferryTime->format('H:i') : '-' }}</p>
                 </div>
                 <div class="bg-slate-50 rounded-xl p-4">
                     <p class="text-xs text-slate-500 mb-1">Total</p>
