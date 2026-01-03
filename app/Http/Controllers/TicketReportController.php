@@ -39,10 +39,12 @@ class TicketReportController extends Controller
     $paymentMode = $request->query('payment_mode');
     $ferryType = $request->query('ferry_type');
     $ferryBoatId = $request->query('ferry_boat_id');
-    $dateFrom = $request->query('date_from');
-    $dateTo = $request->query('date_to');
 
-    // Tickets Query
+    // Default to today's date if no date filter provided (prevents scanning all 2M+ records)
+    $dateFrom = $request->query('date_from') ?? now()->toDateString();
+    $dateTo = $request->query('date_to') ?? now()->toDateString();
+
+    // Tickets Query - use ticket_date for filtering (works for both legacy and new tickets)
     $query = Ticket::with('branch', 'ferryBoat')
         ->where('guest_id', null)
 
@@ -54,15 +56,19 @@ class TicketReportController extends Controller
         ->when($paymentMode, fn($q) => $q->where('payment_mode', $paymentMode))
         ->when($ferryType, fn($q) => $q->where('ferry_type', $ferryType))
         ->when($ferryBoatId, fn($q) => $q->where('ferry_boat_id', $ferryBoatId))
-        ->when($dateFrom, fn($q) => $q->whereDate('created_at', '>=', $dateFrom))
-        ->when($dateTo, fn($q) => $q->whereDate('created_at', '<=', $dateTo))
-        ->orderBy('created_at', 'desc');
+        // Use ticket_date for date filtering - much faster with index
+        ->whereNotNull('ticket_date')
+        ->whereDate('ticket_date', '>=', $dateFrom)
+        ->whereDate('ticket_date', '<=', $dateTo)
+        ->orderBy('ticket_date', 'desc')
+        ->orderBy('ticket_no', 'desc');
 
-    // Calculate total BEFORE pagination
+    // Use simplePaginate - doesn't count total rows (MUCH faster)
+    $tickets = $query->simplePaginate(25);
+
+    // Calculate total for the filtered date range using optimized query
+    // This uses the index on ticket_date for fast filtering
     $totalAmount = (clone $query)->sum('total_amount');
-
-    // Now paginate
-    $tickets = $query->paginate(25);
 
     return view('reports.tickets', compact(
         'tickets',
@@ -93,6 +99,7 @@ class TicketReportController extends Controller
 public function vehicleWiseIndex(Request $request)
 {
     $branches     = Branch::orderBy('branch_name')->get();
+    $ferryBoats   = FerryBoat::all();
     $paymentModes = ['CASH MEMO', 'CREDIT MEMO', 'GUEST PASS', 'GPay'];
     $ferryTypes   = ['REGULAR', 'SPECIAL'];
 
@@ -100,25 +107,24 @@ public function vehicleWiseIndex(Request $request)
     $paymentMode  = $request->query('payment_mode');
     $ferryType    = $request->query('ferry_type');
     $ferryBoatId  = $request->query('ferry_boat_id');
-    $dateFrom     = $request->query('date_from');
-    $dateTo       = $request->query('date_to');
+    // Default to today's date if no date filter provided (prevents scanning all 2M+ records)
+    $dateFrom     = $request->query('date_from') ?? now()->toDateString();
+    $dateTo       = $request->query('date_to') ?? now()->toDateString();
     $vehicleName  = trim((string) $request->query('vehicle_name'));
     $vehicleNo    = trim((string) $request->query('vehicle_no'));
 
-    // Base filter over tickets (vehicle filters via whereHas on lines)
+    // Base filter over tickets - optimized for large datasets
     $filter = Ticket::query()
-        ->where('guest_id',null)
+        ->where('guest_id', null)
+        ->whereNotNull('ticket_date')
+        ->whereDate('ticket_date', '>=', $dateFrom)
+        ->whereDate('ticket_date', '<=', $dateTo)
         ->when($branchId,    fn($q) => $q->where('branch_id', $branchId))
         ->when($paymentMode, fn($q) => $q->where('payment_mode', $paymentMode))
         ->when($ferryType,   fn($q) => $q->where('ferry_type', $ferryType))
         ->when($ferryBoatId, fn($q) => $q->where('ferry_boat_id', $ferryBoatId))
-        ->when($dateFrom,    fn($q) => $q->whereDate('created_at', '>=', $dateFrom))
-        ->when($dateTo,      fn($q) => $q->whereDate('created_at', '<=', $dateTo))
         ->when($vehicleNo,   fn($q) => $q->whereHas('lines',  fn($l) => $l->where('vehicle_no',   'like', "%{$vehicleNo}%")))
         ->when($vehicleName, fn($q) => $q->whereHas('lines',  fn($l) => $l->where('vehicle_name', 'like', "%{$vehicleName}%")));
-
-    // Total across ALL filtered tickets (no joins -> safe)
-    $totalAmount = (clone $filter)->sum('total_amount');
 
     // Grid query with subselects for a representative vehicle_no/name (MIN)
     $base = $filter
@@ -134,13 +140,18 @@ public function vehicleWiseIndex(Request $request)
               ->whereColumn('tl.ticket_id', 'tickets.id')
               ->selectRaw('MIN(tl.vehicle_name)');
         }, 'vehicle_name_join')
-        ->orderBy('tickets.created_at', 'asc');
+        ->orderBy('ticket_date', 'desc')
+        ->orderBy('ticket_no', 'desc');
 
-    $tickets         = $base->paginate(25);
+    // Use simplePaginate - doesn't count total rows (MUCH faster)
+    $tickets = $base->simplePaginate(25);
+
+    // Calculate total for the filtered date range
+    $totalAmount = (clone $filter)->sum('total_amount');
     $pageTotalAmount = $tickets->sum('total_amount');
 
     return view('reports.vehicle_tickets', compact(
-        'tickets','branches','paymentModes','ferryTypes',
+        'tickets','branches','ferryBoats','paymentModes','ferryTypes',
         'branchId','paymentMode','ferryType','ferryBoatId',
         'dateFrom','dateTo','vehicleName','vehicleNo',
         'totalAmount','pageTotalAmount'
@@ -160,13 +171,21 @@ private function buildTicketsFilter(Request $request)
 
     return Ticket::query()
         ->with(['branch','ferryBoat'])
+        ->where('guest_id', null)
         ->when($branchId,    fn($q) => $q->where('branch_id', $branchId))
         ->when($paymentMode, fn($q) => $q->where('payment_mode', $paymentMode))
         ->when($ferryType,   fn($q) => $q->where('ferry_type', $ferryType))
         ->when($ferryBoatId, fn($q) => $q->where('ferry_boat_id', $ferryBoatId))
-        ->when($dateFrom,    fn($q) => $q->whereDate('created_at', '>=', $dateFrom))
-        ->when($dateTo,      fn($q) => $q->whereDate('created_at', '<=', $dateTo))
-        ->orderBy('created_at', 'desc');
+        // Use ticket_date for historical data, fallback to created_at if ticket_date is null
+        ->when($dateFrom, fn($q) => $q->where(function($q) use ($dateFrom) {
+            $q->whereDate('ticket_date', '>=', $dateFrom)
+              ->orWhere(fn($q) => $q->whereNull('ticket_date')->whereDate('created_at', '>=', $dateFrom));
+        }))
+        ->when($dateTo, fn($q) => $q->where(function($q) use ($dateTo) {
+            $q->whereDate('ticket_date', '<=', $dateTo)
+              ->orWhere(fn($q) => $q->whereNull('ticket_date')->whereDate('created_at', '<=', $dateTo));
+        }))
+        ->orderByRaw('COALESCE(ticket_date, DATE(created_at)) DESC, ticket_no DESC');
 }
 
 private function buildVehicleTicketsFilter(Request $request)
@@ -182,15 +201,23 @@ private function buildVehicleTicketsFilter(Request $request)
 
     return Ticket::query()
         ->with(['branch','ferryBoat'])
+        ->where('guest_id', null)
         ->when($branchId,    fn($q) => $q->where('branch_id', $branchId))
         ->when($paymentMode, fn($q) => $q->where('payment_mode', $paymentMode))
         ->when($ferryType,   fn($q) => $q->where('ferry_type', $ferryType))
         ->when($ferryBoatId, fn($q) => $q->where('ferry_boat_id', $ferryBoatId))
-        ->when($dateFrom,    fn($q) => $q->whereDate('created_at', '>=', $dateFrom))
-        ->when($dateTo,      fn($q) => $q->whereDate('created_at', '<=', $dateTo))
+        // Use ticket_date for historical data, fallback to created_at if ticket_date is null
+        ->when($dateFrom, fn($q) => $q->where(function($q) use ($dateFrom) {
+            $q->whereDate('ticket_date', '>=', $dateFrom)
+              ->orWhere(fn($q) => $q->whereNull('ticket_date')->whereDate('created_at', '>=', $dateFrom));
+        }))
+        ->when($dateTo, fn($q) => $q->where(function($q) use ($dateTo) {
+            $q->whereDate('ticket_date', '<=', $dateTo)
+              ->orWhere(fn($q) => $q->whereNull('ticket_date')->whereDate('created_at', '<=', $dateTo));
+        }))
         ->when($vehicleNo,   fn($q) => $q->whereHas('lines',  fn($l) => $l->where('vehicle_no',   'like', "%{$vehicleNo}%")))
         ->when($vehicleName, fn($q) => $q->whereHas('lines',  fn($l) => $l->where('vehicle_name', 'like', "%{$vehicleName}%")))
-        ->orderBy('created_at', 'asc');
+        ->orderByRaw('COALESCE(ticket_date, DATE(created_at)) DESC, ticket_no DESC');
 }
 
 /**
@@ -203,10 +230,11 @@ public function exportTicketsCsv(Request $request): StreamedResponse
     $callback = function () use ($request) {
         $handle = fopen('php://output', 'w');
 
-        // Header row (include customer fields you added)
+        // Header row (include legacy ticket number and customer fields)
         fputcsv($handle, [
             'Ticket Date',
-            'Ticket ID',
+            'Ticket No',
+            'System ID',
             'Branch',
             'Payment Mode',
             'Boat Name',
@@ -214,23 +242,31 @@ public function exportTicketsCsv(Request $request): StreamedResponse
             'Ferry Type',
             'Customer Name',
             'Customer Mobile',
-            'Total Amount'
+            'Total Amount',
+            'Net Amount'
         ]);
 
         $this->buildTicketsFilter($request)
             ->chunkById(1000, function ($chunk) use ($handle) {
                 foreach ($chunk as $t) {
+                    // Use ticket_date for legacy tickets, created_at for new ones
+                    $ticketDate = $t->ticket_date
+                        ? $t->ticket_date->format('Y-m-d')
+                        : optional($t->created_at)->timezone('Asia/Kolkata')->format('Y-m-d');
+
                     fputcsv($handle, [
-                        optional($t->created_at)->timezone('Asia/Kolkata')->format('Y-m-d H:i:s'),
+                        $ticketDate,
+                        $t->ticket_no ?? '',
                         $t->id,
                         $t->branch->branch_name ?? '',
                         $t->payment_mode,
                         $t->ferryBoat->name ?? '',
-                        optional($t->ferry_time)->timezone('Asia/Kolkata')->format('Y-m-d H:i'),
+                        optional($t->ferry_time)->timezone('Asia/Kolkata')->format('H:i'),
                         $t->ferry_type,
                         $t->customer_name ?? '',
                         $t->customer_mobile ?? '',
                         number_format((float)$t->total_amount, 2, '.', ''),
+                        number_format((float)$t->net_amount, 2, '.', ''),
                     ]);
                 }
             }, 'id');
@@ -258,17 +294,19 @@ public function exportVehicleTicketsCsv(Request $request): StreamedResponse
 
         fputcsv($handle, [
             'Ticket Date',
-            'Ticket ID',
+            'Ticket No',
+            'System ID',
             'Branch',
             'Payment Mode',
             'Boat Name',
             'Ferry Time',
             'Ferry Type',
-            'Vehicle Name (any)',
-            'Vehicle No (any)',
+            'Vehicle Name',
+            'Vehicle No',
             'Customer Name',
             'Customer Mobile',
-            'Total Amount'
+            'Total Amount',
+            'Net Amount'
         ]);
 
         // base with subselects for vehicle fields
@@ -287,19 +325,26 @@ public function exportVehicleTicketsCsv(Request $request): StreamedResponse
 
         $q->chunkById(1000, function ($chunk) use ($handle) {
             foreach ($chunk as $t) {
+                // Use ticket_date for legacy tickets, created_at for new ones
+                $ticketDate = $t->ticket_date
+                    ? $t->ticket_date->format('Y-m-d')
+                    : optional($t->created_at)->timezone('Asia/Kolkata')->format('Y-m-d');
+
                 fputcsv($handle, [
-                    optional($t->created_at)->timezone('Asia/Kolkata')->format('Y-m-d H:i:s'),
+                    $ticketDate,
+                    $t->ticket_no ?? '',
                     $t->id,
                     $t->branch->branch_name ?? '',
                     $t->payment_mode,
                     $t->ferryBoat->name ?? '',
-                    optional($t->ferry_time)->timezone('Asia/Kolkata')->format('Y-m-d H:i'),
+                    optional($t->ferry_time)->timezone('Asia/Kolkata')->format('H:i'),
                     $t->ferry_type,
                     $t->vehicle_name_join ?? '',
                     $t->vehicle_no_join ?? '',
                     $t->customer_name ?? '',
                     $t->customer_mobile ?? '',
                     number_format((float)$t->total_amount, 2, '.', ''),
+                    number_format((float)$t->net_amount, 2, '.', ''),
                 ]);
             }
         }, 'id');

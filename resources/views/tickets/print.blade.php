@@ -4,7 +4,7 @@
 
 
   <meta charset="utf-8">
-  <title>Ticket #{{ $ticket->id }}</title>
+  <title>Ticket #{{ $ticket->ticket_no ?? $ticket->id }}</title>
  <style>
   :root {
     --paper-width: 58mm;
@@ -130,11 +130,11 @@
 
     <div class="row">
       <div class="col">PHONE: 9767248900</div>
-      <div class="col right">TIME: {{ optional($ticket->created_at)->timezone('Asia/Kolkata')->format('H:i') }}</div>
+      <div class="col right">TIME: {{ $ticket->ferry_time ? $ticket->ferry_time->format('H:i') : optional($ticket->created_at)->timezone('Asia/Kolkata')->format('H:i') }}</div>
     </div>
     <div class="row">
-      <div class="col">CASH MEMO NO: {{ $ticket->id }}</div>
-      <div class="col right">DATE: {{ optional($ticket->created_at)->timezone('Asia/Kolkata')->format('d-m-Y') }}</div>
+      <div class="col">CASH MEMO NO: {{ $ticket->ticket_no ?? $ticket->id }}</div>
+      <div class="col right">DATE: {{ $ticket->ticket_date ? $ticket->ticket_date->format('d-m-Y') : optional($ticket->created_at)->timezone('Asia/Kolkata')->format('d-m-Y') }}</div>
     </div>
 
     <div class="line"></div>
@@ -208,21 +208,21 @@ if (!function_exists('wrap_2_words')) {
 
     <div class="row">
       <div class="col">
-        DATE: {{ optional($ticket->created_at)->timezone('Asia/Kolkata')->format('d-m-Y H:i') }}<br>
-        CASH MEMO NO: {{ $ticket->id }}
+        DATE: {{ $ticket->ticket_date ? $ticket->ticket_date->format('d-m-Y') : optional($ticket->created_at)->timezone('Asia/Kolkata')->format('d-m-Y') }} {{ $ticket->ferry_time ? $ticket->ferry_time->format('H:i') : optional($ticket->created_at)->timezone('Asia/Kolkata')->format('H:i') }}<br>
+        CASH MEMO NO: {{ $ticket->ticket_no ?? $ticket->id }}
       </div>
       <div class="col right">
         CREATED BY: {{ strtoupper(optional($ticket->user)->name ?? '-') }}
       </div>
 
-      
+
 
 
 <div class="center" style="margin-top:6px;">
     {!! QrCode::size(100)
         ->margin(1)
         ->generate(url('/verify?code=' . $ticket->id)) !!}
-    <div style="font-size:10px;">SCAN TO VERIFY TICKET #{{ $ticket->id }}</div>
+    <div style="font-size:10px;">SCAN TO VERIFY TICKET #{{ $ticket->ticket_no ?? $ticket->id }}</div>
 </div>
 
 

@@ -67,9 +67,15 @@ class BookingController extends Controller
 
     public function getItems($branchId)
     {
-        $items = \App\Models\ItemRate::where('branch_id', $branchId)
+        // Get items for specific branch OR global items (null branch_id)
+        $items = \App\Models\ItemRate::where(function($query) use ($branchId) {
+                $query->where('branch_id', $branchId)
+                      ->orWhereNull('branch_id');
+            })
+            ->where('is_active', 'Y')
             ->effective()   // apply date filter
             ->select('id', 'item_name')
+            ->orderBy('item_name')
             ->get();
 
         return response()->json($items);

@@ -13,12 +13,21 @@ class Branch extends Model
         'branch_id',
         'branch_name',
         'user_id',
-        'branch_id'
+        'is_active',
     ];
 
-     public function ferryboats()
+    public function ferryboats()
     {
-        // change 'branch_id' if your FK on ferryboats table is named differently
-        return $this->hasMany(\App\Models\FerryBoat::class, 'branch_id');
+        return $this->hasMany(FerryBoat::class, 'branch_id');
+    }
+
+    public function tickets()
+    {
+        return $this->hasMany(Ticket::class, 'branch_id', 'branch_id');
+    }
+
+    public function scopeActive($query)
+    {
+        return $query->where('is_active', 'Y');
     }
 }

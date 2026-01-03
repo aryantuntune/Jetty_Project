@@ -25,5 +25,8 @@ Thumbs.db
 
 # Mobile Apps - Excluded from server repo
 /flutter_app/
+flutter_app/
 /Checker mobile app/
 Checker mobile app/
+/Jetty_Original/
+Jetty_Original/
