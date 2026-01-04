@@ -53,7 +53,7 @@ class ItemRatesSeeder extends Seeder
                         'item_rate'  => $rate,
                         'item_lavy'  => $levy,
                         'ending_date'=> null,
-                        'user_id'    => 1,
+                        'user_id'    => null,
                         'route_id'   => null,
                     ]
                 );

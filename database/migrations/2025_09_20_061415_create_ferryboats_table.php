@@ -11,18 +11,14 @@ return new class extends Migration
      */
     public function up(): void
     {
-        // Only create if table doesn't exist (demo1.sql already has it)
-        if (!Schema::hasTable('ferryboats')) {
-            Schema::create('ferryboats', function (Blueprint $table) {
-                $table->id();
-                $table->string('number')->unique();
-                $table->string('name');
-                $table->integer('user_id');
-                $table->unsignedBigInteger('branch_id');
-                $table->foreign('branch_id')->references('id')->on('branches')->onDelete('cascade');
-                $table->timestamps();
-            });
-        }
+        Schema::create('ferryboats', function (Blueprint $table) {
+            $table->id();
+            $table->string('number', 256);
+            $table->string('name');
+            $table->integer('user_id')->nullable();
+            $table->integer('branch_id')->nullable();
+            $table->timestamps();
+        });
     }
 
     /**
