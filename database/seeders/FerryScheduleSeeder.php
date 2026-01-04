@@ -9,6 +9,7 @@ class FerryScheduleSeeder extends Seeder
 {
     public function run()
     {
+        // Common ferry schedule times
         $schedules = [
             ['hour' => 6, 'minute' => 30],
             ['hour' => 7, 'minute' => 15],
@@ -23,7 +24,6 @@ class FerryScheduleSeeder extends Seeder
             ['hour' => 14, 'minute' => 15],
             ['hour' => 15, 'minute' => 0],
             ['hour' => 15, 'minute' => 30],
-            ['hour' => 15, 'minute' => 45],
             ['hour' => 16, 'minute' => 30],
             ['hour' => 17, 'minute' => 15],
             ['hour' => 18, 'minute' => 0],
@@ -32,15 +32,17 @@ class FerryScheduleSeeder extends Seeder
             ['hour' => 20, 'minute' => 15],
             ['hour' => 21, 'minute' => 0],
             ['hour' => 22, 'minute' => 0],
-            ['hour' => 23, 'minute' => 0],
-            ['hour' => 23, 'minute' => 30],
         ];
 
-        foreach ($schedules as $schedule) {
-            FerrySchedule::create([
-                'hour' => $schedule['hour'],
-                'minute' => $schedule['minute'],
-            ]);
+        // Apply schedules to all 12 branches
+        for ($branchId = 1; $branchId <= 12; $branchId++) {
+            foreach ($schedules as $schedule) {
+                FerrySchedule::create([
+                    'hour' => $schedule['hour'],
+                    'minute' => $schedule['minute'],
+                    'branch_id' => $branchId,
+                ]);
+            }
         }
     }
 }

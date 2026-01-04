@@ -9,52 +9,50 @@ class RoutesSeeder extends Seeder
 {
     /**
      * Run the database seeds.
+     *
+     * 6 Routes from carferry.in (each route is a pair of jetties):
+     * Route 1: Dabhol - Dhopave (started 21.10.2003)
+     * Route 2: Jaigad - Tawsal
+     * Route 3: Dighi - Agardanda
+     * Route 4: Veshvi - Bagmandale (started 2007)
+     * Route 5: Vasai - Bhayander
+     * Route 6: Virar - Saphale (RORO service)
      */
     public function run(): void
     {
-        // Route 1: DABHOL <-> DHOPAVE <-> VESHVI
-        // This is a common coastal route
-        $route1 = [
-            ['route_id' => 1, 'branch_id' => 1, 'sequence' => 1], // DABHOL (id=1 from branches)
-            ['route_id' => 1, 'branch_id' => 2, 'sequence' => 2], // DHOPAVE
-            ['route_id' => 1, 'branch_id' => 3, 'sequence' => 3], // VESHVI
+        $routes = [
+            // Route 1: Dabhol (branch_id=1) <-> Dhopave (branch_id=2)
+            ['route_id' => 1, 'branch_id' => 1],
+            ['route_id' => 1, 'branch_id' => 2],
+
+            // Route 2: Jaigad (branch_id=3) <-> Tawsal (branch_id=4)
+            ['route_id' => 2, 'branch_id' => 3],
+            ['route_id' => 2, 'branch_id' => 4],
+
+            // Route 3: Dighi (branch_id=5) <-> Agardanda (branch_id=6)
+            ['route_id' => 3, 'branch_id' => 5],
+            ['route_id' => 3, 'branch_id' => 6],
+
+            // Route 4: Veshvi (branch_id=7) <-> Bagmandale (branch_id=8)
+            ['route_id' => 4, 'branch_id' => 7],
+            ['route_id' => 4, 'branch_id' => 8],
+
+            // Route 5: Vasai (branch_id=9) <-> Bhayander (branch_id=10)
+            ['route_id' => 5, 'branch_id' => 9],
+            ['route_id' => 5, 'branch_id' => 10],
+
+            // Route 6: Virar (branch_id=11) <-> Saphale (branch_id=12)
+            ['route_id' => 6, 'branch_id' => 11],
+            ['route_id' => 6, 'branch_id' => 12],
         ];
 
-        // Route 2: DABHOL <-> BAGMANDALE <-> JAIGAD
-        $route2 = [
-            ['route_id' => 2, 'branch_id' => 1, 'sequence' => 1], // DABHOL
-            ['route_id' => 2, 'branch_id' => 4, 'sequence' => 2], // BAGMANDALE
-            ['route_id' => 2, 'branch_id' => 5, 'sequence' => 3], // JAIGAD
-        ];
-
-        // Route 3: TAVSAL <-> AGARDANDA <-> DIGHI
-        $route3 = [
-            ['route_id' => 3, 'branch_id' => 6, 'sequence' => 1], // TAVSAL
-            ['route_id' => 3, 'branch_id' => 7, 'sequence' => 2], // AGARDANDA
-            ['route_id' => 3, 'branch_id' => 8, 'sequence' => 3], // DIGHI
-        ];
-
-        // Route 4: VASAI <-> BHAYANDER <-> VIRAR
-        // This is for the Mumbai area ferries
-        $route4 = [
-            ['route_id' => 4, 'branch_id' => 9, 'sequence' => 1],  // VASAI
-            ['route_id' => 4, 'branch_id' => 10, 'sequence' => 2], // BHAYANDER
-            ['route_id' => 4, 'branch_id' => 11, 'sequence' => 3], // VIRAR
-        ];
-
-        // Combine all routes
-        $allRoutes = array_merge($route1, $route2, $route3, $route4);
-
-        // Insert all routes (without timestamps since the table doesn't have them)
-        foreach ($allRoutes as $route) {
+        foreach ($routes as $route) {
             DB::table('routes')->updateOrInsert(
                 [
                     'route_id' => $route['route_id'],
                     'branch_id' => $route['branch_id']
                 ],
-                [
-                    'sequence' => $route['sequence']
-                ]
+                []
             );
         }
     }

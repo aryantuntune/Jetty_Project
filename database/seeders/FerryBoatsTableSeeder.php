@@ -7,45 +7,41 @@ use App\Models\FerryBoat;
 
 class FerryBoatsTableSeeder extends Seeder
 {
+    /**
+     * Ferryboats for each route.
+     * Note: Only AAROHI is confirmed from carferry.in (Virar-Saphale route).
+     * Other names are placeholders - update when actual names are known.
+     */
     public function run()
     {
         $boats = [
-            // Branch 1: DABHOL - Keep existing
-            ['number' => 'RTNIV00001', 'name' => 'SHANTADURGA', 'user_id' => 1, 'branch_id' => 1],
+            // Route 1: Dabhol - Dhopave (both jetties share same ferry)
+            ['number' => 'RTNIV-001', 'name' => 'FERRY 1', 'user_id' => null, 'branch_id' => 1],
+            ['number' => 'RTNIV-001', 'name' => 'FERRY 1', 'user_id' => null, 'branch_id' => 2],
 
-            // Branch 2: DHOPAVE
-            ['number' => 'RTNIV00007', 'name' => 'SONIA', 'user_id' => 1, 'branch_id' => 2],
+            // Route 2: Jaigad - Tawsal
+            ['number' => 'RTNIV-002', 'name' => 'FERRY 2', 'user_id' => null, 'branch_id' => 3],
+            ['number' => 'RTNIV-002', 'name' => 'FERRY 2', 'user_id' => null, 'branch_id' => 4],
 
-            // Branch 3: VESHVI
-            ['number' => 'RTNIV00010', 'name' => 'PRIYANKA', 'user_id' => 1, 'branch_id' => 3],
+            // Route 3: Dighi - Agardanda
+            ['number' => 'RTNIV-003', 'name' => 'FERRY 3', 'user_id' => null, 'branch_id' => 5],
+            ['number' => 'RTNIV-003', 'name' => 'FERRY 3', 'user_id' => null, 'branch_id' => 6],
 
-            // Branch 4: BAGMANDALE
-            ['number' => 'RTNIV00011', 'name' => 'SUPRIYA', 'user_id' => 1, 'branch_id' => 4],
+            // Route 4: Veshvi - Bagmandale
+            ['number' => 'RTNIV-004', 'name' => 'FERRY 4', 'user_id' => null, 'branch_id' => 7],
+            ['number' => 'RTNIV-004', 'name' => 'FERRY 4', 'user_id' => null, 'branch_id' => 8],
 
-            // Branch 5: JAIGAD
-            ['number' => 'RTNIV00030', 'name' => 'AISHWARYA', 'user_id' => 1, 'branch_id' => 5],
+            // Route 5: Vasai - Bhayander
+            ['number' => 'RTNIV-005', 'name' => 'FERRY 5', 'user_id' => null, 'branch_id' => 9],
+            ['number' => 'RTNIV-005', 'name' => 'FERRY 5', 'user_id' => null, 'branch_id' => 10],
 
-            // Branch 6: TAVSAL
-            ['number' => 'RTNIV030082', 'name' => 'AVANTIKA', 'user_id' => 1, 'branch_id' => 6],
-
-            // Branch 7: AGARDANDA
-            ['number' => 'RTN-IV-124', 'name' => 'VAIBHAVI', 'user_id' => 1, 'branch_id' => 7],
-
-            // Branch 8: DIGHI
-            ['number' => 'RTN-IV-125', 'name' => 'AAROHI', 'user_id' => 1, 'branch_id' => 8],
-
-            // Branch 9: VASAI
-            ['number' => 'RTN-IV-137', 'name' => 'JANHAVI', 'user_id' => 1, 'branch_id' => 9],
-
-            // Branch 10: BHAYANDER
-            ['number' => 'RTN-IV-159', 'name' => 'DEVIKA', 'user_id' => 1, 'branch_id' => 10],
+            // Route 6: Virar - Saphale (AAROHI - confirmed from carferry.in)
+            ['number' => 'RTNIV-006', 'name' => 'AAROHI', 'user_id' => null, 'branch_id' => 11],
+            ['number' => 'RTNIV-006', 'name' => 'AAROHI', 'user_id' => null, 'branch_id' => 12],
         ];
 
         foreach ($boats as $boat) {
-            FerryBoat::updateOrCreate(
-                ['number' => $boat['number']], // Match by ferry number
-                $boat // Update or create with these values
-            );
+            FerryBoat::create($boat);
         }
     }
 }
