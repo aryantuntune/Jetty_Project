@@ -66,11 +66,12 @@ class TicketEntryController extends Controller
 
 
         // Fetch first and last ferry schedules for this branch
-        $first_row_ferry_schedule = FerrySchedule::where('branch_id', $user->branch_id)
+        // Use $branchId (already set above) instead of $user->branch_id for admins
+        $first_row_ferry_schedule = FerrySchedule::where('branch_id', $branchId)
             ->orderByRaw('CAST(hour AS UNSIGNED), CAST(minute AS UNSIGNED)')
             ->first();
 
-        $last_row_ferry_schedule = FerrySchedule::where('branch_id', $user->branch_id)
+        $last_row_ferry_schedule = FerrySchedule::where('branch_id', $branchId)
             ->orderByRaw('CAST(hour AS UNSIGNED) DESC, CAST(minute AS UNSIGNED) DESC')
             ->first();
         if ($first_row_ferry_schedule && $last_row_ferry_schedule) {
