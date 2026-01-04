@@ -18,12 +18,14 @@ class DatabaseSeeder extends Seeder
         // User::factory(10)->create();
 
         // Order matters! Seed in dependency order
-        $this->call(ItemCategorySeeder::class);      
-        $this->call(GuestCategorySeeder::class);     
+        $this->call(RolesSeeder::class);             // Roles first
+        $this->call(ItemCategorySeeder::class);
+        $this->call(GuestCategorySeeder::class);
         $this->call(BranchSeeder::class);
-        $this->call(RoutesSeeder::class);            
-        $this->call(FerryBoatsTableSeeder::class);   
-        $this->call(ItemRatesSeeder::class);         
-        $this->call(FerryScheduleSeeder::class);     
+        $this->call(RoutesSeeder::class);
+        $this->call(FerryBoatsTableSeeder::class);
+        $this->call(ItemRatesSeeder::class);
+        $this->call(FerryScheduleSeeder::class);
+        $this->call(UserSeeder::class);              // Users last (needs roles & branches)
     }
 }
