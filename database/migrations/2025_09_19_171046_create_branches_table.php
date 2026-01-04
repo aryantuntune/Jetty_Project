@@ -11,7 +11,7 @@ return new class extends Migration {
             $table->id();
             $table->unsignedInteger('branch_id')->unique();
             $table->string('branch_name');
-            $table->integer('user_id');
+            $table->integer('user_id')->nullable();
             $table->timestamps();
         });
     }
