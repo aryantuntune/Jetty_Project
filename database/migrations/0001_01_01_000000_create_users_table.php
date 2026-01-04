@@ -18,6 +18,11 @@ return new class extends Migration
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
             $table->rememberToken();
+            $table->integer('branch_id')->nullable();
+            $table->integer('ferry_boat_id')->nullable();
+            $table->string('mobile', 256)->nullable();
+            $table->string('role', 256)->nullable();
+            $table->integer('role_id')->nullable();
             $table->timestamps();
         });
 

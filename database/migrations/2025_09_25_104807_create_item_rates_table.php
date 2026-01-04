@@ -13,14 +13,16 @@ return new class extends Migration
     {
         Schema::create('item_rates', function (Blueprint $table) {
             $table->id();
+            $table->integer('item_id');
             $table->string('item_name', 150);
-            $table->unsignedBigInteger('item_category_id')->nullable(); // FK to item_categories.id (adjust if different)
+            $table->unsignedBigInteger('item_category_id')->nullable();
             $table->decimal('item_rate', 10, 2)->default(0);
-            $table->decimal('item_lavy', 10, 2)->default(0); // spelled as requested
-            $table->unsignedBigInteger('branch_id')->nullable();        // FK to branches.id (adjust)
+            $table->decimal('item_lavy', 10, 2)->default(0);
+            $table->unsignedBigInteger('branch_id')->nullable();
             $table->date('starting_date');
-            $table->date('ending_date')->nullable(); // null = still effective
+            $table->date('ending_date')->nullable();
             $table->unsignedBigInteger('user_id')->nullable();
+            $table->integer('route_id')->nullable();
             $table->timestamps();
         });
     }
