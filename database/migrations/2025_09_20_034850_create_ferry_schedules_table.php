@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->integer('hour');
             $table->integer('minute');
+            $table->integer('branch_id');
             $table->timestamps();
         });
     }
