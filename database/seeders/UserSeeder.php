@@ -10,33 +10,28 @@ class UserSeeder extends Seeder
 {
     public function run(): void
     {
-        // Super Admin account
-        DB::table('users')->updateOrInsert(
+        // Super Admin account - using User model to avoid double-hashing
+        // (User model has 'password' => 'hashed' cast which auto-hashes)
+        \App\Models\User::updateOrCreate(
             ['email' => 'superadmin@gmail.com'],
             [
                 'name' => 'Super Admin',
-                'email' => 'superadmin@gmail.com',
-                'password' => Hash::make('admin123'),
+                'password' => 'admin123', // Will be auto-hashed by model
                 'role_id' => 1,
                 'branch_id' => null,
                 'mobile' => null,
-                'created_at' => now(),
-                'updated_at' => now(),
             ]
         );
 
         // Admin account
-        DB::table('users')->updateOrInsert(
+        \App\Models\User::updateOrCreate(
             ['email' => 'admin@gmail.com'],
             [
                 'name' => 'Admin',
-                'email' => 'admin@gmail.com',
-                'password' => Hash::make('admin123'),
+                'password' => 'admin123', // Will be auto-hashed by model
                 'role_id' => 2,
                 'branch_id' => null,
                 'mobile' => '9898765432',
-                'created_at' => now(),
-                'updated_at' => now(),
             ]
         );
     }
