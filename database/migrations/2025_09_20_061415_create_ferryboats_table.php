@@ -6,9 +6,6 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
         Schema::create('ferryboats', function (Blueprint $table) {
@@ -17,13 +14,13 @@ return new class extends Migration
             $table->string('name');
             $table->integer('user_id')->nullable();
             $table->integer('branch_id')->nullable();
+            $table->boolean('is_active')->default(true);
+            $table->integer('created_by')->nullable();
+            $table->integer('updated_by')->nullable();
             $table->timestamps();
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::dropIfExists('ferryboats');
