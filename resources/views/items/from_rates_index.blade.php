@@ -87,7 +87,7 @@
                     <tr class="table-row-hover transition-colors">
                         <td class="px-4 py-3">
                             <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-700">
-                                #{{ $row->item_id }}
+                                #{{ $row->id }}
                             </span>
                         </td>
                         <td class="px-4 py-3">

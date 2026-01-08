@@ -27,9 +27,9 @@ class ItemsFromRatesController extends Controller
     $q = DB::table('item_rates as ir')
         ->leftJoin('item_categories as ic', 'ic.id', '=', 'ir.item_category_id')
         ->leftJoin('branches as b', 'b.id', '=', 'ir.branch_id')
-        ->selectRaw('DISTINCT ir.item_id, ir.item_name, ir.item_category_id, ic.category_name as category_name, b.branch_name')
+        ->selectRaw('DISTINCT ir.id, ir.item_name, ir.item_category_id, ic.category_name as category_name, b.branch_name')
         ->when($request->id, function ($qq) use ($request) {
-            $qq->where('ir.item_id', $request->id);
+            $qq->where('ir.id', $request->id);
         })
         ->when($request->name, function ($qq) use ($request) {
             $qq->where('ir.item_name', 'like', '%'.$request->name.'%');
@@ -43,7 +43,7 @@ class ItemsFromRatesController extends Controller
         $q->where('ir.branch_id', $user->branch_id);
     }
 
-    $items = $q->orderBy('ir.item_id')->paginate(20)->withQueryString();
+    $items = $q->orderBy('ir.id')->paginate(20)->withQueryString();
 
     return view('items.from_rates_index', compact('items', 'branches'));
 }

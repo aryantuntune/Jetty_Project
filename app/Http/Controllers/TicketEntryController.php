@@ -290,8 +290,8 @@ class TicketEntryController extends Controller
         $rate = null;
 
         if (ctype_digit($qval)) {
-            // 1) exact ID match FIRST
-            $rate = (clone $base)->where('item_id', (int)$qval)->first();
+            // 1) exact ID match FIRST (using primary key 'id')
+            $rate = (clone $base)->where('id', (int)$qval)->first();
 
             // 2) fallback: name search (if no exact id)
             if (!$rate) {
@@ -301,7 +301,7 @@ class TicketEntryController extends Controller
                                    WHEN item_name LIKE ? THEN 1
                                    ELSE 2 END", [$qval, "{$qval}%"])
                     ->orderByDesc('starting_date')
-                    ->orderBy('item_id')
+                    ->orderBy('id')
                     ->first();
             }
         } else {
@@ -312,7 +312,7 @@ class TicketEntryController extends Controller
                                WHEN item_name LIKE ? THEN 1
                                ELSE 2 END", [$qval, "{$qval}%"])
                 ->orderByDesc('starting_date')
-                ->orderBy('item_id')
+                ->orderBy('id')
                 ->first();
         }
 
@@ -323,15 +323,34 @@ class TicketEntryController extends Controller
         }
 
         return response()->json([
-            'item_id'               => $rate->item_id,
+            'id'               => $rate->id,
             'item_name'        => $rate->item_name,
             'item_category_id' => $rate->item_category_id,
             'item_category'    => $rate->category->category_name ?? null,
             'item_rate'        => (float)$rate->item_rate,
             'item_lavy'        => (float)$rate->item_lavy,
+            'is_vehicle'       => (bool)$rate->is_vehicle,
             'starting_date'    => optional($rate->starting_date)?->toDateString(),
             'branch_id'        => $rate->branch_id,
         ]);
+    }
+
+    /**
+     * Get all items for a branch (for dropdown)
+     */
+    public function listItems(Request $request)
+    {
+        $branchId = $request->input('branch_id');
+        $on = $request->input('on', now()->toDateString());
+
+        $items = ItemRate::query()
+            ->effective($on)
+            ->when($branchId, fn($q) => $q->where('branch_id', $branchId))
+            ->orderBy('is_vehicle')
+            ->orderBy('item_name')
+            ->get(['id', 'item_name', 'item_rate', 'item_lavy', 'is_vehicle', 'item_category_id']);
+
+        return response()->json($items);
     }
 
 

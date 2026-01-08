@@ -15,7 +15,12 @@
       "Bash(git push)",
       "Bash(grep:*)",
       "Bash(git push:*)",
-      "Bash(ls:*)"
+      "Bash(ls:*)",
+      "Bash(powershell \"netstat -an | Select-String '':1433''\")",
+      "Bash(php import_legacy.php:*)",
+      "Bash(mysql -u root -e:*)",
+      "Bash(powershell \"Get-Service | Where-Object {$_Name -like ''*SQL*''}\")",
+      "Bash(php artisan tinker:*)"
     ]
   }
 }

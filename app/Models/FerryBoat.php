@@ -14,6 +14,8 @@ class FerryBoat extends Model
         'user_id',
         'branch_id',
         'is_active',
+        'created_by',
+        'updated_by',
     ];
 
     public function branch()
@@ -33,6 +35,6 @@ class FerryBoat extends Model
 
     public function scopeActive($query)
     {
-        return $query->where('is_active', 'Y');
+        return $query->where('is_active', true);
     }
 }

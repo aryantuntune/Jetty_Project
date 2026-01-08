@@ -9,9 +9,12 @@ class FerrySchedule extends Model
     protected $fillable = [
         'hour',
         'minute',
+        'schedule_time',
         'branch_id',
         'ferry_boat_id',
         'is_active',
+        'created_by',
+        'updated_by',
     ];
 
     protected $casts = [
@@ -41,6 +44,6 @@ class FerrySchedule extends Model
 
     public function scopeActive($query)
     {
-        return $query->where('is_active', 'Y');
+        return $query->where('is_active', true);
     }
 }

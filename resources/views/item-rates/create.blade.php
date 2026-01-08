@@ -64,13 +64,13 @@
                     <input type="text" name="item_name" value="{{ old('item_name') }}" required class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-primary-500 focus:ring-4 focus:ring-primary-500/10 outline-none transition-all" placeholder="Enter item name">
                 </div>
 
-                <!-- Item ID -->
-                <div>
-                    <label class="block text-sm font-semibold text-slate-700 mb-2">
-                        Item ID <span class="text-red-500">*</span>
+                <!-- Is Vehicle -->
+                <div class="flex items-center">
+                    <label class="flex items-center cursor-pointer">
+                        <input type="checkbox" name="is_vehicle" value="1" {{ old('is_vehicle') ? 'checked' : '' }} class="w-5 h-5 rounded border-slate-300 text-primary-600 focus:ring-primary-500">
+                        <span class="ml-2 text-sm font-semibold text-slate-700">Is Vehicle?</span>
                     </label>
-                    <input type="number" name="item_id" value="{{ old('item_id') }}" required min="1" class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-primary-500 focus:ring-4 focus:ring-primary-500/10 outline-none transition-all" placeholder="e.g. 1, 2, 3">
-                    <p class="mt-1 text-xs text-slate-500">Numeric ID of the item</p>
+                    <p class="ml-4 text-xs text-slate-500">Check if this is a vehicle fare</p>
                 </div>
 
                 <!-- Category -->

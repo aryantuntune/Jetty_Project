@@ -15,6 +15,7 @@ use App\Http\Controllers\FerryScheduleController;
 use App\Http\Controllers\GuestCategoryController;
 use App\Http\Controllers\GuestController;
 use App\Http\Controllers\HomeController;
+use App\Http\Controllers\HouseboatAdminController;
 use App\Http\Controllers\ItemCategoryController;
 use App\Http\Controllers\ItemRateController;
 use App\Http\Controllers\ItemsFromRatesController;
@@ -39,6 +40,11 @@ use Illuminate\Support\Facades\Route;
 // Homepage - carferry.in style
 Route::get('/', [PublicController::class, 'home'])->name('public.home');
 
+// Houseboat Booking
+Route::get('/houseboat-booking', [\App\Http\Controllers\HouseboatController::class, 'index'])->name('houseboat.index');
+Route::get('/houseboat-booking/checkout', [\App\Http\Controllers\HouseboatController::class, 'checkout'])->name('houseboat.checkout');
+Route::post('/houseboat-booking/book', [\App\Http\Controllers\HouseboatController::class, 'store'])->name('houseboat.book');
+
 // About Us page
 Route::get('/about', [PublicController::class, 'about'])->name('public.about');
 
@@ -49,6 +55,10 @@ Route::post('/contact', [PublicController::class, 'submitContact'])->name('publi
 // Ferry Route pages (e.g., /route/dabhol-dhopave)
 Route::get('/route/{slug}', [PublicController::class, 'route'])->name('public.route');
 
+// Convenience redirects for common URLs
+Route::get('/book', fn() => redirect('/customer/login'))->name('book.redirect');
+Route::get('/verify-ticket', fn() => redirect('/verify'))->name('verify-ticket.redirect');
+
 // Keep old welcome page accessible for testing
 Route::get('/welcome-old', function () {
     return view('welcome');
@@ -56,10 +66,19 @@ Route::get('/welcome-old', function () {
 
 Route::middleware('admin.guest')->group(function () {
     Auth::routes(); // admin login/register
+
+    // Houseboat Admin Routes
+    Route::prefix('houseboat')->name('admin.houseboat.')->group(function () {
+        Route::get('/', [HouseboatAdminController::class, 'index'])->name('dashboard');
+        Route::get('/rooms', [HouseboatAdminController::class, 'rooms'])->name('rooms');
+        Route::put('/rooms/{id}', [HouseboatAdminController::class, 'updateRoom'])->name('rooms.update');
+        Route::patch('/bookings/{id}/status', [HouseboatAdminController::class, 'updateBookingStatus'])->name('bookings.status');
+    });
 });
 
 Route::middleware(['auth', 'blockRole5'])->group(function () {
     Route::get('/home', [HomeController::class, 'index'])->name('home');
+    Route::get('/dashboard', [HomeController::class, 'index'])->name('dashboard'); // Alias for /home
 });
 
 Auth::routes();
@@ -117,6 +136,7 @@ Route::middleware(['auth', 'blockRole5'])->group(function () {
     Route::post('/ticket-entry', [TicketEntryController::class, 'store'])->name('ticket-entry.store'); // optional
 
     Route::get('/item-rates/find', [TicketEntryController::class, 'find'])->name('api.item-rates.find');
+    Route::get('/ajax/item-rates/list', [TicketEntryController::class, 'listItems'])->name('ajax.item-rates.list');
 
     Route::get('ajax/next-ferry-time', [TicketEntryController::class, 'ajaxNextFerryTime'])->name('ajax.next-ferry-time');
 

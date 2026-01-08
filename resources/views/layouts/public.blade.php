@@ -1,15 +1,19 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>@yield('title', 'Suvarnadurga Shipping & Marine Services')</title>
-    <meta name="description" content="@yield('description', 'Ferry services across Maharashtra - Dabhol-Dhopave, Jaigad-Tawsal, Dighi-Agardande, Veshvi-Bagmandale, Vasai-Bhayander, Virar-Saphale, Ambet-Mahpral')">
+    <meta name="description"
+        content="@yield('description', 'Ferry services across Maharashtra - Dabhol-Dhopave, Jaigad-Tawsal, Dighi-Agardande, Veshvi-Bagmandale, Vasai-Bhayander, Virar-Saphale, Ambet-Mahpral')">
 
     <!-- Google Fonts - Matching carferry.in -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&family=Poppins:wght@300;400;500;600&display=swap"
+        rel="stylesheet">
 
     <!-- Favicon -->
     <link rel="icon" type="image/png" href="{{ asset('images/carferry/logos/logo.png') }}">
@@ -46,7 +50,12 @@
             background: var(--white);
         }
 
-        h1, h2, h3, h4, h5, h6 {
+        h1,
+        h2,
+        h3,
+        h4,
+        h5,
+        h6 {
             font-family: 'Montserrat', sans-serif;
             font-weight: 700;
             color: var(--text-heading);
@@ -75,7 +84,7 @@
            ============================================ */
         .main-header {
             background: var(--white);
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
             position: fixed;
             top: 0;
             left: 0;
@@ -148,13 +157,13 @@
             position: relative;
         }
 
-        .nav-dropdown > a {
+        .nav-dropdown>a {
             display: flex;
             align-items: center;
             gap: 5px;
         }
 
-        .nav-dropdown > a::after {
+        .nav-dropdown>a::after {
             content: '▼';
             font-size: 10px;
             transition: transform 0.3s ease;
@@ -165,7 +174,7 @@
             top: 100%;
             left: 0;
             background: var(--white);
-            box-shadow: 0 5px 20px rgba(0,0,0,0.15);
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.15);
             border-radius: 8px;
             min-width: 220px;
             opacity: 0;
@@ -228,7 +237,7 @@
             font-weight: 800;
             color: var(--primary-blue);
             margin-bottom: 20px;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
         }
 
         .hero-subtitle {
@@ -325,13 +334,13 @@
             background: var(--white);
             border-radius: 15px;
             overflow: hidden;
-            box-shadow: 0 5px 30px rgba(0,0,0,0.1);
+            box-shadow: 0 5px 30px rgba(0, 0, 0, 0.1);
             transition: all 0.4s ease;
         }
 
         .route-card:hover {
             transform: translateY(-10px);
-            box-shadow: 0 15px 40px rgba(0,0,0,0.15);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
         }
 
         .route-card-image {
@@ -399,7 +408,7 @@
 
         .about-image img {
             border-radius: 15px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
         }
 
         .about-content h2 {
@@ -438,7 +447,7 @@
         }
 
         .service-card:hover {
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
         }
 
         .service-card-image {
@@ -533,7 +542,7 @@
             grid-template-columns: 2fr 1fr 1fr 1fr;
             gap: 40px;
             padding-bottom: 40px;
-            border-bottom: 1px solid rgba(255,255,255,0.1);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
         }
 
         .footer-logo img {
@@ -566,7 +575,7 @@
 
         .footer-links a {
             display: block;
-            color: rgba(255,255,255,0.8);
+            color: rgba(255, 255, 255, 0.8);
             font-size: 14px;
             padding: 8px 0;
             transition: all 0.3s ease;
@@ -730,6 +739,7 @@
 
     @stack('styles')
 </head>
+
 <body>
     <!-- Top Bar -->
     <header class="main-header">
@@ -738,23 +748,28 @@
                 <div class="top-bar-content">
                     <div style="display: flex; align-items: center; gap: 20px;">
                         <a href="tel:+919422431371">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <path
+                                    d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
                             </svg>
                             +91 9422431371
                         </a>
                         <span>
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <circle cx="12" cy="12" r="10"/>
-                                <polyline points="12 6 12 12 16 14"/>
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <circle cx="12" cy="12" r="10" />
+                                <polyline points="12 6 12 12 16 14" />
                             </svg>
                             Open 9:00 AM - 5:00 PM (7 Days)
                         </span>
                     </div>
-                    <a href="{{ route('login') }}" style="display: flex; align-items: center; gap: 6px; opacity: 0.85; font-size: 13px;">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
-                            <circle cx="12" cy="7" r="4"/>
+                    <a href="{{ route('login') }}"
+                        style="display: flex; align-items: center; gap: 6px; opacity: 0.85; font-size: 13px;">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                            <circle cx="12" cy="7" r="4" />
                         </svg>
                         Staff Login
                     </a>
@@ -766,7 +781,8 @@
         <div class="container">
             <div class="nav-container">
                 <a href="{{ url('/') }}" class="logo">
-                    <img src="{{ asset('images/carferry/logos/logo.png') }}" alt="Suvarnadurga Shipping & Marine Services">
+                    <img src="{{ asset('images/carferry/logos/logo.png') }}"
+                        alt="Suvarnadurga Shipping & Marine Services">
                 </a>
 
                 <nav class="main-nav">
@@ -786,7 +802,11 @@
                     </div>
 
                     <a href="{{ url('/about') }}" class="{{ request()->is('about') ? 'active' : '' }}">About Us</a>
-                    <a href="{{ url('/contact') }}" class="{{ request()->is('contact') ? 'active' : '' }}">Contact Us</a>
+                    <a href="{{ url('/contact') }}" class="{{ request()->is('contact') ? 'active' : '' }}">Contact
+                        Us</a>
+                    <a href="{{ route('houseboat.index') }}" class="btn-secondary"
+                        style="background: white; color: var(--primary-blue); border: 2px solid var(--primary-blue);">Houseboat
+                        Booking</a>
                     <a href="{{ route('customer.login') }}" class="btn-secondary">Book Now</a>
                 </nav>
 
@@ -812,7 +832,9 @@
         <a href="{{ url('/about') }}">About Us</a>
         <a href="{{ url('/contact') }}">Contact Us</a>
         <a href="{{ route('customer.login') }}" style="color: var(--secondary-orange);">Book Now</a>
-        <a href="{{ route('login') }}" style="color: var(--primary-blue); margin-top: 20px; border-top: 2px solid #eee; padding-top: 20px;">Staff Login</a>
+        <a href="{{ route('login') }}"
+            style="color: var(--primary-blue); margin-top: 20px; border-top: 2px solid #eee; padding-top: 20px;">Staff
+            Login</a>
     </div>
 
     <!-- Main Content -->
@@ -827,7 +849,9 @@
                         <img src="{{ asset('images/carferry/logos/logo-white.png') }}" alt="Suvarnadurga Logo">
                     </div>
                     <p>
-                        Suvarnadurga Shipping & Marine Services Pvt. Ltd. has been providing reliable ferry services across Maharashtra's Konkan coast since 2003. We operate 7 routes connecting coastal communities.
+                        Suvarnadurga Shipping & Marine Services Pvt. Ltd. has been providing reliable ferry services
+                        across Maharashtra's Konkan coast since 2003. We operate 7 routes connecting coastal
+                        communities.
                     </p>
                 </div>
 
@@ -856,22 +880,26 @@
                     <h4 class="footer-title">Contact Info</h4>
                     <div class="footer-contact">
                         <p>
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
-                                <circle cx="12" cy="10" r="3"/>
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+                                <circle cx="12" cy="10" r="3" />
                             </svg>
                             Dabhol FerryBoat Jetty, Dapoli, Dist. Ratnagiri, Maharashtra - 415712
                         </p>
                         <p>
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <path
+                                    d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
                             </svg>
                             <a href="tel:+919422431371">+91 9422431371</a>
                         </p>
                         <p>
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
-                                <polyline points="22,6 12,13 2,6"/>
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
+                                <polyline points="22,6 12,13 2,6" />
                             </svg>
                             <a href="mailto:ssmsdapoli@rediffmail.com">ssmsdapoli@rediffmail.com</a>
                         </p>
@@ -899,4 +927,5 @@
 
     @stack('scripts')
 </body>
+
 </html>

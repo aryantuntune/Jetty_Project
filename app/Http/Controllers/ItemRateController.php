@@ -42,16 +42,22 @@ class ItemRateController extends Controller
         $branchQuery = $user->branch_id; // restrict query automatically
     }
 
+    // Get categories for filter dropdown
+    $categories = \App\Models\ItemCategory::orderBy('category_name')->get(['id', 'category_name']);
+
     $q = \App\Models\ItemRate::query()
         ->when($branchQuery, fn($qq) => $qq->where('branch_id', $branchQuery))
         ->when($request->item_category_id, fn($qq) => $qq->where('item_category_id', $request->item_category_id))
         ->when($request->search, fn($qq) => $qq->where('item_name','like', "%{$request->search}%"))
-        ->orderByDesc('starting_date')
-        ->orderBy('item_name');
+        ->when($request->is_vehicle !== null && $request->is_vehicle !== '', fn($qq) => $qq->where('is_vehicle', $request->is_vehicle))
+        ->orderBy('branch_id')
+        ->orderBy('item_category_id')
+        ->orderBy('item_name')
+        ->orderByDesc('item_rate');
 
-    $itemRates = $q->paginate(15)->withQueryString();
+    $itemRates = $q->paginate(25)->withQueryString();
 
-    return view('item-rates.index', compact('itemRates','branches'));
+    return view('item-rates.index', compact('itemRates', 'branches', 'categories'));
 }
 
 
@@ -72,16 +78,15 @@ class ItemRateController extends Controller
 
    public function store(Request $request)
 {
-    
     $data = $request->validate([
         'item_name'        => ['required','string','max:150'],
         'item_category_id' => ['nullable','integer'],
         'item_rate'        => ['required','numeric','min:0'],
         'item_lavy'        => ['required','numeric','min:0'],
-         'branch_id'        => ['required','array'],
+        'branch_id'        => ['required','array'],
         'starting_date'    => ['required','date'],
         'ending_date'      => ['nullable','date','after_or_equal:starting_date'],
-        'item_id'         => ['required','integer'],
+        'is_vehicle'       => ['nullable','boolean'],
     ]);
 
     $userId = auth()->id();
@@ -108,7 +113,9 @@ class ItemRateController extends Controller
             'starting_date'    => $data['starting_date'],
             'ending_date'      => $data['ending_date'] ?? null,
             'user_id'          => $userId,
-            'item_id'          => $data['item_id'],
+            'is_vehicle'       => $request->boolean('is_vehicle'),
+            'is_active'        => true,
+            'created_by'       => $userId,
         ]);
     }
 
@@ -139,16 +146,17 @@ public function update(Request $request, ItemRate $itemRate)
         'item_category_id' => ['nullable','integer'],
         'item_rate'        => ['required','numeric','min:0'],
         'item_lavy'        => ['required','numeric','min:0'],
-        'branch_id'        => ['required','array'], // array from selected route
+        'branch_id'        => ['required','array'],
         'starting_date'    => ['required','date'],
         'ending_date'      => ['nullable','date','after_or_equal:starting_date'],
+        'is_vehicle'       => ['nullable','boolean'],
     ]);
 
     $userId = auth()->id();
     $selectedBranches = $data['branch_id'];
 
-    // Get all existing records for this item_id + date (without filtering by item_name)
-    $existingRates = ItemRate::where('item_id', $itemRate->item_id)
+    // Get all existing records for this item_name + date
+    $existingRates = ItemRate::where('item_name', $itemRate->item_name)
         ->where('starting_date', $data['starting_date'])
         ->get();
 
@@ -156,7 +164,6 @@ public function update(Request $request, ItemRate $itemRate)
         $existing = $existingRates->firstWhere('branch_id', $branchId);
 
         if ($existing) {
-            // ✅ Update even if item_name or category changes
             $existing->update([
                 'item_name'        => $data['item_name'],
                 'item_category_id' => $data['item_category_id'] ?? null,
@@ -165,10 +172,11 @@ public function update(Request $request, ItemRate $itemRate)
                 'starting_date'    => $data['starting_date'],
                 'ending_date'      => $data['ending_date'] ?? null,
                 'user_id'          => $userId,
+                'is_vehicle'       => $request->boolean('is_vehicle'),
+                'updated_by'       => $userId,
             ]);
         } else {
-            // ✅ Avoid duplicate check on item_name, use item_id + branch + date instead
-            $duplicate = ItemRate::where('item_id', $itemRate->item_id)
+            $duplicate = ItemRate::where('item_name', $data['item_name'])
                 ->where('starting_date', $data['starting_date'])
                 ->where('branch_id', $branchId)
                 ->exists();
@@ -188,7 +196,9 @@ public function update(Request $request, ItemRate $itemRate)
                 'starting_date'    => $data['starting_date'],
                 'ending_date'      => $data['ending_date'] ?? null,
                 'user_id'          => $userId,
-                'item_id'          => $itemRate->item_id,
+                'is_vehicle'       => $request->boolean('is_vehicle'),
+                'is_active'        => true,
+                'created_by'       => $userId,
             ]);
         }
     }

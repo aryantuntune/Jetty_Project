@@ -11,16 +11,23 @@ class ItemRate extends Model
 
     protected $fillable = [
         'item_name',
+        'item_short_name',
+        'item_name_regional',
         'item_category_id',
         'item_rate',
         'item_lavy',
+        'item_surcharge_pct',
+        'levy_surcharge_pct',
+        'space_units',
+        'is_fixed_rate',
+        'is_vehicle',
+        'is_active',
         'branch_id',
         'starting_date',
         'ending_date',
         'user_id',
-        'item_id',
-        'route_id',
-        'is_active',
+        'created_by',
+        'updated_by',
     ];
 
     protected $casts = [
@@ -57,6 +64,6 @@ class ItemRate extends Model
 
     public function scopeActive($query)
     {
-        return $query->where('is_active', 'Y');
+        return $query->where('is_active', true);
     }
 }
