@@ -45,7 +45,7 @@ class TicketEntryController extends Controller
                     ->get()
                     ->map(function ($row) {
                         return [
-                            'id'   => $row->id,
+                            'id' => $row->id,
                             'time' => str_pad($row->hour, 2, '0', STR_PAD_LEFT) . ':' . str_pad($row->minute, 2, '0', STR_PAD_LEFT)
                         ];
                     });
@@ -111,7 +111,7 @@ class TicketEntryController extends Controller
 
         // Existing "nextFerryTime" calculation for NON-admins
         $now = Carbon::now('Asia/Kolkata');
-        $nowMins = ((int)$now->format('H')) * 60 + (int)$now->format('i');
+        $nowMins = ((int) $now->format('H')) * 60 + (int) $now->format('i');
 
         $nextRow = FerrySchedule::query()
             ->when($branchId, fn($q) => $q->where('branch_id', $branchId))
@@ -121,7 +121,7 @@ class TicketEntryController extends Controller
 
         if ($nextRow) {
             $nextFerryTime = $now->copy()
-                ->setTime((int)$nextRow->hour, (int)$nextRow->minute, 0)
+                ->setTime((int) $nextRow->hour, (int) $nextRow->minute, 0)
                 ->format('Y-m-d\TH:i');
         } else {
             $firstRow = FerrySchedule::query()
@@ -130,7 +130,7 @@ class TicketEntryController extends Controller
                 ->first();
 
             $nextFerryTime = $firstRow
-                ? $now->copy()->addDay()->setTime((int)$firstRow->hour, (int)$firstRow->minute, 0)->format('Y-m-d\TH:i')
+                ? $now->copy()->addDay()->setTime((int) $firstRow->hour, (int) $firstRow->minute, 0)->format('Y-m-d\TH:i')
                 : $now->format('Y-m-d\TH:i');
         }
 
@@ -153,116 +153,142 @@ class TicketEntryController extends Controller
 
 
     // Optional: just a stub to receive the form
-   public function store(Request $request)
-{
-    $now = Carbon::now('Asia/Kolkata');
+    public function store(Request $request)
+    {
+        $now = Carbon::now('Asia/Kolkata');
 
-    $data = $request->validate([
-        'payment_mode' => 'required|string|in:Cash,Credit,Guest Pass,GPay',
-        'customer_name' => 'nullable|string|max:120',
-        'customer_mobile' => 'nullable|string|max:20|regex:/^\+?\d{10,15}$/',
-        'ferry_boat_id' => 'required|integer',
-        'ferry_time' => '',
-        'discount_pct' => 'nullable|numeric|min:0',
-        'discount_rs' => 'nullable|numeric|min:0',
-        'lines' => 'required|array|min:1',
-        'lines.*.item_id' => 'nullable|string',
-        'lines.*.item_name' => 'required|string',
-        'lines.*.qty' => 'required|numeric|min:0',
-        'lines.*.rate' => 'required|numeric|min:0',
-        'lines.*.levy' => 'required|numeric|min:0',
-        'lines.*.amount' => 'required|numeric|min:0',
-        'lines.*.vehicle_name' => 'nullable|string',
-        'lines.*.vehicle_no' => 'nullable|string',
-        'ferry_type' => ''
-    ]);
+        $data = $request->validate([
+            'payment_mode' => 'required|string|in:Cash,Credit,Guest Pass,GPay',
+            'customer_name' => 'nullable|string|max:120',
+            'customer_mobile' => 'nullable|string|max:20|regex:/^\+?\d{10,15}$/',
+            'ferry_boat_id' => 'required|integer',
+            'ferry_time' => '',
+            'discount_pct' => 'nullable|numeric|min:0',
+            'discount_rs' => 'nullable|numeric|min:0',
+            'lines' => 'required|array|min:1',
+            'lines.*.item_id' => 'nullable|string',
+            'lines.*.item_name' => 'required|string',
+            'lines.*.qty' => 'required|numeric|min:0',
+            'lines.*.rate' => 'required|numeric|min:0',
+            'lines.*.levy' => 'required|numeric|min:0',
+            'lines.*.amount' => 'required|numeric|min:0',
+            'lines.*.vehicle_name' => 'nullable|string',
+            'lines.*.vehicle_no' => 'nullable|string',
+            'ferry_type' => ''
+        ]);
 
-    $user = $request->user();
-    $branchId = in_array($user->role_id, [1, 2])
-        ? $request->input('branch_id')
-        : $user->branch_id;
+        // Validate Ferry Time (Must be future if today)
+        if (!empty($data['ferry_time'])) {
+            try {
+                $ferryTime = \Carbon\Carbon::parse($data['ferry_time']);
+                // Assuming ferry_time is today's time. 
+                // If ferry_time includes date component, use isPast().
+                // If it's just time, we assume it's for today as per context.
+                // The input format is typically 'Y-m-d H:i:s' or similar from the frontend or just H:i.
 
-    // Calculate total
-    $total = collect($data['lines'])->sum('amount');
-    if (!empty($data['discount_rs'])) {
-        $total -= $data['discount_rs'];
-    } elseif (!empty($data['discount_pct'])) {
-        $total -= ($total * $data['discount_pct'] / 100);
+                // Let's safe guard: strictly parsing as today's time
+                $ferryDateTime = \Carbon\Carbon::today('Asia/Kolkata')->setTimeFrom($ferryTime);
+
+                if ($ferryDateTime->isToday() && $ferryDateTime->lessThan($now)) {
+                    // Allow a small grace period (e.g., 2 mins) for slow clocks/network
+                    if ($ferryDateTime->diffInMinutes($now) > 2) {
+                        return response()->json([
+                            'message' => 'Cannot book ticket for past ferry time.',
+                            'errors' => ['ferry_time' => ['Cannot book ticket for past ferry time.']]
+                        ], 422);
+                    }
+                }
+            } catch (\Exception $e) {
+                // ignore parse errors here, strictly validated elsewhere or let slide
+            }
+        }
+
+        $user = $request->user();
+        $branchId = in_array($user->role_id, [1, 2])
+            ? $request->input('branch_id')
+            : $user->branch_id;
+
+        // Calculate total
+        $total = collect($data['lines'])->sum('amount');
+        if (!empty($data['discount_rs'])) {
+            $total -= $data['discount_rs'];
+        } elseif (!empty($data['discount_pct'])) {
+            $total -= ($total * $data['discount_pct'] / 100);
+        }
+
+        // Apply Special Charge (if applicable)
+        // if (($request->ferry_type ?? '') === 'SPECIAL') {
+        //     $specialChargeRecord = SpecialCharge::where('branch_id', $branchId)->first();
+        //     $specialCharge = $specialChargeRecord ? $specialChargeRecord->special_charge : 0;
+
+        //     $numLines = count($data['lines']);
+        //     if ($numLines > 0) {
+        //         $perLineCharge = round($specialCharge / $numLines, 2);
+        //         $remaining = $specialCharge - ($perLineCharge * $numLines);
+
+        //         foreach ($data['lines'] as $index => &$ln) {
+        //             $ln['amount'] += $perLineCharge;
+        //             if ($index === 0 && $remaining !== 0) {
+        //                 $ln['amount'] += $remaining;
+        //             }
+        //         }
+        //         unset($ln);
+        //         $total = collect($data['lines'])->sum('amount');
+        //     }
+        // }
+
+        $guestId = $request->guest_id;
+
+        // ✅ Prevent accidental duplicate within 10 seconds (same user + boat + total)
+        $duplicate = \App\Models\Ticket::where('branch_id', $branchId)
+            ->where('ferry_boat_id', $data['ferry_boat_id'])
+            ->where('user_id', $user->id)
+            ->where('total_amount', $total)
+            ->whereBetween('created_at', [now()->subSeconds(10), now()->addSeconds(10)])
+            ->exists();
+
+        if ($duplicate) {
+            if ($request->input('guest_id') != null) {
+                return redirect()->route('ticket-entry.create')
+                    ->with('error', 'Duplicate ticket prevented.');
+            }
+
+            return response()->json([
+                'ok' => false,
+                'message' => 'Duplicate ticket prevented (already saved recently).'
+            ]);
+        }
+
+
+        // ✅ Create ticket header
+        $ticket = \App\Models\Ticket::create([
+            'branch_id' => $branchId,
+            'ferry_boat_id' => $data['ferry_boat_id'],
+            'payment_mode' => $data['payment_mode'],
+            'customer_name' => $data['customer_name'] ?? null,
+            'customer_mobile' => $data['customer_mobile'] ?? null,
+            'ferry_time' => $data['ferry_time'] ?? $now,
+            'discount_pct' => $data['discount_pct'] ?? null,
+            'discount_rs' => $data['discount_rs'] ?? null,
+            'total_amount' => $total,
+            'user_id' => $user->id,
+            'ferry_type' => $request->ferry_type ?? 'SPECIAL',
+            'guest_id' => $guestId,
+        ]);
+
+        // Insert lines
+        foreach ($data['lines'] as $ln) {
+            $ln['user_id'] = $user->id;
+            $ticket->lines()->create($ln);
+        }
+
+        return response()->json([
+            'ok' => true,
+            'message' => 'Ticket saved successfully.',
+            'ticket_id' => $ticket->id,
+            'total' => $ticket->total_amount,
+        ]);
     }
-
-    // Apply Special Charge (if applicable)
-    // if (($request->ferry_type ?? '') === 'SPECIAL') {
-    //     $specialChargeRecord = SpecialCharge::where('branch_id', $branchId)->first();
-    //     $specialCharge = $specialChargeRecord ? $specialChargeRecord->special_charge : 0;
-
-    //     $numLines = count($data['lines']);
-    //     if ($numLines > 0) {
-    //         $perLineCharge = round($specialCharge / $numLines, 2);
-    //         $remaining = $specialCharge - ($perLineCharge * $numLines);
-
-    //         foreach ($data['lines'] as $index => &$ln) {
-    //             $ln['amount'] += $perLineCharge;
-    //             if ($index === 0 && $remaining !== 0) {
-    //                 $ln['amount'] += $remaining;
-    //             }
-    //         }
-    //         unset($ln);
-    //         $total = collect($data['lines'])->sum('amount');
-    //     }
-    // }
-
-    $guestId = $request->guest_id;
-
-    // ✅ Prevent accidental duplicate within 10 seconds (same user + boat + total)
-    $duplicate = \App\Models\Ticket::where('branch_id', $branchId)
-        ->where('ferry_boat_id', $data['ferry_boat_id'])
-        ->where('user_id', $user->id)
-        ->where('total_amount', $total)
-        ->whereBetween('created_at', [now()->subSeconds(10), now()->addSeconds(10)])
-        ->exists();
-
-   if ($duplicate) {
-    if ($request->input('guest_id') != null) {
-        return redirect()->route('ticket-entry.create')
-                         ->with('error', 'Duplicate ticket prevented.');
-    }
-
-    return response()->json([
-        'ok' => false,
-        'message' => 'Duplicate ticket prevented (already saved recently).'
-    ]);
-}
-
-
-    // ✅ Create ticket header
-    $ticket = \App\Models\Ticket::create([
-        'branch_id'     => $branchId,
-        'ferry_boat_id' => $data['ferry_boat_id'],
-        'payment_mode'  => $data['payment_mode'],
-        'customer_name'  => $data['customer_name'] ?? null,
-        'customer_mobile' => $data['customer_mobile'] ?? null,
-        'ferry_time'    => $data['ferry_time'] ?? $now,
-        'discount_pct'  => $data['discount_pct'] ?? null,
-        'discount_rs'   => $data['discount_rs'] ?? null,
-        'total_amount'  => $total,
-        'user_id'       => $user->id,
-        'ferry_type'    => $request->ferry_type ?? 'SPECIAL',
-        'guest_id'      => $guestId,
-    ]);
-
-    // Insert lines
-    foreach ($data['lines'] as $ln) {
-        $ln['user_id'] = $user->id;
-        $ticket->lines()->create($ln);
-    }
-
-    return response()->json([
-        'ok'        => true,
-        'message'   => 'Ticket saved successfully.',
-        'ticket_id' => $ticket->id,
-        'total'     => $ticket->total_amount,
-    ]);
-}
 
 
 
@@ -270,9 +296,9 @@ class TicketEntryController extends Controller
     public function find(Request $request)
     {
         $data = $request->validate([
-            'q'         => '',
+            'q' => '',
             'branch_id' => '',
-            'on'        => '',
+            'on' => '',
         ]);
 
         $on = $data['on'] ?? now()->toDateString();
@@ -291,7 +317,7 @@ class TicketEntryController extends Controller
 
         if (ctype_digit($qval)) {
             // 1) exact ID match FIRST (using primary key 'id')
-            $rate = (clone $base)->where('id', (int)$qval)->first();
+            $rate = (clone $base)->where('id', (int) $qval)->first();
 
             // 2) fallback: name search (if no exact id)
             if (!$rate) {
@@ -323,15 +349,15 @@ class TicketEntryController extends Controller
         }
 
         return response()->json([
-            'id'               => $rate->id,
-            'item_name'        => $rate->item_name,
+            'id' => $rate->id,
+            'item_name' => $rate->item_name,
             'item_category_id' => $rate->item_category_id,
-            'item_category'    => $rate->category->category_name ?? null,
-            'item_rate'        => (float)$rate->item_rate,
-            'item_lavy'        => (float)$rate->item_lavy,
-            'is_vehicle'       => (bool)$rate->is_vehicle,
-            'starting_date'    => optional($rate->starting_date)?->toDateString(),
-            'branch_id'        => $rate->branch_id,
+            'item_category' => $rate->category->category_name ?? null,
+            'item_rate' => (float) $rate->item_rate,
+            'item_lavy' => (float) $rate->item_lavy,
+            'is_vehicle' => (bool) $rate->is_vehicle,
+            'starting_date' => optional($rate->starting_date)?->toDateString(),
+            'branch_id' => $rate->branch_id,
         ]);
     }
 
@@ -355,11 +381,11 @@ class TicketEntryController extends Controller
 
 
     public function print(Ticket $ticket)
-{
-    $ticket->load(['branch','ferryBoat','user','lines']); // ensure lines appear
-    return view('tickets.print', compact('ticket'));
-}
+    {
+        $ticket->load(['branch', 'ferryBoat', 'user', 'lines']); // ensure lines appear
+        return view('tickets.print', compact('ticket'));
+    }
 
 
-    
+
 }

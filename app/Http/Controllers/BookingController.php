@@ -107,6 +107,23 @@ class BookingController extends Controller
             'departure_time' => now()->format('H:i:s'), // OR actual ferry time
         ]);
 
+        // Validate Departure Time if booking for today
+        $bookingDate = $request->booking_date ?? now()->toDateString();
+        $departureTime = $request->input('departure_time'); // Ensure this is passed from frontend
+
+        if ($departureTime) {
+            $now = \Carbon\Carbon::now('Asia/Kolkata');
+            $bookingDateTime = \Carbon\Carbon::parse("$bookingDate $departureTime", 'Asia/Kolkata');
+
+            if ($bookingDateTime->isToday() && $bookingDateTime->lessThan($now)) {
+                if ($bookingDateTime->diffInMinutes($now) > 2) {
+                    return response()->json([
+                        'message' => 'Cannot book ticket for past ferry time.',
+                    ], 422);
+                }
+            }
+        }
+
         $api = new Api(env('RAZORPAY_KEY'), env('RAZORPAY_SECRET'));
 
         $order = $api->order->create([
@@ -249,7 +266,7 @@ class BookingController extends Controller
         $pdf = $pdfService->generate($booking);
 
         Mail::to($booking->customer->email)
-            ->send(new BookingTicketMail($booking, $pdf));
+            ->send(new \App\Mail\BookingConfirmationMail($booking)); // Replaced BookingTicketMail
 
         return response()->json([
             'status' => 'Ticket sent successfully'
