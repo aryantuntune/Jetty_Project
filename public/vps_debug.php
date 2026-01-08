@@ -58,7 +58,7 @@ if ($mode == 'dashboard') {
     echo "<div class='card'><h2>3️⃣ Critical Data</h2>";
     echo "<table>";
     echo "<tr><th>Table</th><th>Count</th><th>Status</th></tr>";
-    $tables = ['users', 'branches', 'item_rates', 'item_categories', 'ferry_boats', 'ferry_schedules'];
+    $tables = ['users', 'branches', 'item_rates', 'item_categories', 'ferryboats', 'ferry_schedules', 'routes'];
     foreach ($tables as $t) {
         try {
             $count = \DB::table($t)->count();
