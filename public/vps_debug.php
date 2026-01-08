@@ -470,11 +470,14 @@ elseif ($mode === 'live-logs') {
 elseif ($mode === 'cache-tools') {
     echo "<div class='card'><h2>🧹 Cache Management Tools</h2>";
 
-    // Git Info
+    // Git Info - Add safe.directory first to avoid ownership errors
+    $basePath = base_path();
+    shell_exec('git config --global --add safe.directory ' . $basePath . ' 2>&1');
+
     echo "<h3 style='margin:15px 0 10px;'>📦 Git Status</h3>";
-    $gitBranch = trim(shell_exec('cd ' . base_path() . ' && git branch --show-current 2>&1') ?? 'unknown');
-    $gitStatus = trim(shell_exec('cd ' . base_path() . ' && git status --porcelain 2>&1') ?? '');
-    $gitLog = trim(shell_exec('cd ' . base_path() . ' && git log -1 --oneline 2>&1') ?? '');
+    $gitBranch = trim(shell_exec('cd ' . $basePath . ' && git branch --show-current 2>&1') ?? 'unknown');
+    $gitStatus = trim(shell_exec('cd ' . $basePath . ' && git status --porcelain 2>&1') ?? '');
+    $gitLog = trim(shell_exec('cd ' . $basePath . ' && git log -1 --oneline 2>&1') ?? '');
 
     echo "<table>";
     echo "<tr><td><strong>Branch:</strong></td><td>$gitBranch</td></tr>";
@@ -504,19 +507,25 @@ elseif ($mode === 'cache-tools') {
 
     // Action Buttons
     echo "<h3 style='margin:15px 0 10px;'>🔧 Actions</h3>";
-    echo "<div style='display:flex;gap:10px;flex-wrap:wrap;'>";
+    echo "<div style='display:flex;gap:10px;flex-wrap:wrap;margin-bottom:10px;'>";
     echo "<a href='?mode=cache-tools&action=git-pull' style='background:var(--accent);color:#000;padding:10px 20px;border-radius:6px;text-decoration:none;font-weight:600;'>📥 Git Pull</a>";
-    echo "<a href='?mode=cache-tools&action=clear-views' style='background:var(--warning);color:#000;padding:10px 20px;border-radius:6px;text-decoration:none;font-weight:600;'>🗑️ Delete Compiled Views</a>";
+    echo "<a href='?mode=cache-tools&action=migrate' style='background:var(--success);color:#000;padding:10px 20px;border-radius:6px;text-decoration:none;font-weight:600;'>🗄️ Run Migrations</a>";
     echo "<a href='?mode=cache-tools&action=clear-all' style='background:var(--danger);color:#fff;padding:10px 20px;border-radius:6px;text-decoration:none;font-weight:600;'>💥 Clear ALL Caches</a>";
+    echo "</div>";
+    echo "<div style='display:flex;gap:10px;flex-wrap:wrap;'>";
+    echo "<a href='?mode=cache-tools&action=clear-views' style='background:var(--warning);color:#000;padding:10px 20px;border-radius:6px;text-decoration:none;font-weight:600;'>🗑️ Delete Compiled Views</a>";
+    echo "<a href='?mode=cache-tools&action=seed' style='background:#9333ea;color:#fff;padding:10px 20px;border-radius:6px;text-decoration:none;font-weight:600;'>🌱 Run Seeders</a>";
     echo "</div>";
 
     // Handle Actions
     if ($action === 'git-pull') {
         echo "<div class='test-result test-pass' style='margin-top:15px;'>";
-        echo "<h4>Git Pull Result:</h4>";
+        echo "<h4>Git Pull Result:</h4><pre>";
+        // Add safe.directory first
+        shell_exec('git config --global --add safe.directory ' . base_path());
         $output = shell_exec('cd ' . base_path() . ' && git pull origin master 2>&1');
-        echo "<pre>" . htmlspecialchars($output) . "</pre>";
-        echo "</div>";
+        echo htmlspecialchars($output);
+        echo "</pre></div>";
     }
 
     if ($action === 'clear-views') {
@@ -556,6 +565,22 @@ elseif ($mode === 'cache-tools') {
             echo "artisan $cmd: " . trim($result) . "\n";
         }
 
+        echo "</pre></div>";
+    }
+
+    if ($action === 'migrate') {
+        echo "<div class='test-result test-pass' style='margin-top:15px;'>";
+        echo "<h4>Migration Result:</h4><pre>";
+        $output = shell_exec('cd ' . base_path() . ' && php artisan migrate --force 2>&1');
+        echo htmlspecialchars($output);
+        echo "</pre></div>";
+    }
+
+    if ($action === 'seed') {
+        echo "<div class='test-result test-pass' style='margin-top:15px;'>";
+        echo "<h4>Seeder Result:</h4><pre>";
+        $output = shell_exec('cd ' . base_path() . ' && php artisan db:seed --force 2>&1');
+        echo htmlspecialchars($output);
         echo "</pre></div>";
     }
 
