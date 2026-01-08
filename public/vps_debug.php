@@ -1,126 +1,407 @@
 <?php
-
-// vps_debug.php - Version 4.0 (Comprehensive Diagnostics)
+/**
+ * VPS Debug Dashboard v5.0 - Intelligent Error Detection
+ * Features:
+ * - Smart log parsing (Backend/DB/Auth errors separated)
+ * - API endpoint tester
+ * - Data integrity checker
+ * - Relationship validator
+ */
 
 define('LARAVEL_START', microtime(true));
-
 require __DIR__ . '/../vendor/autoload.php';
 $app = require_once __DIR__ . '/../bootstrap/app.php';
-
 $kernel = $app->make(Illuminate\Contracts\Http\Kernel::class);
 $kernel->handle(Illuminate\Http\Request::capture());
 
 ini_set('display_errors', 1);
 error_reporting(E_ALL);
 
+$mode = $_GET['mode'] ?? 'dashboard';
+$action = $_GET['action'] ?? null;
+
+// CSS
 echo "<style>
-body{font-family:monospace;line-height:1.6;padding:20px;background:#1a1a2e;color:#eee;}
-h1,h2{color:#00d9ff;}
-.card{background:#16213e;padding:15px;border-radius:8px;margin:15px 0;border-left:4px solid #00d9ff;}
-.pass{color:#0f0;} .fail{color:#f00;} .warn{color:#ff0;}
-a.btn{display:inline-block;padding:8px 16px;margin:5px;text-decoration:none;color:#fff;border-radius:5px;font-weight:bold;}
-.btn-blue{background:#0066cc;} .btn-green{background:#00aa00;} .btn-red{background:#cc0000;} .btn-orange{background:#ff9900;}
-pre{background:#0f0f23;color:#ccc;padding:10px;overflow-x:auto;max-height:400px;font-size:12px;}
-table{border-collapse:collapse;width:100%;} th,td{border:1px solid #333;padding:8px;text-align:left;} th{background:#0a3d62;}
+:root { --bg: #0d1117; --card: #161b22; --border: #30363d; --text: #c9d1d9; --accent: #58a6ff; --success: #3fb950; --warning: #d29922; --danger: #f85149; }
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif; background: var(--bg); color: var(--text); padding: 20px; line-height: 1.5; }
+h1 { color: var(--accent); margin-bottom: 20px; display: flex; align-items: center; gap: 10px; }
+h2 { color: var(--accent); margin-bottom: 15px; font-size: 1.1rem; border-bottom: 1px solid var(--border); padding-bottom: 8px; }
+.nav { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 20px; padding: 15px; background: var(--card); border-radius: 8px; border: 1px solid var(--border); }
+.nav a { padding: 8px 16px; background: var(--border); color: var(--text); text-decoration: none; border-radius: 6px; font-size: 13px; font-weight: 500; transition: all 0.2s; }
+.nav a:hover, .nav a.active { background: var(--accent); color: #000; }
+.card { background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 20px; margin-bottom: 15px; }
+.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 15px; }
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+th, td { padding: 10px 12px; text-align: left; border-bottom: 1px solid var(--border); }
+th { background: rgba(88, 166, 255, 0.1); color: var(--accent); font-weight: 600; }
+.ok { color: var(--success); } .warn { color: var(--warning); } .error { color: var(--danger); }
+pre { background: #0d1117; padding: 15px; border-radius: 6px; overflow-x: auto; font-size: 12px; max-height: 400px; overflow-y: auto; border: 1px solid var(--border); }
+.log-entry { padding: 8px 12px; margin: 4px 0; border-radius: 4px; font-family: monospace; font-size: 12px; }
+.log-error { background: rgba(248, 81, 73, 0.1); border-left: 3px solid var(--danger); }
+.log-warning { background: rgba(210, 153, 34, 0.1); border-left: 3px solid var(--warning); }
+.log-info { background: rgba(88, 166, 255, 0.1); border-left: 3px solid var(--accent); }
+.badge { display: inline-block; padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: 600; }
+.badge-success { background: var(--success); color: #000; }
+.badge-danger { background: var(--danger); color: #fff; }
+.badge-warning { background: var(--warning); color: #000; }
+input, select { padding: 8px 12px; border: 1px solid var(--border); background: var(--bg); color: var(--text); border-radius: 6px; font-size: 13px; }
+button { padding: 8px 16px; background: var(--accent); color: #000; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; }
+button:hover { opacity: 0.9; }
+.test-result { margin-top: 15px; padding: 15px; border-radius: 6px; }
+.test-pass { background: rgba(63, 185, 80, 0.1); border: 1px solid var(--success); }
+.test-fail { background: rgba(248, 81, 73, 0.1); border: 1px solid var(--danger); }
 </style>";
 
-echo "<h1>🔧 VPS Debug Tool v4.0</h1>";
+echo "<h1>🔬 VPS Debug Dashboard v5.0</h1>";
 
-$mode = $_GET['mode'] ?? 'dashboard';
-
-// NAV
-echo "<div class='card'>";
-echo "<a href='?mode=dashboard' class='btn btn-blue'>📊 Dashboard</a>";
-echo "<a href='?mode=tables' class='btn btn-orange'>📋 Table Counts</a>";
-echo "<a href='?mode=logs' class='btn btn-red'>📜 Error Logs</a>";
-echo "<a href='?mode=mail' class='btn btn-green'>✉️ Test Email</a>";
-echo "<a href='?mode=env' class='btn btn-blue'>⚙️ .env Values</a>";
+// Navigation
+$modes = ['dashboard' => '📊 Overview', 'logs' => '📜 Smart Logs', 'api-test' => '🔌 API Tester', 'integrity' => '🔗 Data Integrity', 'routes-check' => '🛤️ Routes Debug'];
+echo "<div class='nav'>";
+foreach ($modes as $key => $label) {
+    $class = ($mode === $key) ? 'active' : '';
+    echo "<a href='?mode=$key' class='$class'>$label</a>";
+}
 echo "</div>";
 
-if ($mode == 'dashboard') {
-    echo "<div class='card'><h2>1️⃣ Database Connection</h2>";
+// ===== DASHBOARD =====
+if ($mode === 'dashboard') {
+    echo "<div class='grid'>";
+
+    // DB Connection
+    echo "<div class='card'><h2>🗄️ Database</h2>";
     try {
         \DB::connection()->getPdo();
-        echo "<span class='pass'>✅ Connected to: " . \DB::connection()->getDatabaseName() . "</span>";
+        echo "<p class='ok'>✅ Connected: " . \DB::connection()->getDatabaseName() . "</p>";
     } catch (\Exception $e) {
-        echo "<span class='fail'>❌ Error: " . $e->getMessage() . "</span>";
+        echo "<p class='error'>❌ " . $e->getMessage() . "</p>";
     }
     echo "</div>";
 
-    echo "<div class='card'><h2>2️⃣ User Login Test</h2>";
+    // Auth Test
+    echo "<div class='card'><h2>🔐 Authentication</h2>";
     if (\Auth::attempt(['email' => 'superadmin@gmail.com', 'password' => 'admin123'])) {
-        echo "<span class='pass'>✅ Auth::attempt() PASSED for superadmin@gmail.com</span>";
+        echo "<p class='ok'>✅ Login works for superadmin@gmail.com</p>";
     } else {
-        echo "<span class='fail'>❌ Auth::attempt() FAILED - run 'php artisan db:seed' on VPS</span>";
+        $user = \App\Models\User::where('email', 'superadmin@gmail.com')->first();
+        echo $user ? "<p class='error'>❌ User exists but password wrong</p>" : "<p class='error'>❌ User not found - run db:seed</p>";
     }
     echo "</div>";
 
-    echo "<div class='card'><h2>3️⃣ Critical Data</h2>";
-    echo "<table>";
-    echo "<tr><th>Table</th><th>Count</th><th>Status</th></tr>";
-    $tables = ['users', 'branches', 'item_rates', 'item_categories', 'ferryboats', 'ferry_schedules', 'routes'];
-    foreach ($tables as $t) {
+    echo "</div>"; // grid
+
+    // Critical Tables
+    echo "<div class='card'><h2>📋 Critical Tables</h2><table><tr><th>Table</th><th>Rows</th><th>Status</th><th>Notes</th></tr>";
+    $checks = [
+        'users' => ['min' => 1, 'note' => 'Admin accounts'],
+        'branches' => ['min' => 1, 'note' => 'Jetty locations'],
+        'item_rates' => ['min' => 1, 'note' => 'Ticket prices'],
+        'item_categories' => ['min' => 1, 'note' => 'Item types'],
+        'ferryboats' => ['min' => 1, 'note' => 'Ferry vessels'],
+        'ferry_schedules' => ['min' => 1, 'note' => 'Time slots'],
+        'routes' => ['min' => 1, 'note' => 'Branch connections'],
+    ];
+    foreach ($checks as $table => $cfg) {
         try {
-            $count = \DB::table($t)->count();
-            $status = $count > 0 ? "<span class='pass'>OK</span>" : "<span class='warn'>EMPTY!</span>";
-            echo "<tr><td>$t</td><td>$count</td><td>$status</td></tr>";
+            $count = \DB::table($table)->count();
+            $status = $count >= $cfg['min'] ? "<span class='badge badge-success'>OK</span>" : "<span class='badge badge-danger'>EMPTY</span>";
+            echo "<tr><td>$table</td><td>$count</td><td>$status</td><td>{$cfg['note']}</td></tr>";
         } catch (\Exception $e) {
-            echo "<tr><td>$t</td><td colspan='2'><span class='fail'>ERROR: Table missing?</span></td></tr>";
+            echo "<tr><td>$table</td><td colspan='3'><span class='error'>TABLE MISSING</span></td></tr>";
         }
     }
     echo "</table></div>";
 
-    echo "<div class='card'><h2>4️⃣ Storage Permissions</h2>";
-    $paths = ['storage/logs', 'storage/framework/sessions', 'bootstrap/cache'];
-    foreach ($paths as $p) {
-        $full = base_path($p);
-        $ok = is_writable($full);
-        echo ($ok ? "<span class='pass'>✅" : "<span class='fail'>❌") . " $p</span><br>";
-    }
-    echo "</div>";
-
-} elseif ($mode == 'tables') {
-    echo "<div class='card'><h2>All Table Row Counts</h2><table><tr><th>Table</th><th>Rows</th></tr>";
-    $tables = \DB::select('SHOW TABLES');
-    $key = 'Tables_in_' . \DB::connection()->getDatabaseName();
-    foreach ($tables as $t) {
-        $name = $t->$key;
-        $count = \DB::table($name)->count();
-        echo "<tr><td>$name</td><td>$count</td></tr>";
-    }
-    echo "</table></div>";
-
-} elseif ($mode == 'logs') {
-    echo "<div class='card'><h2>Laravel Error Logs (Last 80 Lines)</h2>";
-    $logFile = storage_path('logs/laravel.log');
-    if (file_exists($logFile)) {
-        $lines = file($logFile);
-        echo "<pre>" . htmlspecialchars(implode('', array_slice($lines, -80))) . "</pre>";
-    } else {
-        echo "No log file found.";
-    }
-    echo "</div>";
-
-} elseif ($mode == 'mail') {
-    echo "<div class='card'><h2>Email Test</h2>";
-    $to = config('mail.from.address');
-    echo "Sending to: $to...<br><br>";
+    // Quick Health Score
+    echo "<div class='card'><h2>🏥 Health Score</h2>";
+    $score = 0;
+    $total = 7;
     try {
-        \Mail::raw('Test from VPS Debug v4', fn($m) => $m->to($to)->subject('VPS Mail Test'));
-        echo "<span class='pass'>✅ Sent! Check your inbox.</span>";
+        if (\DB::connection()->getPdo())
+            $score++;
     } catch (\Exception $e) {
-        echo "<span class='fail'>❌ " . $e->getMessage() . "</span>";
+    }
+    try {
+        if (\App\Models\User::count() > 0)
+            $score++;
+    } catch (\Exception $e) {
+    }
+    try {
+        if (\DB::table('branches')->count() > 0)
+            $score++;
+    } catch (\Exception $e) {
+    }
+    try {
+        if (\DB::table('item_rates')->count() > 0)
+            $score++;
+    } catch (\Exception $e) {
+    }
+    try {
+        if (\DB::table('ferryboats')->count() > 0)
+            $score++;
+    } catch (\Exception $e) {
+    }
+    try {
+        if (\DB::table('routes')->count() > 0)
+            $score++;
+    } catch (\Exception $e) {
+    }
+    try {
+        if (\DB::table('ferry_schedules')->count() > 0)
+            $score++;
+    } catch (\Exception $e) {
+    }
+    $pct = round(($score / $total) * 100);
+    $color = $pct >= 80 ? 'success' : ($pct >= 50 ? 'warning' : 'danger');
+    echo "<div style='font-size: 48px; font-weight: bold;' class='$color'>$pct%</div>";
+    echo "<p>$score / $total checks passed</p></div>";
+}
+
+// ===== SMART LOGS =====
+elseif ($mode === 'logs') {
+    echo "<div class='card'><h2>📜 Intelligent Log Analysis</h2>";
+    $logFile = storage_path('logs/laravel.log');
+
+    if (!file_exists($logFile)) {
+        echo "<p class='warn'>No log file found</p>";
+    } else {
+        $lines = file($logFile);
+        $recent = array_slice($lines, -200); // Last 200 lines
+
+        $errors = ['db' => [], 'auth' => [], 'route' => [], 'general' => []];
+        $currentBlock = '';
+
+        foreach ($recent as $line) {
+            if (preg_match('/\[(\d{4}-\d{2}-\d{2}[^\]]+)\]/', $line, $m)) {
+                $currentBlock = $line;
+            } else {
+                $currentBlock .= $line;
+            }
+
+            // Categorize
+            if (stripos($currentBlock, 'SQLSTATE') !== false || stripos($currentBlock, 'PDOException') !== false) {
+                if (!in_array(substr($currentBlock, 0, 100), array_map(fn($x) => substr($x, 0, 100), $errors['db']))) {
+                    $errors['db'][] = $currentBlock;
+                }
+            } elseif (stripos($currentBlock, 'auth') !== false || stripos($currentBlock, 'login') !== false || stripos($currentBlock, 'Unauthenticated') !== false) {
+                if (!in_array(substr($currentBlock, 0, 100), array_map(fn($x) => substr($x, 0, 100), $errors['auth']))) {
+                    $errors['auth'][] = $currentBlock;
+                }
+            } elseif (stripos($currentBlock, 'Route') !== false || stripos($currentBlock, '404') !== false || stripos($currentBlock, 'NotFoundHttpException') !== false) {
+                if (!in_array(substr($currentBlock, 0, 100), array_map(fn($x) => substr($x, 0, 100), $errors['route']))) {
+                    $errors['route'][] = $currentBlock;
+                }
+            } elseif (stripos($currentBlock, 'ERROR') !== false || stripos($currentBlock, 'Exception') !== false) {
+                if (!in_array(substr($currentBlock, 0, 100), array_map(fn($x) => substr($x, 0, 100), $errors['general']))) {
+                    $errors['general'][] = $currentBlock;
+                }
+            }
+        }
+
+        // Display categorized
+        $categories = [
+            'db' => ['🗄️ Database Errors', 'danger'],
+            'auth' => ['🔐 Auth Errors', 'warning'],
+            'route' => ['🛤️ Route Errors', 'warning'],
+            'general' => ['⚠️ General Errors', 'danger']
+        ];
+
+        foreach ($categories as $key => [$title, $type]) {
+            $count = count($errors[$key]);
+            if ($count > 0) {
+                echo "<h3 style='margin: 15px 0 10px;'>$title <span class='badge badge-$type'>$count</span></h3>";
+                foreach (array_slice($errors[$key], -5) as $err) { // Last 5 of each
+                    echo "<div class='log-entry log-error'>" . htmlspecialchars(substr($err, 0, 500)) . "</div>";
+                }
+            }
+        }
+
+        if (array_sum(array_map('count', $errors)) === 0) {
+            echo "<p class='ok'>✅ No recent errors detected!</p>";
+        }
     }
     echo "</div>";
+}
 
-} elseif ($mode == 'env') {
-    echo "<div class='card'><h2>.env Configuration</h2><table>";
-    $keys = ['APP_URL', 'APP_DEBUG', 'DB_CONNECTION', 'DB_HOST', 'DB_DATABASE', 'SESSION_DRIVER', 'SESSION_DOMAIN', 'SANCTUM_STATEFUL_DOMAINS', 'MAIL_MAILER', 'MAIL_HOST'];
-    foreach ($keys as $k) {
-        $v = config(strtolower(str_replace('_', '.', $k))) ?? env($k) ?? '<not set>';
-        if (str_contains($k, 'PASSWORD') || str_contains($k, 'SECRET'))
-            $v = '****';
-        echo "<tr><td>$k</td><td>$v</td></tr>";
+// ===== API TESTER =====
+elseif ($mode === 'api-test') {
+    echo "<div class='card'><h2>🔌 API Endpoint Tester</h2>";
+    echo "<p style='margin-bottom:15px;'>Test critical endpoints to find which one is failing</p>";
+
+    $endpoints = [
+        ['GET', '/booking/to-branches/1', 'Customer: Get destinations for branch 1'],
+        ['GET', '/ajax/item-rate-lookup?q=1&branch_id=1', 'Admin: Lookup item rate'],
+        ['GET', '/booking/items?branch_id=1', 'Customer: Get items for booking'],
+    ];
+
+    echo "<table><tr><th>Method</th><th>Endpoint</th><th>Description</th><th>Action</th></tr>";
+    foreach ($endpoints as $i => [$method, $url, $desc]) {
+        echo "<tr><td>$method</td><td><code>$url</code></td><td>$desc</td>";
+        echo "<td><a href='?mode=api-test&action=test&endpoint=$i' class='nav a'>Test</a></td></tr>";
+    }
+    echo "</table>";
+
+    // Run test
+    if ($action === 'test' && isset($_GET['endpoint'])) {
+        $idx = (int) $_GET['endpoint'];
+        if (isset($endpoints[$idx])) {
+            [$method, $url, $desc] = $endpoints[$idx];
+            echo "<div class='test-result'><h3>Testing: $url</h3>";
+
+            try {
+                $request = \Illuminate\Http\Request::create($url, $method);
+                $response = app()->handle($request);
+                $status = $response->getStatusCode();
+                $content = $response->getContent();
+
+                $class = $status === 200 ? 'test-pass' : 'test-fail';
+                echo "<div class='$class' style='margin-top:10px;'>";
+                echo "<strong>Status:</strong> $status<br>";
+                echo "<strong>Response:</strong><pre>" . htmlspecialchars(substr($content, 0, 2000)) . "</pre>";
+                echo "</div>";
+            } catch (\Exception $e) {
+                echo "<div class='test-fail'><strong>Exception:</strong> " . htmlspecialchars($e->getMessage()) . "</div>";
+            }
+            echo "</div>";
+        }
+    }
+    echo "</div>";
+}
+
+// ===== DATA INTEGRITY =====
+elseif ($mode === 'integrity') {
+    echo "<div class='card'><h2>🔗 Data Integrity Checker</h2>";
+    echo "<p style='margin-bottom:15px;'>Validates relationships between tables</p>";
+
+    $issues = [];
+
+    // Check: Do all branches have routes?
+    try {
+        $branchesWithoutRoutes = \DB::table('branches')
+            ->leftJoin('routes', 'branches.id', '=', 'routes.branch_id')
+            ->whereNull('routes.id')
+            ->pluck('branches.branch_name');
+        if ($branchesWithoutRoutes->count() > 0) {
+            $issues[] = ['warn', 'Branches without routes: ' . $branchesWithoutRoutes->implode(', ')];
+        }
+    } catch (\Exception $e) {
+        $issues[] = ['error', 'Routes table error: ' . $e->getMessage()];
+    }
+
+    // Check: Do all branches have ferry boats?
+    try {
+        $branchesWithoutBoats = \DB::table('branches')
+            ->leftJoin('ferryboats', 'branches.id', '=', 'ferryboats.branch_id')
+            ->whereNull('ferryboats.id')
+            ->pluck('branches.branch_name');
+        if ($branchesWithoutBoats->count() > 0) {
+            $issues[] = ['warn', 'Branches without ferryboats: ' . $branchesWithoutBoats->implode(', ')];
+        }
+    } catch (\Exception $e) {
+        $issues[] = ['error', 'Ferryboats table error: ' . $e->getMessage()];
+    }
+
+    // Check: Item rates with valid starting_date
+    try {
+        $futureRates = \DB::table('item_rates')->where('starting_date', '>', now())->count();
+        $activeRates = \DB::table('item_rates')
+            ->where('starting_date', '<=', now())
+            ->where(function ($q) {
+                $q->whereNull('ending_date')->orWhere('ending_date', '>=', now()); })
+            ->count();
+        if ($activeRates === 0) {
+            $issues[] = ['error', "No active item rates! All rates have future start dates or expired."];
+        } else {
+            $issues[] = ['ok', "Active item rates: $activeRates (Future: $futureRates)"];
+        }
+    } catch (\Exception $e) {
+        $issues[] = ['error', 'Item rates error: ' . $e->getMessage()];
+    }
+
+    // Check: Ferry schedules exist
+    try {
+        $schedulesPerBranch = \DB::table('ferry_schedules')
+            ->selectRaw('branch_id, COUNT(*) as cnt')
+            ->groupBy('branch_id')
+            ->pluck('cnt', 'branch_id');
+        $branchesWithSchedules = $schedulesPerBranch->count();
+        $totalBranches = \DB::table('branches')->count();
+        if ($branchesWithSchedules < $totalBranches) {
+            $issues[] = ['warn', "Only $branchesWithSchedules of $totalBranches branches have schedules"];
+        } else {
+            $issues[] = ['ok', "All $totalBranches branches have ferry schedules"];
+        }
+    } catch (\Exception $e) {
+        $issues[] = ['error', 'Schedules error: ' . $e->getMessage()];
+    }
+
+    echo "<table><tr><th>Status</th><th>Check Result</th></tr>";
+    foreach ($issues as [$status, $msg]) {
+        $badge = $status === 'ok' ? 'success' : ($status === 'warn' ? 'warning' : 'danger');
+        $icon = $status === 'ok' ? '✅' : ($status === 'warn' ? '⚠️' : '❌');
+        echo "<tr><td><span class='badge badge-$badge'>$icon</span></td><td>$msg</td></tr>";
     }
     echo "</table></div>";
+}
+
+// ===== ROUTES DEBUG =====
+elseif ($mode === 'routes-check') {
+    echo "<div class='card'><h2>🛤️ Routes & Destinations Debug</h2>";
+
+    // Show all routes data
+    echo "<h3 style='margin:15px 0 10px;'>Routes Table Contents</h3>";
+    try {
+        $routes = \DB::table('routes')
+            ->join('branches', 'routes.branch_id', '=', 'branches.id')
+            ->select('routes.route_id', 'routes.branch_id', 'branches.branch_name')
+            ->orderBy('routes.route_id')
+            ->get();
+
+        if ($routes->isEmpty()) {
+            echo "<p class='error'>❌ Routes table is EMPTY! Run: php artisan db:seed --force</p>";
+        } else {
+            echo "<table><tr><th>Route ID</th><th>Branch ID</th><th>Branch Name</th></tr>";
+            foreach ($routes as $r) {
+                echo "<tr><td>{$r->route_id}</td><td>{$r->branch_id}</td><td>{$r->branch_name}</td></tr>";
+            }
+            echo "</table>";
+        }
+    } catch (\Exception $e) {
+        echo "<p class='error'>❌ Error: " . htmlspecialchars($e->getMessage()) . "</p>";
+    }
+
+    // Test getToBranches logic
+    echo "<h3 style='margin:15px 0 10px;'>Test: Get Destinations for Branch</h3>";
+    $testBranchId = $_GET['test_branch'] ?? 1;
+    echo "<form method='get' style='margin-bottom:15px;'><input type='hidden' name='mode' value='routes-check'>";
+    echo "<label>Branch ID: <input type='number' name='test_branch' value='$testBranchId' style='width:80px;'></label> ";
+    echo "<button type='submit'>Test</button></form>";
+
+    try {
+        $routeIds = \DB::table('routes')->where('branch_id', $testBranchId)->pluck('route_id');
+        echo "<p>Route IDs for branch $testBranchId: " . ($routeIds->isEmpty() ? '<span class="error">NONE</span>' : $routeIds->implode(', ')) . "</p>";
+
+        if ($routeIds->isNotEmpty()) {
+            $toBranchIds = \DB::table('routes')
+                ->whereIn('route_id', $routeIds)
+                ->where('branch_id', '!=', $testBranchId)
+                ->distinct()
+                ->pluck('branch_id');
+
+            $destinations = \App\Models\Branch::whereIn('id', $toBranchIds)->get(['id', 'branch_name']);
+            echo "<p>Destinations: ";
+            if ($destinations->isEmpty()) {
+                echo "<span class='error'>NONE FOUND</span>";
+            } else {
+                foreach ($destinations as $d) {
+                    echo "<span class='badge badge-success'>{$d->branch_name}</span> ";
+                }
+            }
+            echo "</p>";
+        }
+    } catch (\Exception $e) {
+        echo "<p class='error'>❌ Error: " . htmlspecialchars($e->getMessage()) . "</p>";
+    }
+
+    echo "</div>";
 }
