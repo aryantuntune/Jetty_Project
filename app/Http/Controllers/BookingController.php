@@ -73,11 +73,11 @@ class BookingController extends Controller
     public function getItems($branchId)
     {
         // Get items for specific branch OR global items (null branch_id)
-        $items = \App\Models\ItemRate::where(function($query) use ($branchId) {
-                $query->where('branch_id', $branchId)
-                      ->orWhereNull('branch_id');
-            })
-            ->where('is_active', 'Y')
+        $items = \App\Models\ItemRate::where(function ($query) use ($branchId) {
+            $query->where('branch_id', $branchId)
+                ->orWhereNull('branch_id');
+        })
+            ->where('is_active', true)  // Boolean, not 'Y'
             ->effective()   // apply date filter
             ->select('id', 'item_name')
             ->orderBy('item_name')
@@ -99,26 +99,26 @@ class BookingController extends Controller
     {
         // ✅ Store everything in session FIRST
         session([
-            'from_branch'   => $request->from_branch,
-            'to_branch'     => $request->to_branch,
-            'items'         => $request->items,
-            'grand_total'   => $request->grand_total,
-            'booking_date'  => now()->toDateString(), // OR pass from form
+            'from_branch' => $request->from_branch,
+            'to_branch' => $request->to_branch,
+            'items' => $request->items,
+            'grand_total' => $request->grand_total,
+            'booking_date' => now()->toDateString(), // OR pass from form
             'departure_time' => now()->format('H:i:s'), // OR actual ferry time
         ]);
 
         $api = new Api(env('RAZORPAY_KEY'), env('RAZORPAY_SECRET'));
 
         $order = $api->order->create([
-            'receipt'  => 'RCPT_' . time(),
-            'amount'   => $request->grand_total * 100,
+            'receipt' => 'RCPT_' . time(),
+            'amount' => $request->grand_total * 100,
             'currency' => 'INR',
         ]);
 
         return response()->json([
             'order_id' => $order['id'],
-            'amount'   => $order['amount'],
-            'key'      => env('RAZORPAY_KEY'),
+            'amount' => $order['amount'],
+            'key' => env('RAZORPAY_KEY'),
             'customer' => auth()->guard('customer')->user(),
         ]);
     }
@@ -147,9 +147,9 @@ class BookingController extends Controller
 
             $items = collect(session('items'))->map(function ($item) {
                 return [
-                    'item_name'  => $item['item_name'] ?? '',
-                    'quantity'   => $item['quantity'] ?? '',
-                    'rate'       => $item['rate'] ?? '',
+                    'item_name' => $item['item_name'] ?? '',
+                    'quantity' => $item['quantity'] ?? '',
+                    'rate' => $item['rate'] ?? '',
                     'vehicle_no' => $item['vehicle_no'] ?? null,
                 ];
             });
@@ -160,23 +160,23 @@ class BookingController extends Controller
                 $ticketNo = $this->generateTicketNo();
             } while (Booking::where('ticket_id', $ticketNo)->exists());
 
-            $booking =    Booking::create([
-                'ticket_id'       => $ticketNo, // OR proper ticket number
-                'customer_id'     => auth()->guard('customer')->id(),
-                'ferry_id'        => 1, // TEMP or actual ferry ID
+            $booking = Booking::create([
+                'ticket_id' => $ticketNo, // OR proper ticket number
+                'customer_id' => auth()->guard('customer')->id(),
+                'ferry_id' => 1, // TEMP or actual ferry ID
 
-                'from_branch'     => session('from_branch'),
-                'to_branch'       => session('to_branch'),
+                'from_branch' => session('from_branch'),
+                'to_branch' => session('to_branch'),
 
-                'booking_date'    => session('booking_date'),
-                'departure_time'  => session('departure_time'),
+                'booking_date' => session('booking_date'),
+                'departure_time' => session('departure_time'),
 
-                'items'           => json_encode(session('items')),
-                'total_amount'    => session('grand_total'),
+                'items' => json_encode(session('items')),
+                'total_amount' => session('grand_total'),
 
-                'payment_id'      => $request->razorpay_payment_id,
-                'booking_source'  => 'web',
-                'status'          => 'success',
+                'payment_id' => $request->razorpay_payment_id,
+                'booking_source' => 'web',
+                'status' => 'success',
             ]);
 
             $booking->load(['customer', 'fromBranch', 'toBranch']);
@@ -200,8 +200,8 @@ class BookingController extends Controller
 
     private function generateTicketNo()
     {
-        $year   = Carbon::now()->format('Y');
-        $date   = Carbon::now()->format('md'); // MMDD
+        $year = Carbon::now()->format('Y');
+        $date = Carbon::now()->format('md'); // MMDD
         $random = random_int(100000, 999999);
 
         return "{$year}{$date}{$random}";

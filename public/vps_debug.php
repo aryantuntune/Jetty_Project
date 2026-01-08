@@ -56,7 +56,7 @@ button:hover { opacity: 0.9; }
 echo "<h1>🔬 VPS Debug Dashboard v5.0</h1>";
 
 // Navigation
-$modes = ['dashboard' => '📊 Overview', 'logs' => '📜 Smart Logs', 'api-test' => '🔌 API Tester', 'integrity' => '🔗 Data Integrity', 'routes-check' => '🛤️ Routes Debug'];
+$modes = ['dashboard' => '📊 Overview', 'logs' => '📜 Smart Logs', 'live-logs' => '🔴 Live Logs', 'api-test' => '🔌 API Tester', 'integrity' => '🔗 Data Integrity', 'routes-check' => '🛤️ Routes Debug'];
 echo "<div class='nav'>";
 foreach ($modes as $key => $label) {
     $class = ($mode === $key) ? 'active' : '';
@@ -307,7 +307,8 @@ elseif ($mode === 'integrity') {
         $activeRates = \DB::table('item_rates')
             ->where('starting_date', '<=', now())
             ->where(function ($q) {
-                $q->whereNull('ending_date')->orWhere('ending_date', '>=', now()); })
+                $q->whereNull('ending_date')->orWhere('ending_date', '>=', now());
+            })
             ->count();
         if ($activeRates === 0) {
             $issues[] = ['error', "No active item rates! All rates have future start dates or expired."];
@@ -405,3 +406,63 @@ elseif ($mode === 'routes-check') {
 
     echo "</div>";
 }
+
+// ===== LIVE LOGS =====
+elseif ($mode === 'live-logs') {
+    $autoRefresh = isset($_GET['auto']) && $_GET['auto'] === '1';
+
+    echo "<div class='card'>";
+    echo "<h2>🔴 Live Log Stream</h2>";
+    echo "<div style='margin-bottom:15px;'>";
+    echo "<a href='?mode=live-logs&auto=1' class='nav a' style='" . ($autoRefresh ? "background:var(--success);color:#000;" : "") . "'>▶ Auto-Refresh ON</a> ";
+    echo "<a href='?mode=live-logs' class='nav a' style='" . (!$autoRefresh ? "background:var(--danger);color:#fff;" : "") . "'>⏸ Auto-Refresh OFF</a> ";
+    echo "<a href='?mode=live-logs&clear=1' class='nav a' style='background:var(--warning);color:#000;'>🗑️ Clear Logs</a>";
+    echo "</div>";
+
+    // Clear logs if requested
+    if (isset($_GET['clear']) && $_GET['clear'] === '1') {
+        $logFile = storage_path('logs/laravel.log');
+        if (file_exists($logFile)) {
+            file_put_contents($logFile, '');
+            echo "<p class='ok'>✅ Log file cleared!</p>";
+        }
+    }
+
+    // Auto-refresh script
+    if ($autoRefresh) {
+        echo "<script>setTimeout(function(){ location.reload(); }, 3000);</script>";
+        echo "<p style='color:var(--success);'>🔄 Refreshing every 3 seconds...</p>";
+    }
+
+    // Show last 50 log lines in real-time format
+    $logFile = storage_path('logs/laravel.log');
+    if (file_exists($logFile)) {
+        $lines = file($logFile);
+        $recent = array_slice($lines, -50);
+
+        echo "<div style='background:#0d1117;border:1px solid var(--border);border-radius:6px;padding:10px;font-family:monospace;font-size:11px;max-height:500px;overflow-y:auto;'>";
+        foreach ($recent as $line) {
+            $line = htmlspecialchars(trim($line));
+            if (stripos($line, 'ERROR') !== false || stripos($line, 'Exception') !== false) {
+                echo "<div style='color:var(--danger);'>$line</div>";
+            } elseif (stripos($line, 'WARNING') !== false || stripos($line, 'WARN') !== false) {
+                echo "<div style='color:var(--warning);'>$line</div>";
+            } elseif (stripos($line, 'INFO') !== false) {
+                echo "<div style='color:var(--accent);'>$line</div>";
+            } else {
+                echo "<div style='color:var(--text);opacity:0.7;'>$line</div>";
+            }
+        }
+        echo "</div>";
+
+        // Stats
+        $fileSize = filesize($logFile);
+        $lineCount = count($lines);
+        echo "<p style='margin-top:10px;font-size:12px;opacity:0.7;'>📊 Total lines: $lineCount | File size: " . round($fileSize / 1024, 1) . " KB</p>";
+    } else {
+        echo "<p class='warn'>No log file found at: $logFile</p>";
+    }
+
+    echo "</div>";
+}
+

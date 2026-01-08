@@ -26,6 +26,6 @@ class ItemCategory extends Model
 
     public function scopeActive($query)
     {
-        return $query->where('is_active', 'Y');
+        return $query->where('is_active', true);
     }
 }
