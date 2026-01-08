@@ -225,13 +225,55 @@ elseif ($mode === 'logs') {
 
 // ===== API TESTER =====
 elseif ($mode === 'api-test') {
-    echo "<div class='card'><h2>🔌 API Endpoint Tester</h2>";
-    echo "<p style='margin-bottom:15px;'>Test critical endpoints to find which one is failing</p>";
+    echo "<div class='card'><h2>🔌 Page & API Tester</h2>";
+    echo "<p style='margin-bottom:15px;'>Test critical pages/endpoints with authentication</p>";
 
+    // Test ticket-entry directly with authentication  
+    echo "<h3 style='margin:15px 0 10px;'>🎫 Ticket Entry Page Test</h3>";
+
+    if ($action === 'test-ticket-entry') {
+        echo "<div class='test-result' style='margin-bottom:15px;'>";
+        try {
+            // Login as admin first
+            $admin = \App\Models\User::where('email', 'superadmin@gmail.com')->first();
+            if (!$admin) {
+                throw new \Exception("Admin user not found! Run db:seed first.");
+            }
+
+            \Auth::login($admin);
+
+            // Now test the controller directly
+            $request = \Illuminate\Http\Request::create('/ticket-entry', 'GET');
+            $request->setUserResolver(fn() => $admin);
+
+            $controller = new \App\Http\Controllers\TicketEntryController();
+            $response = $controller->create($request);
+
+            echo "<div class='test-pass'>";
+            echo "<strong>✅ SUCCESS!</strong> Page loaded without error.<br>";
+            echo "Response type: " . get_class($response);
+            echo "</div>";
+
+        } catch (\Throwable $e) {
+            echo "<div class='test-fail'>";
+            echo "<strong>❌ EXCEPTION FOUND!</strong><br><br>";
+            echo "<strong>Error Class:</strong> " . get_class($e) . "<br>";
+            echo "<strong>Message:</strong> " . htmlspecialchars($e->getMessage()) . "<br>";
+            echo "<strong>File:</strong> " . $e->getFile() . ":" . $e->getLine() . "<br><br>";
+            echo "<strong>Stack Trace:</strong><pre style='font-size:10px;max-height:300px;overflow:auto;'>" . htmlspecialchars($e->getTraceAsString()) . "</pre>";
+            echo "</div>";
+        }
+        echo "</div>";
+    }
+
+    echo "<a href='?mode=api-test&action=test-ticket-entry' style='background:var(--accent);color:#000;padding:10px 20px;border-radius:6px;text-decoration:none;font-weight:600;display:inline-block;margin-bottom:15px;'>🧪 Test Ticket Entry Page</a>";
+
+    // Other endpoints
+    echo "<h3 style='margin:15px 0 10px;'>📡 API Endpoints</h3>";
     $endpoints = [
         ['GET', '/booking/to-branches/1', 'Customer: Get destinations for branch 1'],
         ['GET', '/ajax/item-rate-lookup?q=1&branch_id=1', 'Admin: Lookup item rate'],
-        ['GET', '/booking/items?branch_id=1', 'Customer: Get items for booking'],
+        ['GET', '/booking/items/1', 'Customer: Get items for booking'],
     ];
 
     echo "<table><tr><th>Method</th><th>Endpoint</th><th>Description</th><th>Action</th></tr>";
