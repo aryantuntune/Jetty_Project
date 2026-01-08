@@ -56,7 +56,7 @@ button:hover { opacity: 0.9; }
 echo "<h1>🔬 VPS Debug Dashboard v5.0</h1>";
 
 // Navigation
-$modes = ['dashboard' => '📊 Overview', 'logs' => '📜 Smart Logs', 'live-logs' => '🔴 Live Logs', 'api-test' => '🔌 API Tester', 'integrity' => '🔗 Data Integrity', 'routes-check' => '🛤️ Routes Debug'];
+$modes = ['dashboard' => '📊 Overview', 'logs' => '📜 Smart Logs', 'live-logs' => '🔴 Live Logs', 'cache-tools' => '🧹 Cache Tools', 'api-test' => '🔌 API Tester', 'integrity' => '🔗 Data Integrity', 'routes-check' => '🛤️ Routes Debug'];
 echo "<div class='nav'>";
 foreach ($modes as $key => $label) {
     $class = ($mode === $key) ? 'active' : '';
@@ -466,3 +466,98 @@ elseif ($mode === 'live-logs') {
     echo "</div>";
 }
 
+// ===== CACHE TOOLS =====
+elseif ($mode === 'cache-tools') {
+    echo "<div class='card'><h2>🧹 Cache Management Tools</h2>";
+
+    // Git Info
+    echo "<h3 style='margin:15px 0 10px;'>📦 Git Status</h3>";
+    $gitBranch = trim(shell_exec('cd ' . base_path() . ' && git branch --show-current 2>&1') ?? 'unknown');
+    $gitStatus = trim(shell_exec('cd ' . base_path() . ' && git status --porcelain 2>&1') ?? '');
+    $gitLog = trim(shell_exec('cd ' . base_path() . ' && git log -1 --oneline 2>&1') ?? '');
+
+    echo "<table>";
+    echo "<tr><td><strong>Branch:</strong></td><td>$gitBranch</td></tr>";
+    echo "<tr><td><strong>Last Commit:</strong></td><td>$gitLog</td></tr>";
+    echo "<tr><td><strong>Uncommitted Changes:</strong></td><td>" . ($gitStatus ? "<span class='error'>YES - " . substr(htmlspecialchars($gitStatus), 0, 100) . "</span>" : "<span class='ok'>Clean</span>") . "</td></tr>";
+    echo "</table>";
+
+    // View File Version Check
+    echo "<h3 style='margin:15px 0 10px;'>📄 View Version Check</h3>";
+    $viewFile = resource_path('views/tickets/create.blade.php');
+    if (file_exists($viewFile)) {
+        $viewContent = file_get_contents($viewFile);
+        if (preg_match('/VIEW VERSION: ([^\-\}]+)/', $viewContent, $m)) {
+            echo "<p class='ok'>✅ Ticket Entry View Version: <strong>{$m[1]}</strong></p>";
+        } else {
+            echo "<p class='warn'>⚠️ No version marker found in view file</p>";
+        }
+        echo "<p style='font-size:12px;opacity:0.7;'>File modified: " . date('Y-m-d H:i:s', filemtime($viewFile)) . "</p>";
+    } else {
+        echo "<p class='error'>❌ View file not found!</p>";
+    }
+
+    // Compiled Views Count
+    $compiledViewsDir = storage_path('framework/views');
+    $compiledCount = is_dir($compiledViewsDir) ? count(glob($compiledViewsDir . '/*.php')) : 0;
+    echo "<p>Compiled views in cache: <strong>$compiledCount</strong></p>";
+
+    // Action Buttons
+    echo "<h3 style='margin:15px 0 10px;'>🔧 Actions</h3>";
+    echo "<div style='display:flex;gap:10px;flex-wrap:wrap;'>";
+    echo "<a href='?mode=cache-tools&action=git-pull' style='background:var(--accent);color:#000;padding:10px 20px;border-radius:6px;text-decoration:none;font-weight:600;'>📥 Git Pull</a>";
+    echo "<a href='?mode=cache-tools&action=clear-views' style='background:var(--warning);color:#000;padding:10px 20px;border-radius:6px;text-decoration:none;font-weight:600;'>🗑️ Delete Compiled Views</a>";
+    echo "<a href='?mode=cache-tools&action=clear-all' style='background:var(--danger);color:#fff;padding:10px 20px;border-radius:6px;text-decoration:none;font-weight:600;'>💥 Clear ALL Caches</a>";
+    echo "</div>";
+
+    // Handle Actions
+    if ($action === 'git-pull') {
+        echo "<div class='test-result test-pass' style='margin-top:15px;'>";
+        echo "<h4>Git Pull Result:</h4>";
+        $output = shell_exec('cd ' . base_path() . ' && git pull origin master 2>&1');
+        echo "<pre>" . htmlspecialchars($output) . "</pre>";
+        echo "</div>";
+    }
+
+    if ($action === 'clear-views') {
+        echo "<div class='test-result test-pass' style='margin-top:15px;'>";
+        $count = 0;
+        $files = glob(storage_path('framework/views') . '/*.php');
+        foreach ($files as $file) {
+            if (unlink($file))
+                $count++;
+        }
+        echo "<h4>✅ Deleted $count compiled view files</h4>";
+        echo "</div>";
+    }
+
+    if ($action === 'clear-all') {
+        echo "<div class='test-result test-pass' style='margin-top:15px;'>";
+        echo "<h4>Cache Clear Results:</h4><pre>";
+
+        // Delete compiled views
+        $files = glob(storage_path('framework/views') . '/*.php');
+        foreach ($files as $file) {
+            @unlink($file);
+        }
+        echo "✅ Compiled views deleted\n";
+
+        // Delete cache files
+        $cacheFiles = glob(storage_path('framework/cache/data') . '/*');
+        foreach ($cacheFiles as $file) {
+            @unlink($file);
+        }
+        echo "✅ Cache files deleted\n";
+
+        // Try artisan commands
+        $commands = ['config:clear', 'view:clear', 'cache:clear', 'route:clear'];
+        foreach ($commands as $cmd) {
+            $result = shell_exec('cd ' . base_path() . ' && php artisan ' . $cmd . ' 2>&1');
+            echo "artisan $cmd: " . trim($result) . "\n";
+        }
+
+        echo "</pre></div>";
+    }
+
+    echo "</div>";
+}

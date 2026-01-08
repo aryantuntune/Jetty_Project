@@ -1,50 +1,104 @@
 @extends('layouts.admin')
+{{-- VIEW VERSION: v2.0-modern-2026-01-08 --}}
 
 @section('title', 'Ticket Entry')
-@section('page-title', 'Ticket Entry')
+@section('page-title', 'Ticket Entry / Create New Booking')
 
 @section('content')
 <style>
-/* Modern styling overrides */
-.ticket-card {
+/* Two Column Layout */
+.main-grid {
+    display: grid;
+    grid-template-columns: 1fr 380px;
+    gap: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+@media (max-width: 1200px) {
+    .main-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Card Styles */
+.card {
     background: white;
-    border-radius: 1rem;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    border-radius: 0.75rem;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
     border: 1px solid #e2e8f0;
     overflow: hidden;
 }
 
-.ticket-header {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
-    padding: 1rem 1.5rem;
-    font-weight: 700;
-    font-size: 1.25rem;
+.card-header {
+    padding: 1rem 1.25rem;
+    border-bottom: 1px solid #e2e8f0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.card-title {
     display: flex;
     align-items: center;
     gap: 0.5rem;
+    font-weight: 600;
+    font-size: 1rem;
+    color: #1e293b;
 }
 
-.form-strip {
-    background: #f8fafc;
-    border-bottom: 1px solid #e2e8f0;
+.card-title i {
+    color: #6366f1;
+    width: 1.25rem;
+    height: 1.25rem;
+}
+
+.card-body {
     padding: 1.25rem;
 }
 
-.form-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 1rem;
+/* Badge Styles */
+.badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.25rem 0.75rem;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 500;
 }
 
-.form-group label {
-    display: block;
-    font-size: 0.75rem;
-    font-weight: 600;
-    color: #64748b;
+.badge-primary {
+    background: #eff6ff;
+    color: #2563eb;
+}
+
+.badge-success {
+    background: #dcfce7;
+    color: #16a34a;
+}
+
+/* Form Controls */
+.form-group {
+    margin-bottom: 1rem;
+}
+
+.form-group:last-child {
+    margin-bottom: 0;
+}
+
+.form-label {
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    color: #475569;
     margin-bottom: 0.375rem;
-    text-transform: uppercase;
-    letter-spacing: 0.025em;
+}
+
+.form-label i {
+    width: 0.875rem;
+    height: 0.875rem;
+    color: #94a3b8;
 }
 
 .form-control {
@@ -59,15 +113,101 @@
 }
 
 .form-control:focus {
-    border-color: #667eea;
-    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    border-color: #6366f1;
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
 }
 
-.form-control:read-only {
-    background: #f1f5f9;
+.form-control:read-only,
+.form-control:disabled {
+    background: #f8fafc;
+    color: #64748b;
 }
 
-/* Table styling */
+.form-control::placeholder {
+    color: #94a3b8;
+}
+
+/* Trip Info Grid */
+.trip-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+}
+
+@media (max-width: 640px) {
+    .trip-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Schedule Section */
+.schedule-section {
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid #e2e8f0;
+}
+
+.schedule-row {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.schedule-row .form-control {
+    flex: 1;
+}
+
+/* Note Box */
+.note-box {
+    background: #fefce8;
+    border: 1px solid #fde047;
+    border-radius: 0.5rem;
+    padding: 0.75rem 1rem;
+    margin-top: 1rem;
+}
+
+.note-title {
+    font-weight: 600;
+    color: #b45309;
+    font-size: 0.8125rem;
+}
+
+.note-text {
+    color: #92400e;
+    font-size: 0.8125rem;
+    margin-top: 0.125rem;
+}
+
+/* Line Items Card */
+.line-items-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem 1.25rem;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.btn-add-row {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    padding: 0.5rem 1rem;
+    background: white;
+    border: 1px solid #e2e8f0;
+    border-radius: 0.5rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #374151;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-add-row:hover {
+    background: #f8fafc;
+    border-color: #cbd5e1;
+}
+
+/* Items Table */
 .items-table-wrap {
     overflow-x: auto;
 }
@@ -78,20 +218,20 @@
 }
 
 .items-table thead th {
-    background: #f1f5f9;
+    background: #f8fafc;
     padding: 0.75rem 0.625rem;
-    font-size: 0.75rem;
+    font-size: 0.7rem;
     font-weight: 600;
-    color: #475569;
+    color: #64748b;
     text-transform: uppercase;
-    letter-spacing: 0.025em;
+    letter-spacing: 0.05em;
     text-align: left;
-    border-bottom: 2px solid #e2e8f0;
+    border-bottom: 1px solid #e2e8f0;
     white-space: nowrap;
 }
 
 .items-table tbody td {
-    padding: 0.5rem 0.375rem;
+    padding: 0.5rem 0.5rem;
     border-bottom: 1px solid #f1f5f9;
     vertical-align: middle;
 }
@@ -109,126 +249,175 @@
     text-align: right;
 }
 
-/* Summary section */
-.summary-section {
-    background: #f8fafc;
-    border-top: 1px solid #e2e8f0;
-    padding: 1.25rem;
-}
-
-.summary-grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 1rem;
-    max-width: 500px;
-    margin-left: auto;
-}
-
-.summary-row {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-}
-
-.summary-label {
-    font-size: 0.875rem;
-    font-weight: 600;
-    color: #475569;
-    min-width: 100px;
-}
-
-.summary-box {
-    background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
-    color: #4ade80;
-    font-weight: 700;
-    font-size: 1.25rem;
-    padding: 0.625rem 1rem;
-    border-radius: 0.5rem;
-    text-align: right;
-    min-width: 120px;
-    font-family: 'Courier New', monospace;
-}
-
-/* Footer */
-.ticket-footer {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    padding: 1rem 1.5rem;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-}
-
-.print-checkbox {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    color: white;
-    font-size: 0.875rem;
-}
-
-.print-checkbox input[type="checkbox"] {
-    width: 1.125rem;
-    height: 1.125rem;
-    accent-color: #4ade80;
-}
-
-/* Buttons */
-.btn-add-row {
-    background: white;
-    border: 1px solid #e2e8f0;
-    padding: 0.5rem 1rem;
-    border-radius: 0.5rem;
-    font-size: 0.875rem;
+.row-number {
+    color: #94a3b8;
     font-weight: 500;
-    cursor: pointer;
-    transition: all 0.2s;
-    display: inline-flex;
-    align-items: center;
-    gap: 0.375rem;
-}
-
-.btn-add-row:hover {
-    background: #f8fafc;
-    border-color: #cbd5e1;
-}
-
-.btn-save {
-    background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
-    color: white;
-    border: none;
-    padding: 0.75rem 1.5rem;
-    border-radius: 0.625rem;
-    font-weight: 600;
-    font-size: 0.9375rem;
-    cursor: pointer;
-    transition: all 0.2s;
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    box-shadow: 0 4px 14px rgba(34, 197, 94, 0.3);
-}
-
-.btn-save:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 6px 20px rgba(34, 197, 94, 0.4);
+    font-size: 0.8125rem;
+    text-align: center;
 }
 
 .btn-remove {
     background: #fee2e2;
     color: #dc2626;
     border: none;
-    width: 2rem;
-    height: 2rem;
+    width: 1.75rem;
+    height: 1.75rem;
     border-radius: 0.375rem;
     cursor: pointer;
     display: inline-flex;
     align-items: center;
     justify-content: center;
     transition: all 0.2s;
+    font-size: 0.875rem;
 }
 
 .btn-remove:hover {
     background: #fecaca;
+}
+
+/* Footer Section */
+.footer-section {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 2rem;
+    padding: 1.25rem;
+    background: #f8fafc;
+    border-top: 1px solid #e2e8f0;
+}
+
+@media (max-width: 900px) {
+    .footer-section {
+        flex-direction: column;
+    }
+}
+
+.print-checkbox {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: #475569;
+    font-size: 0.875rem;
+    cursor: pointer;
+}
+
+.print-checkbox input[type="checkbox"] {
+    width: 1.125rem;
+    height: 1.125rem;
+    accent-color: #6366f1;
+}
+
+/* Summary & Actions */
+.summary-actions {
+    display: flex;
+    align-items: flex-start;
+    gap: 2rem;
+}
+
+@media (max-width: 900px) {
+    .summary-actions {
+        flex-direction: column;
+        width: 100%;
+    }
+}
+
+.summary-box {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.summary-row {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    justify-content: flex-end;
+}
+
+.summary-label {
+    font-size: 0.8125rem;
+    color: #64748b;
+    min-width: 85px;
+    text-align: right;
+}
+
+.summary-value {
+    font-weight: 700;
+    font-size: 1rem;
+    color: #1e293b;
+    min-width: 80px;
+    text-align: right;
+}
+
+.summary-value.net-total {
+    color: #16a34a;
+    font-size: 1.125rem;
+}
+
+.summary-input {
+    width: 80px;
+    padding: 0.375rem 0.5rem;
+    border: 1px solid #e2e8f0;
+    border-radius: 0.375rem;
+    font-size: 0.8125rem;
+    text-align: right;
+    background: white;
+    outline: none;
+}
+
+.summary-input:focus {
+    border-color: #6366f1;
+    box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.1);
+}
+
+/* Action Buttons */
+.action-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.btn-save {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.5rem;
+    background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+    color: white;
+    border: none;
+    border-radius: 0.5rem;
+    font-weight: 600;
+    font-size: 0.9375rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    box-shadow: 0 4px 14px rgba(99, 102, 241, 0.3);
+}
+
+.btn-save:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 20px rgba(99, 102, 241, 0.4);
+}
+
+.btn-pay {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.5rem;
+    background: white;
+    color: #374151;
+    border: 1px solid #e2e8f0;
+    border-radius: 0.5rem;
+    font-weight: 500;
+    font-size: 0.9375rem;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-pay:hover {
+    background: #f8fafc;
+    border-color: #cbd5e1;
 }
 
 /* Modals */
@@ -248,7 +437,7 @@
 
 .modal-content {
     background: white;
-    border-radius: 1rem;
+    border-radius: 0.75rem;
     max-width: 420px;
     width: 90%;
     box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
@@ -256,11 +445,11 @@
 }
 
 .modal-header {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
     color: white;
-    padding: 1rem 1.5rem;
+    padding: 1rem 1.25rem;
     font-weight: 600;
-    font-size: 1.125rem;
+    font-size: 1rem;
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -270,8 +459,8 @@
     background: rgba(255,255,255,0.2);
     border: none;
     color: white;
-    width: 2rem;
-    height: 2rem;
+    width: 1.75rem;
+    height: 1.75rem;
     border-radius: 0.375rem;
     cursor: pointer;
     display: flex;
@@ -280,11 +469,11 @@
 }
 
 .modal-body {
-    padding: 1.5rem;
+    padding: 1.25rem;
 }
 
 .modal-footer {
-    padding: 1rem 1.5rem;
+    padding: 1rem 1.25rem;
     background: #f8fafc;
     display: flex;
     justify-content: flex-end;
@@ -320,7 +509,7 @@
     opacity: 0.9;
 }
 
-/* Guest Modal specific */
+/* Guest Modal */
 .divider-text {
     text-align: center;
     color: #94a3b8;
@@ -354,7 +543,7 @@
     border-bottom: none;
 }
 
-/* Success alert */
+/* Alert */
 .alert-success {
     background: #dcfce7;
     border: 1px solid #86efac;
@@ -370,159 +559,213 @@
     <input type="hidden" name="guest_id" id="guest_id_hidden">
     <input type="hidden" name="payment_mode" id="payment_mode" value="">
 
-    <div class="ticket-card">
-        <div class="ticket-header">
-            <i data-lucide="ticket" class="w-6 h-6"></i>
-            Ticket Entry
-        </div>
+    <!-- Main Two Column Grid -->
+    <div class="main-grid">
+        <!-- Left Column - Trip Information -->
+        <div class="card">
+            <div class="card-header">
+                <div class="card-title">
+                    <i data-lucide="ship"></i>
+                    Trip Information
+                </div>
+                <span class="badge badge-primary">Active Schedule</span>
+            </div>
+            <div class="card-body">
+                <div class="trip-grid">
+                    <!-- Branch Name -->
+                    <div class="form-group">
+                        <label class="form-label">
+                            <i data-lucide="map-pin"></i>
+                            Branch Name
+                        </label>
+                        @if(in_array($user->role_id, [1,2]))
+                            @php($selectedBranch = (string) old('branch_id', request('branch_id', '')))
+                            <select name="branch_id" class="form-control" id="branchSelect">
+                                <option value="" {{ $selectedBranch === '' ? 'selected' : '' }}>-- Select Branch --</option>
+                                @foreach($branches as $branch)
+                                    <option value="{{ $branch->id }}" {{ $selectedBranch === (string) $branch->id ? 'selected' : '' }}>
+                                        {{ $branch->branch_name }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        @else
+                            <input class="form-control" value="{{ $branchName }}" readonly>
+                            <input type="hidden" name="branch_id" id="branch_id" value="{{ $branchId }}">
+                        @endif
+                    </div>
 
-        <!-- Form Fields -->
-        <div class="form-strip">
-            <div class="form-grid">
-                <!-- Branch -->
-                <div class="form-group">
-                    <label>Branch Name</label>
-                    @if(in_array($user->role_id, [1,2]))
-                        @php($selectedBranch = (string) old('branch_id', request('branch_id', '')))
-                        <select name="branch_id" class="form-control" id="branchSelect">
-                            <option value="" {{ $selectedBranch === '' ? 'selected' : '' }}>-- Select Branch --</option>
-                            @foreach($branches as $branch)
-                                <option value="{{ $branch->id }}" {{ $selectedBranch === (string) $branch->id ? 'selected' : '' }}>
-                                    {{ $branch->branch_name }}
+                    <!-- Ferry Boat -->
+                    <div class="form-group">
+                        <label class="form-label">
+                            <i data-lucide="anchor"></i>
+                            Ferry Boat
+                        </label>
+                        <select name="ferry_boat_id" class="form-control" required id="ferryBoatSelect">
+                            @foreach($ferryboatsBranch as $fb)
+                                <option value="{{ $fb->id }}" @selected(old('ferry_boat_id')==$fb->id)>
+                                    {{ $fb->name }} (Capacity: {{ $fb->pax_capacity ?? 'N/A' }})
                                 </option>
                             @endforeach
                         </select>
-                    @else
-                        <input class="form-control" value="{{ $branchName }}" readonly>
-                        <input type="hidden" name="branch_id" value="{{ $branchId }}">
-                    @endif
-                </div>
-
-                <!-- Ferry Boat -->
-                <div class="form-group">
-                    <label>Ferry Boat</label>
-                    <select name="ferry_boat_id" class="form-control" required id="ferryBoatSelect">
-                        @foreach($ferryboatsBranch as $fb)
-                            <option value="{{ $fb->id }}" @selected(old('ferry_boat_id')==$fb->id)>
-                                {{ $fb->name }}
-                            </option>
-                        @endforeach
-                    </select>
-                </div>
-
-                <!-- Customer Name -->
-                <div class="form-group">
-                    <label>Customer Name</label>
-                    <input class="form-control" type="text" name="customer_name" value="{{ old('customer_name') }}" placeholder="Enter name">
-                </div>
-
-                <!-- Mobile -->
-                <div class="form-group">
-                    <label>Mobile</label>
-                    <input class="form-control" type="tel" name="customer_mobile" value="{{ old('customer_mobile') }}" placeholder="+91XXXXXXXXXX">
-                </div>
-
-                <!-- Ferry Time -->
-                @if(in_array($user->role_id, [1,2]))
-                    <div class="form-group">
-                        <label>Ferry Time</label>
-                        <select id="ferryTimeSelect" class="form-control">
-                            <option value="">-- Select Schedule --</option>
-                            @foreach($ferrySchedulesPerBranch[$branchId] ?? [] as $fs)
-                                <option value="{{ $fs['time'] }}">{{ $fs['time'] }}</option>
-                            @endforeach
-                        </select>
-                        <input type="hidden" name="ferry_time" id="ferryTimeInput" value="">
-                        <input type="hidden" name="ferry_type" value="REGULAR">
                     </div>
-                @else
-                    @if(!$hideFerryTime)
-                        <div class="form-group">
-                            <label>Ferry Time</label>
-                            @php($ferryIso = old('ferry_time', $nextFerryTime))
-                            <input type="datetime-local" class="form-control" value="{{ $ferryIso }}" disabled>
-                            <input type="hidden" name="ferry_time" value="{{ $ferryIso }}">
-                            <input type="hidden" name="ferry_type" value="REGULAR">
+                </div>
+
+                <!-- Schedule & Time -->
+                <div class="schedule-section">
+                    <div class="form-group">
+                        <label class="form-label">
+                            <i data-lucide="clock"></i>
+                            Schedule & Time
+                        </label>
+                        <div class="schedule-row">
+                            @if(in_array($user->role_id, [1,2]))
+                                <select id="ferryTimeSelect" class="form-control">
+                                    <option value="">-- Select Schedule --</option>
+                                    @foreach($ferrySchedulesPerBranch[$branchId] ?? [] as $fs)
+                                        <option value="{{ $fs['time'] }}">{{ $fs['time'] }}</option>
+                                    @endforeach
+                                </select>
+                                <input type="hidden" name="ferry_time" id="ferryTimeInput" value="">
+                                <input type="hidden" name="ferry_type" value="REGULAR">
+                            @else
+                                @if(!$hideFerryTime)
+                                    @php($ferryIso = old('ferry_time', $nextFerryTime))
+                                    <select class="form-control" disabled>
+                                        <option>{{ \Carbon\Carbon::parse($ferryIso)->format('h:i A') }}</option>
+                                    </select>
+                                    <input type="hidden" name="ferry_time" value="{{ $ferryIso }}">
+                                    <input type="hidden" name="ferry_type" value="REGULAR">
+                                @else
+                                    <select class="form-control">
+                                        <option value="">-- Select Schedule --</option>
+                                    </select>
+                                    <input type="hidden" name="ferry_type" value="REGULAR">
+                                @endif
+                            @endif
+                            <span class="badge badge-success">Status: On Time</span>
                         </div>
-                    @else
-                        <input type="hidden" name="ferry_type" value="REGULAR">
-                    @endif
-                @endif
+                    </div>
+                </div>
             </div>
         </div>
 
-        <!-- Add Row Button -->
-        <div style="padding: 0.75rem 1.25rem; text-align: right; background: white;">
+        <!-- Right Column - Passenger Details -->
+        <div class="card">
+            <div class="card-header">
+                <div class="card-title">
+                    <i data-lucide="user"></i>
+                    Passenger Details
+                </div>
+            </div>
+            <div class="card-body">
+                <!-- Customer Name -->
+                <div class="form-group">
+                    <label class="form-label">Customer Name</label>
+                    <input class="form-control" type="text" name="customer_name" value="{{ old('customer_name') }}" placeholder="Enter name">
+                </div>
+
+                <!-- Mobile Number -->
+                <div class="form-group">
+                    <label class="form-label">Mobile Number</label>
+                    <input class="form-control" type="tel" name="customer_mobile" value="{{ old('customer_mobile') }}" placeholder="+91 XXXXX XXXXX">
+                </div>
+
+                <!-- Note -->
+                <div class="note-box">
+                    <div class="note-title">Note:</div>
+                    <div class="note-text">Verify ID proof for non-local passengers before issuing tickets.</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Line Items Section -->
+    <div class="card">
+        <div class="line-items-header">
+            <div class="card-title">Line Items</div>
             <button type="button" id="btnAddRow" class="btn-add-row">
                 <i data-lucide="plus" class="w-4 h-4"></i>
                 Add Row
             </button>
         </div>
 
-        <!-- Items Table -->
         <div class="items-table-wrap">
             <table class="items-table" id="itemsGrid">
                 <thead>
                     <tr>
-                        <th style="width: 100px;">Item ID</th>
-                        <th>Item Name</th>
-                        <th style="width: 90px;">Qty</th>
-                        <th style="width: 100px;">Rate</th>
-                        <th style="width: 100px;">Levy</th>
-                        <th style="width: 110px;">Amount</th>
-                        <th style="width: 140px;">Vehicle Name</th>
-                        <th style="width: 120px;">Vehicle No</th>
-                        <th style="width: 50px;"></th>
+                        <th style="width: 40px; text-align: center;">#</th>
+                        <th style="width: 80px;">Item ID</th>
+                        <th style="width: 200px;">Item Name</th>
+                        <th style="width: 70px;">Qty</th>
+                        <th style="width: 80px;">Rate</th>
+                        <th style="width: 70px;">Levy</th>
+                        <th style="width: 90px;">Amount</th>
+                        <th style="width: 120px;">Vehicle Name</th>
+                        <th style="width: 110px;">Vehicle No</th>
+                        <th style="width: 60px; text-align: center;">Actions</th>
                     </tr>
                 </thead>
                 <tbody id="ticketLinesBody">
                     <tr>
-                        <td><input class="form-control" name="lines[0][item_id]" placeholder=""></td>
-                        <td><input class="form-control" name="lines[0][item_name]" placeholder="" readonly></td>
-                        <td><input class="form-control num-input" name="lines[0][qty]" type="number" step="1" min="0"></td>
-                        <td><input class="form-control num-input" name="lines[0][rate]" type="number" step="0.01" min="0"></td>
-                        <td><input class="form-control num-input" name="lines[0][levy]" type="number" step="0.01" min="0"></td>
+                        <td><span class="row-number">1</span></td>
+                        <td>
+                            <select class="form-control item-select" name="lines[0][item_id]">
+                                <option value="">--</option>
+                            </select>
+                            <input type="hidden" name="lines[0][item_name]">
+                        </td>
+                        <td><input class="form-control" name="lines[0][item_name_display]" readonly placeholder="Select item"></td>
+                        <td><input class="form-control num-input" name="lines[0][qty]" type="number" step="1" min="1" value="1"></td>
+                        <td><input class="form-control num-input" name="lines[0][rate]" type="number" step="0.01" min="0" readonly></td>
+                        <td><input class="form-control num-input" name="lines[0][levy]" type="number" step="0.01" min="0" readonly></td>
                         <td><input class="form-control num-input" name="lines[0][amount]" type="number" step="0.01" min="0" readonly></td>
-                        <td><input class="form-control" name="lines[0][vehicle_name]"></td>
-                        <td><input class="form-control" name="lines[0][vehicle_no]"></td>
-                        <td><button type="button" class="btn-remove btn-remove-row">✕</button></td>
+                        <td><input class="form-control" name="lines[0][vehicle_name]" placeholder="Optional"></td>
+                        <td><input class="form-control" name="lines[0][vehicle_no]" placeholder="Optional"></td>
+                        <td style="text-align: center;"><button type="button" class="btn-remove btn-remove-row">✕</button></td>
                     </tr>
                 </tbody>
             </table>
         </div>
 
-        <!-- Summary Section -->
-        <div class="summary-section">
-            <div class="summary-grid">
-                <div class="summary-row">
-                    <span class="summary-label">Discount %</span>
-                    <input class="form-control num-input" name="discount_pct" type="number" step="0.01" min="0" style="max-width: 100px;">
-                </div>
-                <div class="summary-row">
-                    <span class="summary-label">Total</span>
-                    <div class="summary-box" id="totalBox">0.00</div>
-                </div>
-                <div class="summary-row">
-                    <span class="summary-label">Discount ₹</span>
-                    <input class="form-control num-input" name="discount_rs" type="number" step="0.01" min="0" style="max-width: 100px;">
-                </div>
-                <div class="summary-row">
-                    <span class="summary-label">Net</span>
-                    <div class="summary-box" id="netBox">0.00</div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Footer -->
-        <div class="ticket-footer">
+        <!-- Footer with Summary and Buttons -->
+        <div class="footer-section">
             <label class="print-checkbox">
                 <input type="checkbox" id="printAfterSave">
-                Print after save
+                <i data-lucide="printer" class="w-4 h-4"></i>
+                Print Receipt automatically
             </label>
-            <button class="btn-save" type="button" id="openPaymentModal">
-                <i data-lucide="save" class="w-5 h-5"></i>
-                Save Ticket
-            </button>
+
+            <div class="summary-actions">
+                <div class="summary-box">
+                    <div class="summary-row">
+                        <span class="summary-label">Subtotal</span>
+                        <span class="summary-value" id="totalBox">0.00</span>
+                    </div>
+                    <div class="summary-row">
+                        <span class="summary-label">Discount %</span>
+                        <input class="summary-input" name="discount_pct" type="number" step="0.01" min="0" value="0">
+                    </div>
+                    <div class="summary-row">
+                        <span class="summary-label">Discount Amt</span>
+                        <input class="summary-input" name="discount_rs" type="number" step="0.01" min="0" value="0">
+                    </div>
+                    <div class="summary-row">
+                        <span class="summary-label">Net Total</span>
+                        <span class="summary-value net-total" id="netBox">0.00</span>
+                    </div>
+                </div>
+
+                <div class="action-buttons">
+                    <button class="btn-save" type="button" id="openPaymentModal">
+                        <i data-lucide="save" class="w-5 h-5"></i>
+                        Save Ticket
+                    </button>
+                    <button class="btn-pay" type="button" id="openPayAndSave">
+                        <i data-lucide="credit-card" class="w-5 h-5"></i>
+                        Pay & Save
+                    </button>
+                </div>
+            </div>
         </div>
     </div>
 </form>
@@ -532,14 +775,15 @@
     <div class="modal-content">
         <div class="modal-header">
             <span>Confirm Payment</span>
+            <button type="button" class="modal-close" id="closePaymentModal">✕</button>
         </div>
         <div class="modal-body">
             <div class="form-group" style="margin-bottom: 1rem;">
-                <label>Net Total</label>
+                <label class="form-label">Net Total</label>
                 <input type="text" id="modalNetTotal" class="form-control" readonly>
             </div>
             <div class="form-group" style="margin-bottom: 1rem;">
-                <label>Payment Mode</label>
+                <label class="form-label">Payment Mode</label>
                 <select id="paymentMode" class="form-control" onchange="handlePaymentModeChange(this.value)">
                     <option value="Cash">Cash</option>
                     <option value="Guest Pass">Guest Pass</option>
@@ -547,11 +791,11 @@
                 </select>
             </div>
             <div class="form-group" style="margin-bottom: 1rem;">
-                <label>Given Amount</label>
+                <label class="form-label">Given Amount</label>
                 <input type="number" id="modalGivenAmount" class="form-control" placeholder="Enter given amount">
             </div>
             <div class="form-group">
-                <label>Change to Return</label>
+                <label class="form-label">Change to Return</label>
                 <input type="text" id="modalReturnChange" class="form-control" readonly>
             </div>
         </div>
@@ -571,12 +815,12 @@
         </div>
         <div class="modal-body">
             <div class="form-group" style="margin-bottom: 1rem;">
-                <label>Search by Guest ID</label>
+                <label class="form-label">Search by Guest ID</label>
                 <input type="text" id="guestId" class="form-control" placeholder="Enter Guest ID">
             </div>
             <div class="divider-text">OR</div>
             <div class="form-group">
-                <label>Search by Guest Name</label>
+                <label class="form-label">Search by Guest Name</label>
                 <input type="text" id="guestName" class="form-control" placeholder="Enter Guest Name">
                 <ul id="guestList" class="guest-list"></ul>
             </div>
@@ -599,19 +843,17 @@
 <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
-    lucide.createIcons();
+lucide.createIcons();
 
 const branchFerryMap = @json($ferryBoatsPerBranch ?? []);
 const ferrySchedulesPerBranch = @json($ferrySchedulesPerBranch ?? []);
 const ferryTimeInput = document.getElementById('ferryTimeInput');
 const ferryTimeSelect = document.getElementById('ferryTimeSelect');
 
-const branchSelect = document.getElementById('branchSelect');
-
 ferryTimeSelect?.addEventListener('change', function() {
     const selectedTime = this.value;
     if (!selectedTime) {
-        ferryTimeInput.value = '';
+        if (ferryTimeInput) ferryTimeInput.value = '';
         return;
     }
 
@@ -625,202 +867,144 @@ ferryTimeSelect?.addEventListener('change', function() {
     const hh   = String(today.getHours()).padStart(2,'0');
     const min  = String(today.getMinutes()).padStart(2,'0');
 
-    ferryTimeInput.value = `${yyyy}-${mm}-${dd}T${hh}:${min}`;
+    if (ferryTimeInput) ferryTimeInput.value = `${yyyy}-${mm}-${dd}T${hh}:${min}`;
 });
 
 document.getElementById('branchSelect')?.addEventListener('change', function() {
     const branchId = this.value;
     const schedules = ferrySchedulesPerBranch[branchId] || [];
     const scheduleSelect = document.getElementById('ferryTimeSelect');
-    scheduleSelect.innerHTML = '';
 
-    const defaultOpt = document.createElement('option');
-    defaultOpt.value = '';
-    defaultOpt.textContent = '-- Select Schedule --';
-    scheduleSelect.appendChild(defaultOpt);
-
-    schedules.forEach(fs => {
-        let opt = document.createElement('option');
-        opt.value = fs.time;
-        opt.textContent = fs.time;
-        scheduleSelect.appendChild(opt);
-    });
+    if (scheduleSelect) {
+        scheduleSelect.innerHTML = '<option value="">-- Select Schedule --</option>';
+        schedules.forEach(fs => {
+            let opt = document.createElement('option');
+            opt.value = fs.time;
+            opt.textContent = fs.time;
+            scheduleSelect.appendChild(opt);
+        });
+    }
 
     const ferrySelect = document.getElementById('ferryBoatSelect');
-    ferrySelect.innerHTML = '';
-
-    const defaultBoatOpt = document.createElement('option');
-    defaultBoatOpt.value = '';
-    defaultBoatOpt.textContent = '-- Select Boat --';
-    ferrySelect.appendChild(defaultBoatOpt);
+    ferrySelect.innerHTML = '<option value="">-- Select Boat --</option>';
 
     if (branchFerryMap[branchId]) {
         branchFerryMap[branchId].forEach(fb => {
             const opt = document.createElement('option');
             opt.value = fb.id;
-            opt.textContent = fb.name;
+            opt.textContent = `${fb.name} (Capacity: ${fb.pax_capacity || 'N/A'})`;
             ferrySelect.appendChild(opt);
         });
     }
-    ferryTimeInput.value = '';
+
+    if (ferryTimeInput) ferryTimeInput.value = '';
 });
 
-document.getElementById('ticketForm').addEventListener('submit', function (e) {
-    e.preventDefault();
-
-    let form = e.target;
-    let formData = new FormData(form);
-
-    const shouldPrint = document.getElementById('printAfterSave')?.checked === true;
-    formData.append('print', shouldPrint ? 1 : 0);
-
-    axios.post(form.action, formData)
-        .then(res => {
-            if (res.data.ok) {
-                if (shouldPrint && res.data.ticket_id) {
-                    fetch(`{{ url('/tickets') }}/${res.data.ticket_id}/print`)
-                        .then(res => res.text())
-                        .then(html => {
-                            const printWindow = window.open('', '', 'width=400,height=600');
-                            printWindow.document.write(html);
-                            printWindow.document.close();
-                            printWindow.focus();
-                            printWindow.print();
-                            setTimeout(() => {
-                                printWindow.close();
-                            }, 1000);
-                        });
-                }
-
-                Swal.fire({
-                    icon: 'success',
-                    title: 'Ticket Confirmed',
-                    html: `<b>Total:</b> ${res.data.total}`,
-                    confirmButtonColor: '#22c55e'
-                });
-
-                form.reset();
-                document.getElementById('totalBox').textContent = '0.00';
-                document.getElementById('netBox').textContent = '0.00';
-                document.getElementById('ticketLinesBody').innerHTML = '';
-
-                const tr = document.createElement('tr');
-                tr.innerHTML = `
-                    <td><input class="form-control" name="lines[0][item_id]" placeholder=""></td>
-                    <td><input class="form-control" name="lines[0][item_name]" placeholder="" readonly></td>
-                    <td><input class="form-control num-input" name="lines[0][qty]" type="number" step="1" min="0"></td>
-                    <td><input class="form-control num-input" name="lines[0][rate]" type="number" step="0.01" min="0"></td>
-                    <td><input class="form-control num-input" name="lines[0][levy]" type="number" step="0.01" min="0"></td>
-                    <td><input class="form-control num-input" name="lines[0][amount]" type="number" step="0.01" min="0" readonly></td>
-                    <td><input class="form-control" name="lines[0][vehicle_name]"></td>
-                    <td><input class="form-control" name="lines[0][vehicle_no]"></td>
-                    <td><button type="button" class="btn-remove btn-remove-row">✕</button></td>`;
-                document.getElementById('ticketLinesBody').appendChild(tr);
-            }
-        })
-        .catch(err => {
-            if (err.response && err.response.data.errors) {
-                let errors = Object.values(err.response.data.errors).flat().join("<br>");
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Validation Error',
-                    html: errors,
-                    confirmButtonColor: '#dc2626'
-                });
-            } else {
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Error',
-                    text: 'Something went wrong while saving the ticket.',
-                    confirmButtonColor: '#dc2626'
-                });
-            }
-        });
-});
-
+// Item dropdown and calculation logic
 (function() {
-    const apiUrl = "{{ route('ajax.item-rates.find') }}";
+    const listItemsUrl = "{{ route('ajax.item-rates.list') }}";
     const tbody = document.querySelector('#ticketLinesBody');
+    let cachedItems = [];
 
-    function clearRow(tr, opts = {}) {
-        if (opts.clearId) tr.querySelector('input[name$="[item_id]"]').value = '';
-        tr.querySelector('input[name$="[item_name]"]').value = '';
-        tr.querySelector('input[name$="[rate]"]').value = '';
-        tr.querySelector('input[name$="[levy]"]').value = '';
-        tr.querySelector('input[name$="[amount]"]').value = '';
-        tr.querySelector('input[name$="[item_id]"]').dataset.lastLookup = '';
-        computeTotals();
-    }
-
-    async function lookupAndFill(tr, q) {
-        if (!q) { clearRow(tr); return false; }
-
-        const idInput = tr.querySelector('input[name$="[item_id]"]');
-
-        let branchId = '';
-        const branchSelect = document.getElementById('branchSelect');
-        if (branchSelect) {
-            branchId = branchSelect.value;
-        } else {
-            branchId = document.getElementById('branch_id')?.value || '';
-        }
+    async function loadItemsForBranch(branchId) {
+        if (!branchId) return;
 
         try {
-            const url = new URL(apiUrl, window.location.origin);
-            url.searchParams.set('q', q);
-            if (branchId) url.searchParams.set('branch_id', branchId);
+            const url = new URL(listItemsUrl, window.location.origin);
+            url.searchParams.set('branch_id', branchId);
 
             const res = await fetch(url, { headers: { 'Accept': 'application/json' } });
-            if (!res.ok) throw new Error('Lookup failed');
-            const data = await res.json();
+            if (!res.ok) throw new Error('Failed to load items');
+            cachedItems = await res.json();
 
-            tr.querySelector('input[name$="[item_name]"]').value = data.item_name ?? '';
-            tr.querySelector('input[name$="[rate]"]').value = (data.item_rate ?? 0).toFixed(2);
-            tr.querySelector('input[name$="[levy]"]').value = (data.item_lavy ?? 0).toFixed(2);
-
-            idInput.dataset.lastLookup = q;
-            computeRow(tr);
-            return true;
+            document.querySelectorAll('.item-select').forEach(populateDropdown);
         } catch (e) {
-            clearRow(tr);
-            const msg = 'Item not found';
-            idInput.setCustomValidity(msg);
-            idInput.reportValidity();
-            setTimeout(() => idInput.setCustomValidity(''), 1500);
-            return false;
+            console.error('Error loading items:', e);
+            cachedItems = [];
         }
     }
 
-    tbody.addEventListener('input', (e) => {
-        if (!e.target.name?.endsWith('[item_id]')) return;
-        const tr = e.target.closest('tr');
-        const hasValues =
-            tr.querySelector('input[name$="[item_name]"]').value ||
-            tr.querySelector('input[name$="[rate]"]').value ||
-            tr.querySelector('input[name$="[levy]"]').value;
-        if (hasValues) clearRow(tr);
-    });
+    function populateDropdown(select) {
+        const currentValue = select.value;
+        select.innerHTML = '<option value="">--</option>';
 
-    tbody.addEventListener('keydown', async (e) => {
-        const input = e.target;
-        if (!input.name?.endsWith('[item_id]')) return;
+        const passengers = cachedItems.filter(i => !i.is_vehicle);
+        const vehicles = cachedItems.filter(i => i.is_vehicle);
 
-        if (e.key === 'Enter' || e.key === 'Tab') {
-            e.preventDefault();
-            const tr = input.closest('tr');
-            const ok = await lookupAndFill(tr, input.value.trim());
-            const qty = tr.querySelector('input[name$="[qty]"]');
-            (ok ? qty : input).focus();
-            if (ok && qty) qty.select();
+        if (passengers.length) {
+            const group = document.createElement('optgroup');
+            group.label = 'Passengers';
+            passengers.forEach(item => {
+                const opt = document.createElement('option');
+                opt.value = item.id;
+                opt.textContent = `${item.item_id || item.id} - ${item.item_name}`;
+                opt.dataset.rate = item.item_rate;
+                opt.dataset.levy = item.item_lavy;
+                opt.dataset.name = item.item_name;
+                opt.dataset.itemId = item.item_id || item.id;
+                opt.dataset.isVehicle = '0';
+                group.appendChild(opt);
+            });
+            select.appendChild(group);
         }
+
+        if (vehicles.length) {
+            const group = document.createElement('optgroup');
+            group.label = 'Vehicles';
+            vehicles.forEach(item => {
+                const opt = document.createElement('option');
+                opt.value = item.id;
+                opt.textContent = `${item.item_id || item.id} - ${item.item_name}`;
+                opt.dataset.rate = item.item_rate;
+                opt.dataset.levy = item.item_lavy;
+                opt.dataset.name = item.item_name;
+                opt.dataset.itemId = item.item_id || item.id;
+                opt.dataset.isVehicle = '1';
+                group.appendChild(opt);
+            });
+            select.appendChild(group);
+        }
+
+        if (currentValue) select.value = currentValue;
+    }
+
+    tbody.addEventListener('change', (e) => {
+        if (!e.target.classList.contains('item-select')) return;
+
+        const select = e.target;
+        const tr = select.closest('tr');
+        const selectedOpt = select.options[select.selectedIndex];
+
+        if (selectedOpt && selectedOpt.value) {
+            tr.querySelector('input[name$="[item_name]"]').value = selectedOpt.dataset.name || '';
+            tr.querySelector('input[name$="[item_name_display]"]').value = selectedOpt.dataset.name || '';
+            tr.querySelector('input[name$="[rate]"]').value = parseFloat(selectedOpt.dataset.rate || 0).toFixed(2);
+            tr.querySelector('input[name$="[levy]"]').value = parseFloat(selectedOpt.dataset.levy || 0).toFixed(2);
+        } else {
+            tr.querySelector('input[name$="[item_name]"]').value = '';
+            tr.querySelector('input[name$="[item_name_display]"]').value = '';
+            tr.querySelector('input[name$="[rate]"]').value = '';
+            tr.querySelector('input[name$="[levy]"]').value = '';
+        }
+
+        computeRow(tr);
     });
 
-    tbody.addEventListener('focusout', async (e) => {
-        const input = e.target;
-        if (!input.name?.endsWith('[item_id]')) return;
-        const tr = input.closest('tr');
-        await lookupAndFill(tr, input.value.trim());
-    });
+    function getCurrentBranchId() {
+        const branchSelect = document.getElementById('branchSelect');
+        if (branchSelect) return branchSelect.value;
+        return document.getElementById('branch_id')?.value || '';
+    }
+
+    const branchSelect = document.getElementById('branchSelect');
+    if (branchSelect) {
+        branchSelect.addEventListener('change', () => loadItemsForBranch(branchSelect.value));
+    }
+
+    const initialBranch = getCurrentBranchId();
+    if (initialBranch) loadItemsForBranch(initialBranch);
+
+    window.populateItemDropdown = populateDropdown;
 
     function computeRow(tr) {
         const qty = parseFloat(tr.querySelector('input[name$="[qty]"]').value) || 0;
@@ -845,8 +1029,8 @@ document.getElementById('ticketForm').addEventListener('submit', function (e) {
         totalBox.textContent = total.toFixed(2);
 
         let net = total;
-        const dPct = parseFloat(discountPct.value) || 0;
-        const dRs = parseFloat(discountRs.value) || 0;
+        const dPct = parseFloat(discountPct?.value) || 0;
+        const dRs = parseFloat(discountRs?.value) || 0;
         if (dPct > 0) net -= (total * dPct / 100);
         if (dRs > 0) net -= dRs;
         netBox.textContent = Math.max(net, 0).toFixed(2);
@@ -859,8 +1043,8 @@ document.getElementById('ticketForm').addEventListener('submit', function (e) {
         }
     });
 
-    discountPct.addEventListener('input', computeTotals);
-    discountRs.addEventListener('input', computeTotals);
+    discountPct?.addEventListener('input', computeTotals);
+    discountRs?.addEventListener('input', computeTotals);
 })();
 
 // Add Row logic
@@ -876,72 +1060,91 @@ function nextRowIndex() {
     return maxIdx + 1;
 }
 
-function buildRowHTML(idx) {
+function updateRowNumbers() {
+    tbodyEl.querySelectorAll('tr').forEach((row, index) => {
+        const numEl = row.querySelector('.row-number');
+        if (numEl) numEl.textContent = index + 1;
+    });
+}
+
+function buildRowHTML(idx, rowNum) {
     return `
-        <tr>
-            <td><input class="form-control" name="lines[${idx}][item_id]" placeholder=""></td>
-            <td><input class="form-control" name="lines[${idx}][item_name]" placeholder="" readonly></td>
-            <td><input class="form-control num-input" name="lines[${idx}][qty]" type="number" step="1" min="0"></td>
-            <td><input class="form-control num-input" name="lines[${idx}][rate]" type="number" step="0.01" min="0"></td>
-            <td><input class="form-control num-input" name="lines[${idx}][levy]" type="number" step="0.01" min="0"></td>
-            <td><input class="form-control num-input" name="lines[${idx}][amount]" type="number" step="0.01" min="0" readonly></td>
-            <td><input class="form-control" name="lines[${idx}][vehicle_name]"></td>
-            <td><input class="form-control" name="lines[${idx}][vehicle_no]"></td>
-            <td><button type="button" class="btn-remove btn-remove-row">✕</button></td>
-        </tr>
+        <td><span class="row-number">${rowNum}</span></td>
+        <td>
+            <select class="form-control item-select" name="lines[${idx}][item_id]">
+                <option value="">--</option>
+            </select>
+            <input type="hidden" name="lines[${idx}][item_name]">
+        </td>
+        <td><input class="form-control" name="lines[${idx}][item_name_display]" readonly placeholder="Select item"></td>
+        <td><input class="form-control num-input" name="lines[${idx}][qty]" type="number" step="1" min="1" value="1"></td>
+        <td><input class="form-control num-input" name="lines[${idx}][rate]" type="number" step="0.01" min="0" readonly></td>
+        <td><input class="form-control num-input" name="lines[${idx}][levy]" type="number" step="0.01" min="0" readonly></td>
+        <td><input class="form-control num-input" name="lines[${idx}][amount]" type="number" step="0.01" min="0" readonly></td>
+        <td><input class="form-control" name="lines[${idx}][vehicle_name]" placeholder="Optional"></td>
+        <td><input class="form-control" name="lines[${idx}][vehicle_no]" placeholder="Optional"></td>
+        <td style="text-align: center;"><button type="button" class="btn-remove btn-remove-row">✕</button></td>
     `;
 }
 
 tbodyEl.addEventListener('click', (e) => {
     if (e.target.classList.contains('btn-remove-row')) {
-        const tr = e.target.closest('tr');
-        tr.remove();
+        e.target.closest('tr').remove();
+        updateRowNumbers();
         computeTotals();
     }
 });
 
-function addRow(focusItemId = true) {
+function addRow(focus = true) {
     const idx = nextRowIndex();
+    const rowNum = tbodyEl.querySelectorAll('tr').length + 1;
     const tr = document.createElement('tr');
-    tr.innerHTML = buildRowHTML(idx);
+    tr.innerHTML = buildRowHTML(idx, rowNum);
     tbodyEl.appendChild(tr);
-    if (focusItemId) {
-        const idInput = tr.querySelector(`input[name="lines[${idx}][item_id]"]`);
-        idInput && idInput.focus();
+
+    const newSelect = tr.querySelector('.item-select');
+    if (newSelect && window.populateItemDropdown) {
+        window.populateItemDropdown(newSelect);
     }
+
+    if (focus && newSelect) newSelect.focus();
 }
 
 btnAddRow?.addEventListener('click', () => addRow(true));
 
 tbodyEl.addEventListener('keydown', (e) => {
-    const isAmount = e.target.name?.endsWith('[amount]');
-    if (isAmount && e.key === 'Enter') {
+    if (e.target.name?.endsWith('[amount]') && e.key === 'Enter') {
         e.preventDefault();
         addRow(true);
     }
 });
 
-// Payment Modal logic
+// Payment Modal
 const openPaymentModal = document.getElementById('openPaymentModal');
+const openPayAndSave = document.getElementById('openPayAndSave');
 const paymentModal = document.getElementById('paymentModal');
-const modalPaymentMode = document.getElementById('paymentMode');
 const modalGivenAmount = document.getElementById('modalGivenAmount');
 const modalNetTotal = document.getElementById('modalNetTotal');
 const modalReturnChange = document.getElementById('modalReturnChange');
 const modalConfirm = document.getElementById('modalConfirm');
 const modalCancel = document.getElementById('modalCancel');
+const closePaymentModal = document.getElementById('closePaymentModal');
 const netBox = document.getElementById('netBox');
 
-openPaymentModal.addEventListener('click', () => {
+function showPaymentModal() {
     modalNetTotal.value = netBox.textContent;
+    modalGivenAmount.value = '';
+    modalReturnChange.value = '';
     paymentModal.style.display = 'flex';
-});
+}
 
-modalCancel.addEventListener('click', () => {
-    paymentModal.style.display = 'none';
-});
+openPaymentModal?.addEventListener('click', showPaymentModal);
+openPayAndSave?.addEventListener('click', showPaymentModal);
 
-modalGivenAmount.addEventListener('input', () => {
+modalCancel?.addEventListener('click', () => paymentModal.style.display = 'none');
+closePaymentModal?.addEventListener('click', () => paymentModal.style.display = 'none');
+
+modalGivenAmount?.addEventListener('input', () => {
     const given = parseFloat(modalGivenAmount.value) || 0;
     const net = parseFloat(modalNetTotal.value) || 0;
     modalReturnChange.value = (given - net).toFixed(2);
@@ -951,45 +1154,26 @@ modalGivenAmount.addEventListener('input', () => {
 const guestModalEl = document.getElementById('guestModal');
 const closeGuestModal = document.getElementById('closeGuestModal');
 
-closeGuestModal?.addEventListener('click', () => {
-    guestModalEl.style.display = 'none';
-});
+closeGuestModal?.addEventListener('click', () => guestModalEl.style.display = 'none');
 
-function showGuestModal() {
-    guestModalEl.style.display = 'flex';
-}
-
-function hideGuestModal() {
-    guestModalEl.style.display = 'none';
-}
-
-function showPaymentModal() {
-    paymentModal.style.display = 'flex';
-}
-
-function hidePaymentModal() {
-    paymentModal.style.display = 'none';
-}
+function showGuestModal() { guestModalEl.style.display = 'flex'; }
+function hideGuestModal() { guestModalEl.style.display = 'none'; }
+function hidePaymentModal() { paymentModal.style.display = 'none'; }
 
 function handlePaymentModeChange(value) {
-    const paymentModeInput = document.getElementById('payment_mode');
-
-    if (!paymentModeInput) {
-        const hidden = document.createElement('input');
-        hidden.type = 'hidden';
-        hidden.name = 'payment_mode';
-        hidden.id = 'payment_mode';
-        document.getElementById('ticketForm').appendChild(hidden);
+    let input = document.getElementById('payment_mode');
+    if (!input) {
+        input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = 'payment_mode';
+        input.id = 'payment_mode';
+        document.getElementById('ticketForm').appendChild(input);
     }
-
-    const input = document.getElementById('payment_mode');
 
     if (value === 'Guest Pass') {
         input.value = 'Cash';
         hidePaymentModal();
-        setTimeout(() => {
-            showGuestModal();
-        }, 200);
+        setTimeout(showGuestModal, 200);
     } else {
         input.value = value;
     }
@@ -1054,11 +1238,7 @@ function selectGuest() {
     const name = $('#guestName').val().trim();
 
     if (!id && !name) {
-        Swal.fire({
-            icon: 'warning',
-            title: 'Missing Guest Details',
-            text: 'Please enter Guest ID or Name.',
-        });
+        Swal.fire({ icon: 'warning', title: 'Missing Guest Details', text: 'Please enter Guest ID or Name.' });
         return;
     }
 
@@ -1067,18 +1247,11 @@ function selectGuest() {
 
     setTimeout(() => {
         $('#payment_mode').val('Cash');
-        $('#ticketForm').submit();
+        submitTicket();
     }, 300);
 }
 
-document.getElementById('modalConfirm').addEventListener('click', function () {
-    const paymentMode = document.getElementById('paymentMode').value;
-    const givenAmount = parseFloat(document.getElementById('modalGivenAmount').value) || 0;
-    const netTotal = parseFloat(document.getElementById('modalNetTotal').value) || 0;
-
-    document.getElementById('payment_mode').value = paymentMode;
-    document.getElementById('paymentModal').style.display = 'none';
-
+function submitTicket() {
     const form = document.getElementById('ticketForm');
     const formData = new FormData(form);
     const shouldPrint = document.getElementById('printAfterSave')?.checked === true;
@@ -1094,34 +1267,63 @@ document.getElementById('modalConfirm').addEventListener('click', function () {
                 Swal.fire({
                     icon: 'success',
                     title: 'Ticket Confirmed',
-                    text: 'Saved successfully!',
-                    confirmButtonColor: '#22c55e'
+                    html: `<b>Total:</b> ${res.data.total}`,
+                    confirmButtonColor: '#6366f1'
                 }).then(() => {
                     form.reset();
                     document.getElementById('totalBox').textContent = '0.00';
                     document.getElementById('netBox').textContent = '0.00';
-                    document.getElementById('ticketLinesBody').innerHTML = `
-                        <tr>
-                            <td><input class="form-control" name="lines[0][item_id]" placeholder=""></td>
-                            <td><input class="form-control" name="lines[0][item_name]" placeholder="" readonly></td>
-                            <td><input class="form-control num-input" name="lines[0][qty]" type="number" step="1" min="0"></td>
-                            <td><input class="form-control num-input" name="lines[0][rate]" type="number" step="0.01" min="0"></td>
-                            <td><input class="form-control num-input" name="lines[0][levy]" type="number" step="0.01" min="0"></td>
-                            <td><input class="form-control num-input" name="lines[0][amount]" type="number" step="0.01" min="0" readonly></td>
-                            <td><input class="form-control" name="lines[0][vehicle_name]"></td>
-                            <td><input class="form-control" name="lines[0][vehicle_no]"></td>
-                            <td><button type="button" class="btn-remove btn-remove-row">✕</button></td>
-                        </tr>`;
+                    resetForm();
                 });
             }
         })
         .catch(err => {
-            Swal.fire({
-                icon: 'error',
-                title: 'Error',
-                text: 'Something went wrong while saving the ticket.'
-            });
+            if (err.response?.data?.errors) {
+                let errors = Object.values(err.response.data.errors).flat().join("<br>");
+                Swal.fire({ icon: 'error', title: 'Validation Error', html: errors, confirmButtonColor: '#dc2626' });
+            } else {
+                Swal.fire({ icon: 'error', title: 'Error', text: 'Something went wrong while saving the ticket.', confirmButtonColor: '#dc2626' });
+            }
         });
+}
+
+function resetForm() {
+    tbodyEl.innerHTML = `
+        <tr>
+            <td><span class="row-number">1</span></td>
+            <td>
+                <select class="form-control item-select" name="lines[0][item_id]">
+                    <option value="">--</option>
+                </select>
+                <input type="hidden" name="lines[0][item_name]">
+            </td>
+            <td><input class="form-control" name="lines[0][item_name_display]" readonly placeholder="Select item"></td>
+            <td><input class="form-control num-input" name="lines[0][qty]" type="number" step="1" min="1" value="1"></td>
+            <td><input class="form-control num-input" name="lines[0][rate]" type="number" step="0.01" min="0" readonly></td>
+            <td><input class="form-control num-input" name="lines[0][levy]" type="number" step="0.01" min="0" readonly></td>
+            <td><input class="form-control num-input" name="lines[0][amount]" type="number" step="0.01" min="0" readonly></td>
+            <td><input class="form-control" name="lines[0][vehicle_name]" placeholder="Optional"></td>
+            <td><input class="form-control" name="lines[0][vehicle_no]" placeholder="Optional"></td>
+            <td style="text-align: center;"><button type="button" class="btn-remove btn-remove-row">✕</button></td>
+        </tr>`;
+
+    const newSelect = tbodyEl.querySelector('.item-select');
+    if (newSelect && window.populateItemDropdown) {
+        window.populateItemDropdown(newSelect);
+    }
+}
+
+modalConfirm?.addEventListener('click', function() {
+    const paymentMode = document.getElementById('paymentMode').value;
+    document.getElementById('payment_mode').value = paymentMode;
+    paymentModal.style.display = 'none';
+    submitTicket();
+});
+
+// Form submit handler
+document.getElementById('ticketForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    submitTicket();
 });
 </script>
 @endpush
