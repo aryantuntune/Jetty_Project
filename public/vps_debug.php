@@ -1,6 +1,6 @@
 <?php
 
-// vps_debug.php - Place this in your 'public' folder and visit it.
+// vps_debug.php - Version 2.0 (Login Doctor)
 
 define('LARAVEL_START', microtime(true));
 
@@ -12,75 +12,66 @@ $response = $kernel->handle(
     $request = Illuminate\Http\Request::capture()
 );
 
-// Enable error reporting
 ini_set('display_errors', 1);
-ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 
-echo "<h1>VPS Debugger</h1>";
+echo "<style>body{font-family:sans-serif;line-height:1.5;padding:20px;} h2{border-bottom:1px solid #ccc;}</style>";
+echo "<h1>VPS Login Doctor</h1>";
 
-// 1. Check Database Connection
-echo "<h2>1. Database Connection</h2>";
+// 1. DB Connection
+echo "<h2>1. Database Connectivity</h2>";
 try {
     \DB::connection()->getPdo();
-    echo "<span style='color:green'>[PASS] Database Connected!</span><br>";
-    echo "Database: " . \DB::connection()->getDatabaseName();
+    echo "<span style='color:green'>✅ [PASS] Connected to Database: " . \DB::connection()->getDatabaseName() . "</span>";
 } catch (\Exception $e) {
-    echo "<span style='color:red'>[FAIL] Could not connect to DB: " . $e->getMessage() . "</span>";
-    die(); // Stop if no DB
+    echo "<span style='color:red'>❌ [FAIL] Database Error: " . $e->getMessage() . "</span>";
+    die();
 }
 
-// 2. Check User existence
-echo "<h2>2. User Check</h2>";
+// 2. User Existence
+echo "<h2>2. User Data Check</h2>";
 $email = 'superadmin@gmail.com';
 $user = \App\Models\User::where('email', $email)->first();
 
 if ($user) {
-    echo "<span style='color:green'>[PASS] User '$email' Found!</span><br>";
-    echo "ID: " . $user->id . "<br>";
-    echo "Role ID: " . $user->role_id . "<br>";
+    echo "<span style='color:green'>✅ [PASS] User '$email' Found (ID: $user->id)</span><br>";
+    echo "Current Password Hash: " . substr($user->password, 0, 15) . "...<br>";
 } else {
-    echo "<span style='color:red'>[FAIL] User '$email' NOT FOUND in table 'users'.</span><br>";
-    echo "Total Users in DB: " . \App\Models\User::count();
-    // Try to find ANY user
-    $anyUser = \App\Models\User::first();
-    if ($anyUser) {
-        echo "<br>Found someone else: " . $anyUser->email;
-    }
+    echo "<span style='color:red'>❌ [FAIL] User '$email' does NOT exist! Did you run seed?</span><br>";
+    echo "Total Users: " . \App\Models\User::count();
 }
 
-// 3. Password Verification
-if ($user) {
-    echo "<h2>3. Password Verification</h2>";
-    $testPass = 'admin123';
+// 3. Environment & Session
+echo "<h2>3. Session Configuration</h2>";
+echo "<b>APP_URL:</b> " . config('app.url') . "<br>";
+echo "<b>SESSION_DOMAIN:</b> " . (config('session.domain') ?: '<span style="color:orange">NULL (Browsers may block cookies)</span>') . "<br>";
+echo "<b>SANCTUM DOMAINS:</b> " . implode(',', config('sanctum.stateful', [])) . "<br>";
+echo "<b>Storage Writable:</b> ";
+if (is_writable(storage_path('framework/sessions'))) {
+    echo "<span style='color:green'>✅ Yes</span>";
+} else {
+    echo "<span style='color:red'>❌ NO! (Run: chmod -R 775 storage)</span>";
+}
 
-    // Manual Check
-    $isMatch = \Hash::check($testPass, $user->password);
+// 4. THE REAL TEST
+echo "<h2>4. Authentication Test</h2>";
+if (isset($_GET['try_login'])) {
+    echo "Attempting <code>Auth::attempt(['email' => '$email', 'password' => 'admin123'])</code>...<br><br>";
 
-    if ($isMatch) {
-        echo "<span style='color:green'>[PASS] Password 'admin123' MATCHES the hash in DB.</span>";
+    if (\Auth::attempt(['email' => $email, 'password' => 'admin123'])) {
+        echo "<span style='color:green;font-size:1.2em;font-weight:bold'>✅ [SUCCESS] Login SUCCESSFUL!</span><br>";
+        echo "The database and password are CORRECT.<br>";
+        echo "Authentication System returned TRUE.<br><br>";
+        echo "👉 <b>If you still cannot login on the website:</b><br>";
+        echo "1. The issue is likely <b>COOKIES</b> or <b>HTTPS</b>.<br>";
+        echo "2. Your browser might be blocking the cookie due to <code>SESSION_DOMAIN</code> mismatch.<br>";
+        echo "3. Try clearing browser cookies and trying again.";
     } else {
-        echo "<span style='color:red'>[FAIL] Password 'admin123' does NOT match.</span><br>";
-        echo "Stored Hash: " . substr($user->password, 0, 10) . "...<br>";
-        echo "Re-hashing 'admin123': " . substr(\Hash::make($testPass), 0, 10) . "...<br>";
-        echo "<b>Fix:</b> You may need to re-seed or manually reset the password via Tinker.";
+        echo "<span style='color:red;font-size:1.2em;font-weight:bold'>❌ [FAIL] Login FAILED!</span><br>";
+        echo "The password 'admin123' was rejected by Laravel.<br>";
+        echo "<b>Diagnosis:</b> The password in the database does NOT match 'admin123'.<br>";
+        echo "<b>Fix:</b> Run <code>php artisan migrate:fresh --seed --force</code> again on VPS.";
     }
-}
-
-// 4. Session & Domain Config
-echo "<h2>4. Environment & Session</h2>";
-echo "APP_URL: " . config('app.url') . "<br>";
-echo "SESSION_DOMAIN: " . (config('session.domain') ?: 'null (defaults to host)') . "<br>";
-echo "SESSION_SECURE_COOKIE: " . (config('session.secure') ? 'true' : 'false') . "<br>";
-echo "SANCTUM_STATEFUL: " . config('sanctum.stateful')[0] ?? 'none';
-
-
-// 5. Storage Permissions
-echo "<h2>5. Storage Permissions</h2>";
-$path = storage_path('framework/sessions');
-if (is_writable($path)) {
-    echo "<span style='color:green'>[PASS] Session folder is writable.</span>";
 } else {
-    echo "<span style='color:red'>[FAIL] Session folder is NOT writable! Login will fail.</span><br>";
-    echo "Path: $path";
+    echo "<a href='?try_login=true' style='background:blue;color:white;padding:10px 20px;text-decoration:none;border-radius:5px;'>👉 Click Here to Test Login Logic</a>";
 }
