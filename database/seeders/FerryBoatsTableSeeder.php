@@ -41,7 +41,10 @@ class FerryBoatsTableSeeder extends Seeder
         ];
 
         foreach ($boats as $boat) {
-            FerryBoat::create($boat);
+            FerryBoat::updateOrCreate(
+                ['number' => $boat['number'], 'branch_id' => $boat['branch_id']],
+                $boat
+            );
         }
     }
 }

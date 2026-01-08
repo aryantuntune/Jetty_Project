@@ -32,7 +32,10 @@ class ItemCategorySeeder extends Seeder
         ];
 
         foreach ($categories as $category) {
-            ItemCategory::create($category);
+            ItemCategory::updateOrCreate(
+                ['category_name' => $category['category_name']],
+                $category
+            );
         }
     }
 }

@@ -25,6 +25,6 @@ class GuestCategorySeeder extends Seeder
             ['id' => 9, 'name' => 'LOCAL'],
         ];
 
-        DB::table('guest_categories')->insert($categories);
+        DB::table('guest_categories')->upsert($categories, ['id'], ['name']);
     }
 }

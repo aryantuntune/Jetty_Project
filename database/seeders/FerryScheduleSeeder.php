@@ -37,10 +37,13 @@ class FerryScheduleSeeder extends Seeder
         // Apply schedules to all 12 branches
         for ($branchId = 1; $branchId <= 12; $branchId++) {
             foreach ($schedules as $schedule) {
+                $time = sprintf('%02d:%02d:00', $schedule['hour'], $schedule['minute']);
                 FerrySchedule::create([
                     'hour' => $schedule['hour'],
                     'minute' => $schedule['minute'],
+                    'schedule_time' => $time,
                     'branch_id' => $branchId,
+                    'is_active' => true,
                 ]);
             }
         }
