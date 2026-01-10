@@ -7,6 +7,60 @@
 <a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
 </p>
 
+## Jetty Project
+
+A Laravel-based web application with PWA support and QR code generation capabilities.
+
+**Current Version:** Check the [VERSION](VERSION) file or run `config('app.version')` in Laravel.
+
+## Version Management
+
+This project follows [Semantic Versioning](https://semver.org/) (SemVer) for tracking releases.
+
+### Version Format: MAJOR.MINOR.PATCH
+
+- **MAJOR**: Breaking changes that are not backward compatible
+- **MINOR**: New features that are backward compatible
+- **PATCH**: Bug fixes and minor improvements
+
+### Version Files
+
+| File | Purpose |
+|------|---------|
+| `VERSION` | Single source of truth for the current version number |
+| `CHANGELOG.md` | Documents all notable changes for each version |
+
+**Note:** Git tags (e.g., `v1.0.0`) are used for release management and are the standard way to track versions in Git/GitHub.
+
+### How to Access Version in Code
+
+```php
+// In Laravel controllers, views, or anywhere
+$version = config('app.version');
+
+// Or read directly from VERSION file
+$version = trim(file_get_contents(base_path('VERSION')));
+```
+
+### How to Create a New Release
+
+1. **Update VERSION file** with the new version number
+2. **Update CHANGELOG.md** with the changes made
+3. **Commit changes** with message: `chore: bump version to X.Y.Z`
+4. **Create a git tag**: `git tag -a vX.Y.Z -m "Release vX.Y.Z"`
+5. **Push the tag**: `git push origin vX.Y.Z`
+6. **Create a GitHub Release** from the tag
+
+### Changelog Guidelines
+
+When updating the CHANGELOG.md, categorize changes under:
+- **Added**: New features
+- **Changed**: Changes in existing functionality
+- **Deprecated**: Features that will be removed
+- **Removed**: Removed features
+- **Fixed**: Bug fixes
+- **Security**: Security vulnerability fixes
+
 ## About Laravel
 
 Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
