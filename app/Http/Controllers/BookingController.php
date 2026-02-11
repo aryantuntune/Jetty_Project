@@ -11,6 +11,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
+use Inertia\Inertia;
 use Razorpay\Api\Api;
 
 class BookingController extends Controller
@@ -29,7 +30,7 @@ class BookingController extends Controller
         // Check in debug if this returns data
         // dd($branches); // Uncomment this line temporarily if still empty
         //  dd( $branches);
-        return view('customer.dashboard', compact('branches'));
+        return Inertia::render('Customer/Booking', ['branches' => $branches]);
     }
 
     public function getToBranches($branchId)
@@ -94,17 +95,43 @@ class BookingController extends Controller
         return response()->json($item);
     }
 
+    public function getSchedules($branchId)
+    {
+        $schedules = \App\Models\FerrySchedule::where('branch_id', $branchId)
+            ->where('is_active', true)
+            ->select('hour', 'minute')
+            ->distinct()
+            ->orderBy('hour')
+            ->orderBy('minute')
+            ->get()
+            ->map(function ($schedule) {
+                return [
+                    'schedule_time' => sprintf('%02d:%02d', $schedule->hour, $schedule->minute),
+                ];
+            });
+
+        return response()->json($schedules);
+    }
+
     // ----------------------------------------------------------------
     public function createOrder(Request $request)
     {
+        // Check if Razorpay keys are configured
+        if (empty(env('RAZORPAY_KEY')) || empty(env('RAZORPAY_SECRET'))) {
+            return response()->json([
+                'error' => 'Payment gateway not configured. Please contact support.',
+                'message' => 'Missing Razorpay configuration',
+            ], 500);
+        }
+
         // ✅ Store everything in session FIRST
         session([
             'from_branch' => $request->from_branch,
             'to_branch' => $request->to_branch,
             'items' => $request->items,
             'grand_total' => $request->grand_total,
-            'booking_date' => now()->toDateString(), // OR pass from form
-            'departure_time' => now()->format('H:i:s'), // OR actual ferry time
+            'booking_date' => $request->date ?? now()->toDateString(),
+            'departure_time' => $request->departure_time ?? now()->format('H:i:s'),
         ]);
 
         // Validate Departure Time if booking for today
@@ -124,20 +151,28 @@ class BookingController extends Controller
             }
         }
 
-        $api = new Api(env('RAZORPAY_KEY'), env('RAZORPAY_SECRET'));
+        try {
+            $api = new Api(env('RAZORPAY_KEY'), env('RAZORPAY_SECRET'));
 
-        $order = $api->order->create([
-            'receipt' => 'RCPT_' . time(),
-            'amount' => $request->grand_total * 100,
-            'currency' => 'INR',
-        ]);
+            $order = $api->order->create([
+                'receipt' => 'RCPT_' . time(),
+                'amount' => $request->grand_total * 100,
+                'currency' => 'INR',
+            ]);
 
-        return response()->json([
-            'order_id' => $order['id'],
-            'amount' => $order['amount'],
-            'key' => env('RAZORPAY_KEY'),
-            'customer' => auth()->guard('customer')->user(),
-        ]);
+            return response()->json([
+                'order_id' => $order['id'],
+                'amount' => $order['amount'],
+                'key' => env('RAZORPAY_KEY'),
+                'customer' => auth()->guard('customer')->user(),
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Razorpay order creation failed: ' . $e->getMessage());
+            return response()->json([
+                'error' => 'Failed to create payment order. Please try again.',
+                'message' => $e->getMessage(),
+            ], 500);
+        }
     }
 
     public function verifyPayment1(Request $request)
@@ -231,28 +266,27 @@ class BookingController extends Controller
     {
         $customer = auth()->guard('customer')->user();
 
-        $bookings = Booking::where('customer_id', $customer->id)
+        $bookings = Booking::with(['fromBranch', 'toBranch'])
+            ->where('customer_id', $customer->id)
             ->orderBy('created_at', 'desc')
-            ->get()
-            ->map(function ($booking) {
-                // Get branch names
-                $fromBranch = Branch::find($booking->from_branch);
-                $toBranch = Branch::find($booking->to_branch);
-
-                $booking->from_branch_name = $fromBranch ? $fromBranch->branch_name : 'N/A';
-                $booking->to_branch_name = $toBranch ? $toBranch->branch_name : 'N/A';
-                $booking->items_decoded = json_decode($booking->items, true) ?? [];
-
+            ->paginate(10)
+            ->through(function ($booking) {
+                // Decode items JSON
+                $booking->items = json_decode($booking->items, true) ?? [];
                 return $booking;
             });
 
-        return view('customer.history', compact('bookings'));
+        return Inertia::render('Customer/History', ['bookings' => $bookings]);
     }
 
     public function view($ticket_id)
     {
         $booking = Booking::where('ticket_id', $ticket_id)->with(['customer', 'fromBranch', 'toBranch'])->firstOrFail();
-        return view('tickets.view', compact('booking'));
+
+        // Decode items
+        $booking->items = json_decode($booking->items, true) ?? [];
+
+        return Inertia::render('Customer/BookingView', ['booking' => $booking]);
     }
 
     public function sendTicket($bookingId, \App\Services\TicketPdfService $pdfService)

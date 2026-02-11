@@ -2,11 +2,15 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Booking extends Model
 {
+    use HasFactory;
+
     protected $fillable = [
+        'ticket_id',
         'customer_id',
         'ferry_id',
         'from_branch',
@@ -16,33 +20,44 @@ class Booking extends Model
         'items',
         'total_amount',
         'payment_id',
-        'qr_code',
-        'status',
         'booking_source',
-        'verified_at',
-        'verified_by',
-        'ticket_id',
-
+        'status',
     ];
 
     protected $casts = [
-        'verified_at' => 'datetime',
-
+        'booking_date' => 'date',
+        'total_amount' => 'decimal:2',
     ];
 
-
+    /**
+     * Get the customer who made the booking.
+     */
     public function customer()
     {
-        return $this->belongsTo(\App\Models\Customer::class);
+        return $this->belongsTo(Customer::class);
     }
 
+    /**
+     * Get the ferry boat for this booking.
+     */
+    public function ferry()
+    {
+        return $this->belongsTo(FerryBoat::class, 'ferry_id');
+    }
+
+    /**
+     * Get the departing branch.
+     */
     public function fromBranch()
     {
-        return $this->belongsTo(\App\Models\Branch::class, 'from_branch');
+        return $this->belongsTo(Branch::class, 'from_branch');
     }
 
+    /**
+     * Get the destination branch.
+     */
     public function toBranch()
     {
-        return $this->belongsTo(\App\Models\Branch::class, 'to_branch');
+        return $this->belongsTo(Branch::class, 'to_branch');
     }
 }

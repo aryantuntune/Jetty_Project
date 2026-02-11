@@ -7,6 +7,7 @@ use App\Models\Guest;
 use App\Models\GuestCategory;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Inertia\Inertia;
 
 class GuestController extends Controller
 {
@@ -16,29 +17,39 @@ class GuestController extends Controller
         $branchId = $request->query('branch_id');
 
         // Branch dropdown
-        if (in_array($user->role_id, [1,2])) {
+        if (in_array($user->role_id, [1, 2])) {
             $branches = Branch::all(); // all branches
         } else {
             $branches = Branch::where('id', $user->branch_id)->get(); // only user's branch
         }
 
         // Guests query
-        $guests = Guest::with('category','branch')
+        $guests = Guest::with('category', 'branch')
             ->when($user->role_id == 3, fn($q) => $q->where('branch_id', $user->branch_id)) // role 3 sees only own branch
-            ->when($branchId && in_array($user->role_id, [1,2]), fn($q) => $q->where('branch_id', $branchId)) // filter by dropdown for 1,2
+            ->when($branchId && in_array($user->role_id, [1, 2]), fn($q) => $q->where('branch_id', $branchId)) // filter by dropdown for 1,2
             ->get();
 
         $total = $guests->count();
 
-        return view('guests.index', compact('guests', 'total', 'branches', 'branchId', 'user'));
+        return Inertia::render('Masters/Guests/Index', [
+            'guests' => $guests,
+            'total' => $total,
+            'branches' => $branches,
+            'branchId' => $branchId,
+            'user' => $user,
+        ]);
     }
 
     public function create()
     {
         $categories = GuestCategory::all();
         $user = Auth::user();
-        $branches = in_array($user->role_id, [1,2]) ? Branch::all() : Branch::where('id', $user->branch_id)->get();
-        return view('guests.create', compact('categories', 'branches', 'user'));
+        $branches = in_array($user->role_id, [1, 2]) ? Branch::all() : Branch::where('id', $user->branch_id)->get();
+        return Inertia::render('Masters/Guests/Create', [
+            'categories' => $categories,
+            'branches' => $branches,
+            'user' => $user,
+        ]);
     }
 
     public function store(Request $request)
@@ -46,16 +57,16 @@ class GuestController extends Controller
         $user = Auth::user();
 
         $request->validate([
-            'name'        => 'required|string|max:255',
+            'name' => 'required|string|max:255',
             'category_id' => 'required|exists:guest_categories,id',
-            'branch_id'   => 'required_if:user_role,1,2|exists:branches,id',
+            'branch_id' => 'required_if:user_role,1,2|exists:branches,id',
         ]);
 
         Guest::create([
-            'name'        => $request->name,
+            'name' => $request->name,
             'category_id' => $request->category_id,
-            'user_id'     => $user->id,
-            'branch_id'   => in_array($user->role_id, [1,2]) ? $request->branch_id : $user->branch_id,
+            'user_id' => $user->id,
+            'branch_id' => in_array($user->role_id, [1, 2]) ? $request->branch_id : $user->branch_id,
         ]);
 
         return redirect()->route('guests.index')->with('success', 'Guest added successfully!');
@@ -65,9 +76,14 @@ class GuestController extends Controller
     {
         $categories = GuestCategory::all();
         $user = Auth::user();
-        $branches = in_array($user->role_id, [1,2]) ? Branch::all() : Branch::where('id', $user->branch_id)->get();
+        $branches = in_array($user->role_id, [1, 2]) ? Branch::all() : Branch::where('id', $user->branch_id)->get();
 
-        return view('guests.edit', compact('guest', 'categories', 'branches', 'user'));
+        return Inertia::render('Masters/Guests/Edit', [
+            'guest' => $guest,
+            'categories' => $categories,
+            'branches' => $branches,
+            'user' => $user,
+        ]);
     }
 
     public function update(Request $request, Guest $guest)
@@ -75,16 +91,16 @@ class GuestController extends Controller
         $user = Auth::user();
 
         $request->validate([
-            'name'        => 'required|string|max:255',
+            'name' => 'required|string|max:255',
             'category_id' => 'required|exists:guest_categories,id',
-            'branch_id'   => 'required_if:user_role,1,2|exists:branches,id',
+            'branch_id' => 'required_if:user_role,1,2|exists:branches,id',
         ]);
 
         $guest->update([
-            'name'        => $request->name,
+            'name' => $request->name,
             'category_id' => $request->category_id,
-            'user_id'     => $user->id,
-            'branch_id'   => in_array($user->role_id, [1,2]) ? $request->branch_id : $user->branch_id,
+            'user_id' => $user->id,
+            'branch_id' => in_array($user->role_id, [1, 2]) ? $request->branch_id : $user->branch_id,
         ]);
 
         return redirect()->route('guests.index')->with('success', 'Guest updated successfully!');
@@ -98,24 +114,24 @@ class GuestController extends Controller
 
 
     public function searchById(Request $request)
-{
-    $guest = Guest::where('id', $request->id)->first();
-    return response()->json($guest);
-}
+    {
+        $guest = Guest::where('id', $request->id)->first();
+        return response()->json($guest);
+    }
 
-public function searchByName(Request $request)
-{
-    $guests = Guest::where('name', 'like', '%' . $request->name . '%')->get(['id', 'name']);
-    return response()->json($guests);
-}
+    public function searchByName(Request $request)
+    {
+        $guests = Guest::where('name', 'like', '%' . $request->name . '%')->get(['id', 'name']);
+        return response()->json($guests);
+    }
 
-public function storebyticket(Request $request)
-{
-    $validated = $request->validate([
-        'name' => 'required|string|max:255',
-    ]);
-    $guest = Guest::create($validated);
-    return response()->json($guest);
-}
+    public function storebyticket(Request $request)
+    {
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+        ]);
+        $guest = Guest::create($validated);
+        return response()->json($guest);
+    }
 
 }

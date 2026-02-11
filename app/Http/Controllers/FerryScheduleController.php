@@ -6,6 +6,7 @@ use App\Models\Branch;
 use App\Models\FerrySchedule;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Inertia\Inertia;
 
 class FerryScheduleController extends Controller
 {
@@ -35,7 +36,12 @@ class FerryScheduleController extends Controller
             ->when($branchId, fn($q) => $q->where('branch_id', $branchId))
             ->get();
 
-        return view('ferry_schedules.index', compact('schedules', 'branches', 'branchId', 'user'));
+        return Inertia::render('Masters/Schedules/Index', [
+            'schedules' => $schedules,
+            'branches' => $branches,
+            'branchId' => $branchId,
+            'user' => $user,
+        ]);
     }
 
     public function create()
@@ -49,7 +55,10 @@ class FerryScheduleController extends Controller
             $branches = Branch::where('id', $user->branch_id)->get();
         }
 
-        return view('ferry_schedules.create', compact('branches', 'user'));
+        return Inertia::render('Masters/Schedules/Create', [
+            'branches' => $branches,
+            'user' => $user,
+        ]);
     }
 
     public function store(Request $request)
@@ -75,7 +84,11 @@ class FerryScheduleController extends Controller
             $branches = Branch::where('id', $user->branch_id)->get();
         }
 
-        return view('ferry_schedules.edit', compact('ferry_schedule', 'branches', 'user'));
+        return Inertia::render('Masters/Schedules/Edit', [
+            'ferrySchedule' => $ferry_schedule,
+            'branches' => $branches,
+            'user' => $user,
+        ]);
     }
 
     public function update(Request $request, FerrySchedule $ferry_schedule)
@@ -86,7 +99,7 @@ class FerryScheduleController extends Controller
             'minute' => 'required|integer|min:0|max:59',
         ]);
 
-        $ferry_schedule->update($request->only([ 'hour', 'minute']));
+        $ferry_schedule->update($request->only(['hour', 'minute']));
 
         return redirect()->route('ferry_schedules.index')->with('success', 'Ferry schedule updated successfully.');
     }

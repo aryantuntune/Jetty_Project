@@ -1,0 +1,253 @@
+﻿
+  GET|HEAD        / .......... public.home ΓÇ║ PublicController@home
+  GET|HEAD        about .... public.about ΓÇ║ PublicController@about
+  GET|HEAD        admin admin.index ΓÇ║ AdministratorController@indΓÇª
+  POST            admin admin.store ΓÇ║ AdministratorController@stoΓÇª
+  GET|HEAD        admin/create admin.create ΓÇ║ AdministratorControΓÇª
+  GET|HEAD        admin/{admin} admin.show ΓÇ║ AdministratorControlΓÇª
+  PUT|PATCH       admin/{admin} admin.update ΓÇ║ AdministratorContrΓÇª
+  DELETE          admin/{admin} admin.destroy ΓÇ║ AdministratorContΓÇª
+  GET|HEAD        admin/{admin}/edit admin.edit ΓÇ║ AdministratorCoΓÇª
+  POST            ajax/add-guest ... GuestController@storebyticket
+  GET|HEAD        ajax/item-rate-lookup ajax.item-rates.find ΓÇ║ TiΓÇª
+  GET|HEAD        ajax/item-rates/list ajax.item-rates.list ΓÇ║ TicΓÇª
+  GET|HEAD        ajax/next-ferry-time ajax.next-ferry-time ΓÇ║ TicΓÇª
+  GET|HEAD        ajax/search-guest-by-id GuestController@searchBΓÇª
+  GET|HEAD        ajax/search-guest-by-name GuestController@searcΓÇª
+  GET|HEAD        api/admin/branches ............................. 
+  POST            api/admin/branches ............................. 
+  GET|HEAD        api/admin/branches/{id} ........................ 
+  PUT             api/admin/branches/{id} ........................ 
+  DELETE          api/admin/branches/{id} ........................ 
+  GET|HEAD        api/admin/ferries .............................. 
+  POST            api/admin/ferries .............................. 
+  GET|HEAD        api/admin/ferries/{id} ......................... 
+  PUT             api/admin/ferries/{id} ......................... 
+  DELETE          api/admin/ferries/{id} ......................... 
+  GET|HEAD        api/admin/guest-categories ..................... 
+  POST            api/admin/guest-categories ..................... 
+  DELETE          api/admin/guest-categories/{id} ................ 
+  GET|HEAD        api/admin/guests ............................... 
+  POST            api/admin/guests ............................... 
+  GET|HEAD        api/admin/guests/{id} .......................... 
+  PUT             api/admin/guests/{id} .......................... 
+  DELETE          api/admin/guests/{id} .......................... 
+  GET|HEAD        api/admin/item-categories ...................... 
+  POST            api/admin/item-categories ...................... 
+  GET|HEAD        api/admin/item-categories/{id} ................. 
+  PUT             api/admin/item-categories/{id} ................. 
+  DELETE          api/admin/item-categories/{id} ................. 
+  POST            api/admin/login ................................ 
+  POST            api/admin/logout ............................... 
+  GET|HEAD        api/admin/rates ................................ 
+  POST            api/admin/rates ................................ 
+  GET|HEAD        api/admin/rates/{id} ........................... 
+  PUT             api/admin/rates/{id} ........................... 
+  DELETE          api/admin/rates/{id} ........................... 
+  GET|HEAD        api/admin/schedules ............................ 
+  POST            api/admin/schedules ............................ 
+  GET|HEAD        api/admin/schedules/{id} ....................... 
+  PUT             api/admin/schedules/{id} ....................... 
+  DELETE          api/admin/schedules/{id} ....................... 
+  GET|HEAD        api/admin/special-charges ...................... 
+  POST            api/admin/special-charges ...................... 
+  PUT             api/admin/special-charges/{id} ................. 
+  DELETE          api/admin/special-charges/{id} ................. 
+  GET|HEAD        api/admin/user ................................. 
+  GET|HEAD        api/admin/users ................................ 
+  POST            api/admin/users ................................ 
+  GET|HEAD        api/admin/users/{id} ........................... 
+  PUT             api/admin/users/{id} ........................... 
+  DELETE          api/admin/users/{id} ........................... 
+  GET|HEAD        api/bookings ........... Api\ApiController@index
+  POST            api/bookings ........... Api\ApiController@store
+  GET|HEAD        api/bookings/success Api\ApiController@getSucceΓÇª
+  GET|HEAD        api/bookings/{id} ....... Api\ApiController@show
+  POST            api/bookings/{id}/cancel Api\ApiController@cancΓÇª
+  GET|HEAD        api/branches ...... BranchController@getBranches
+  GET|HEAD        api/branches/{id}/to-branches Api\ApiControllerΓÇª
+  POST            api/checker/login Api\CheckerAuthController@logΓÇª
+  POST            api/checker/logout Api\CheckerAuthController@loΓÇª
+  GET|HEAD        api/checker/profile Api\CheckerAuthController@pΓÇª
+  POST            api/checker/verify-ticket Api\CheckerAuthControΓÇª
+  GET|HEAD        api/customer/branch BranchController@getBranches
+  POST            api/customer/change-password Api\ApiController@ΓÇª
+  POST            api/customer/change-password/request-otp Api\ApΓÇª
+  GET|HEAD        api/customer/ferries/branch/{id} FerryBoatContrΓÇª
+  POST            api/customer/generate-otp Api\ApiController@senΓÇª
+  POST            api/customer/google-signin Api\ApiController@cuΓÇª
+  POST            api/customer/login Api\ApiController@customerloΓÇª
+  GET|HEAD        api/customer/logout Api\ApiController@customerlΓÇª
+  POST            api/customer/password-reset/request-otp Api\ApiΓÇª
+  POST            api/customer/password-reset/reset Api\ApiControΓÇª
+  POST            api/customer/password-reset/verify-otp Api\ApiCΓÇª
+  GET|HEAD        api/customer/profile ........................... 
+  PUT             api/customer/profile CustomerAuth\CustomerProfiΓÇª
+  POST            api/customer/profile/upload-picture CustomerAutΓÇª
+  GET|HEAD        api/customer/rates/branch/{id} ItemRateControllΓÇª
+  POST            api/customer/verify-otp Api\ApiController@verifΓÇª
+  GET|HEAD        api/ferries/branch/{id} FerryBoatController@getΓÇª
+  GET|HEAD        api/rates/branch/{id} ItemRateController@getIteΓÇª
+  POST            api/razorpay/order RazorpayController@createOrdΓÇª
+  POST            api/razorpay/verify RazorpayController@verifyPaΓÇª
+  GET|HEAD        api/tickets .................................... 
+  POST            api/tickets .................................... 
+  GET|HEAD        api/tickets/{id} ............................... 
+  GET|HEAD        book ............................. book.redirect
+  GET|HEAD        booking .. booking.form ΓÇ║ BookingController@show
+  POST            booking booking.submit ΓÇ║ BookingController@submΓÇª
+  GET|HEAD        booking/history booking.history ΓÇ║ BookingControΓÇª
+  GET|HEAD        booking/item-rate/{itemRateId} BookingControlleΓÇª
+  GET|HEAD        booking/items/{branchId} BookingController@getIΓÇª
+  GET|HEAD        booking/to-branches/{branchId} BookingControlleΓÇª
+  GET|HEAD        branches branches.index ΓÇ║ BranchController@index
+  POST            branches branches.store ΓÇ║ BranchController@store
+  GET|HEAD        branches/create branches.create ΓÇ║ BranchControlΓÇª
+  GET|HEAD        branches/{branch} branches.show ΓÇ║ BranchControlΓÇª
+  PUT|PATCH       branches/{branch} branches.update ΓÇ║ BranchContrΓÇª
+  DELETE          branches/{branch} branches.destroy ΓÇ║ BranchContΓÇª
+  GET|HEAD        branches/{branch}/edit branches.edit ΓÇ║ BranchCoΓÇª
+  GET|HEAD        branches/{branch}/ferryboats branches.ferryboatΓÇª
+  GET|HEAD        checker checker.index ΓÇ║ CheckerController@index
+  POST            checker checker.store ΓÇ║ CheckerController@store
+  GET|HEAD        checker/create checker.create ΓÇ║ CheckerControllΓÇª
+  GET|HEAD        checker/{checker} checker.show ΓÇ║ CheckerControlΓÇª
+  PUT|PATCH       checker/{checker} checker.update ΓÇ║ CheckerContrΓÇª
+  DELETE          checker/{checker} checker.destroy ΓÇ║ CheckerContΓÇª
+  GET|HEAD        checker/{checker}/edit checker.edit ΓÇ║ CheckerCoΓÇª
+  GET|HEAD        clear-config ................................... 
+  GET|HEAD        contact public.contact ΓÇ║ PublicController@contaΓÇª
+  POST            contact public.contact.submit ΓÇ║ PublicControlleΓÇª
+  GET|HEAD        customer/dashboard customer.dashboard ΓÇ║ BookingΓÇª
+  GET|HEAD        customer/forgot-password customer.password.requΓÇª
+  POST            customer/forgot-password customer.password.emaiΓÇª
+  GET|HEAD        customer/login customer.login ΓÇ║ CustomerAuth\LoΓÇª
+  POST            customer/login customer.login.submit ΓÇ║ CustomerΓÇª
+  POST            customer/logout customer.logout ΓÇ║ CustomerAuth\ΓÇª
+  GET|HEAD        customer/register customer.register ΓÇ║ CustomerAΓÇª
+  POST            customer/register customer.register.submit ΓÇ║ CuΓÇª
+  POST            customer/register/send-otp customer.register.seΓÇª
+  POST            customer/register/verify-otp customer.register.ΓÇª
+  POST            customer/reset-password customer.password.updatΓÇª
+  GET|HEAD        customer/reset-password/{token} customer.passwoΓÇª
+  GET|HEAD        dashboard ..... dashboard ΓÇ║ HomeController@index
+  GET|HEAD        employees/transfer employees.transfer.index ΓÇ║ EΓÇª
+  GET|HEAD        employees/{id}/transfer employees.transfer.formΓÇª
+  PUT             employees/{id}/transfer employees.transfer.updaΓÇª
+  GET|HEAD        ferry-boats ferryboats.index ΓÇ║ FerryBoatControlΓÇª
+  POST            ferry-boats ferryboats.store ΓÇ║ FerryBoatControlΓÇª
+  GET|HEAD        ferry-boats/create ferryboats.create ΓÇ║ FerryBoaΓÇª
+  DELETE          ferry-boats/{ferryboat} ferryboats.destroy ΓÇ║ FeΓÇª
+  PUT             ferry-boats/{ferryboat} ferryboats.update ΓÇ║ FerΓÇª
+  GET|HEAD        ferry-boats/{ferryboat}/edit ferryboats.edit ΓÇ║ ΓÇª
+  GET|HEAD        ferry_schedules ferry_schedules.index ΓÇ║ FerryScΓÇª
+  POST            ferry_schedules ferry_schedules.store ΓÇ║ FerryScΓÇª
+  GET|HEAD        ferry_schedules/create ferry_schedules.create  ΓÇª
+  GET|HEAD        ferry_schedules/{ferry_schedule} ferry_scheduleΓÇª
+  PUT|PATCH       ferry_schedules/{ferry_schedule} ferry_scheduleΓÇª
+  DELETE          ferry_schedules/{ferry_schedule} ferry_scheduleΓÇª
+  GET|HEAD        ferry_schedules/{ferry_schedule}/edit ferry_schΓÇª
+  GET|HEAD        guest_categories guest_categories.index ΓÇ║ GuestΓÇª
+  POST            guest_categories guest_categories.store ΓÇ║ GuestΓÇª
+  GET|HEAD        guest_categories/create guest_categories.createΓÇª
+  GET|HEAD        guest_categories/{guest_category} guest_categorΓÇª
+  PUT|PATCH       guest_categories/{guest_category} guest_categorΓÇª
+  DELETE          guest_categories/{guest_category} guest_categorΓÇª
+  GET|HEAD        guest_categories/{guest_category}/edit guest_caΓÇª
+  GET|HEAD        guests .... guests.index ΓÇ║ GuestController@index
+  POST            guests .... guests.store ΓÇ║ GuestController@store
+  GET|HEAD        guests/create guests.create ΓÇ║ GuestController@cΓÇª
+  GET|HEAD        guests/{guest} guests.show ΓÇ║ GuestController@shΓÇª
+  PUT|PATCH       guests/{guest} guests.update ΓÇ║ GuestController@ΓÇª
+  DELETE          guests/{guest} guests.destroy ΓÇ║ GuestControllerΓÇª
+  GET|HEAD        guests/{guest}/edit guests.edit ΓÇ║ GuestControllΓÇª
+  GET|HEAD        health ... health.check ΓÇ║ HealthController@check
+  GET|HEAD        home ............... home ΓÇ║ HomeController@index
+  GET|HEAD        houseboat admin.houseboat.dashboard ΓÇ║ HouseboatΓÇª
+  GET|HEAD        houseboat-booking houseboat.index ΓÇ║ HouseboatCoΓÇª
+  POST            houseboat-booking/book houseboat.book ΓÇ║ HouseboΓÇª
+  GET|HEAD        houseboat-booking/checkout houseboat.checkout  ΓÇª
+  PATCH           houseboat/bookings/{id}/status admin.houseboat.ΓÇª
+  GET|HEAD        houseboat/rooms admin.houseboat.rooms ΓÇ║ HouseboΓÇª
+  PUT             houseboat/rooms/{id} admin.houseboat.rooms.updaΓÇª
+  GET|HEAD        item-categories item_categories.index ΓÇ║ ItemCatΓÇª
+  POST            item-categories item_categories.store ΓÇ║ ItemCatΓÇª
+  GET|HEAD        item-categories/create item_categories.create  ΓÇª
+  PUT             item-categories/{itemCategory} item_categories.ΓÇª
+  DELETE          item-categories/{itemCategory} item_categories.ΓÇª
+  GET|HEAD        item-categories/{itemCategory}/edit item_categoΓÇª
+  GET|HEAD        item-rates item-rates.index ΓÇ║ ItemRateControlleΓÇª
+  POST            item-rates item-rates.store ΓÇ║ ItemRateControlleΓÇª
+  GET|HEAD        item-rates/create item-rates.create ΓÇ║ ItemRateCΓÇª
+  GET|HEAD        item-rates/find api.item-rates.find ΓÇ║ TicketEntΓÇª
+  GET|HEAD        item-rates/{item_rate} item-rates.show ΓÇ║ ItemRaΓÇª
+  PUT|PATCH       item-rates/{item_rate} item-rates.update ΓÇ║ ItemΓÇª
+  DELETE          item-rates/{item_rate} item-rates.destroy ΓÇ║ IteΓÇª
+  GET|HEAD        item-rates/{item_rate}/edit item-rates.edit ΓÇ║ IΓÇª
+  GET|HEAD        items-from-rates items.from_rates.index ΓÇ║ ItemsΓÇª
+  GET|HEAD        login login ΓÇ║ Auth\LoginController@showLoginForm
+  POST            login ............... Auth\LoginController@login
+  POST            logout .... logout ΓÇ║ Auth\LoginController@logout
+  GET|HEAD        manager manager.index ΓÇ║ ManagerController@index
+  POST            manager manager.store ΓÇ║ ManagerController@store
+  GET|HEAD        manager/create manager.create ΓÇ║ ManagerControllΓÇª
+  GET|HEAD        manager/{manager} manager.show ΓÇ║ ManagerControlΓÇª
+  PUT|PATCH       manager/{manager} manager.update ΓÇ║ ManagerContrΓÇª
+  DELETE          manager/{manager} manager.destroy ΓÇ║ ManagerContΓÇª
+  GET|HEAD        manager/{manager}/edit manager.edit ΓÇ║ ManagerCoΓÇª
+  GET|HEAD        manifest.json laravelpwa.manifest ΓÇ║ LaravelPWA\ΓÇª
+  GET|HEAD        offline laravelpwa. ΓÇ║ LaravelPWA\Http ΓÇ║ LaravelΓÇª
+  GET|HEAD        operator operator.index ΓÇ║ OperatorController@inΓÇª
+  POST            operator operator.store ΓÇ║ OperatorController@stΓÇª
+  GET|HEAD        operator/create operator.create ΓÇ║ OperatorContrΓÇª
+  GET|HEAD        operator/{operator} operator.show ΓÇ║ OperatorConΓÇª
+  PUT|PATCH       operator/{operator} operator.update ΓÇ║ OperatorCΓÇª
+  DELETE          operator/{operator} operator.destroy ΓÇ║ OperatorΓÇª
+  GET|HEAD        operator/{operator}/edit operator.edit ΓÇ║ OperatΓÇª
+  GET|HEAD        password/change password.change ΓÇ║ Auth\ChangePaΓÇª
+  POST            password/change password.change.update ΓÇ║ Auth\CΓÇª
+  GET|HEAD        password/confirm password.confirm ΓÇ║ Auth\ConfirΓÇª
+  POST            password/confirm Auth\ConfirmPasswordControllerΓÇª
+  POST            password/email password.email ΓÇ║ Auth\ForgotPassΓÇª
+  GET|HEAD        password/reset password.request ΓÇ║ Auth\ForgotPaΓÇª
+  POST            password/reset password.update ΓÇ║ Auth\ResetPassΓÇª
+  GET|HEAD        password/reset/{token} password.reset ΓÇ║ Auth\ReΓÇª
+  POST            payment/create-order payment.createOrder ΓÇ║ BookΓÇª
+  POST            payment/verify1 payment.verify ΓÇ║ BookingControlΓÇª
+  GET|HEAD        ping ....... health.ping ΓÇ║ HealthController@ping
+  GET|HEAD        register register ΓÇ║ Auth\RegisterController@shoΓÇª
+  POST            register ...... Auth\RegisterController@register
+  GET|HEAD        reports/tickets reports.tickets ΓÇ║ TicketReportCΓÇª
+  GET|HEAD        reports/tickets/export reports.tickets.export  ΓÇª
+  GET|HEAD        reports/vehicle-tickets reports.vehicle_ticketsΓÇª
+  GET|HEAD        reports/vehicle-tickets/export reports.vehicle_ΓÇª
+  GET|HEAD        route/{slug} public.route ΓÇ║ PublicController@roΓÇª
+  GET|HEAD        routes .... routes.index ΓÇ║ RouteController@index
+  POST            routes .... routes.store ΓÇ║ RouteController@store
+  GET|HEAD        routes/create routes.create ΓÇ║ RouteController@cΓÇª
+  GET|HEAD        routes/{route} routes.show ΓÇ║ RouteController@shΓÇª
+  PUT|PATCH       routes/{route} routes.update ΓÇ║ RouteController@ΓÇª
+  DELETE          routes/{route} routes.destroy ΓÇ║ RouteControllerΓÇª
+  GET|HEAD        routes/{route}/edit routes.edit ΓÇ║ RouteControllΓÇª
+  GET|HEAD        sanctum/csrf-cookie sanctum.csrf-cookie ΓÇ║ LaravΓÇª
+  GET|HEAD        scan-ticket/{ticket_id} Api\CheckerAuthControllΓÇª
+  GET|HEAD        special-charges special-charges.index ΓÇ║ SpecialΓÇª
+  POST            special-charges special-charges.store ΓÇ║ SpecialΓÇª
+  GET|HEAD        special-charges/create special-charges.create  ΓÇª
+  GET|HEAD        special-charges/{special_charge} special-chargeΓÇª
+  PUT|PATCH       special-charges/{special_charge} special-chargeΓÇª
+  DELETE          special-charges/{special_charge} special-chargeΓÇª
+  GET|HEAD        special-charges/{special_charge}/edit special-cΓÇª
+  GET|HEAD        storage/{path} ................... storage.local
+  GET|HEAD        t/{hash}/print tickets.print.secure ΓÇ║ TicketEntΓÇª
+  GET|HEAD        ticket-entry ticket-entry.create ΓÇ║ TicketEntryCΓÇª
+  POST            ticket-entry ticket-entry.store ΓÇ║ TicketEntryCoΓÇª
+  GET|HEAD        ticket/view/{ticket_id} ticket.view ΓÇ║ BookingCoΓÇª
+  GET|HEAD        tickets/{ticket}/print tickets.print ΓÇ║ TicketEnΓÇª
+  GET|HEAD        up ............................................. 
+  GET|HEAD        verify verify.index ΓÇ║ TicketVerifyController@inΓÇª
+  POST            verify verify.ticket ΓÇ║ TicketVerifyController@vΓÇª
+  GET|HEAD        verify-ticket ........... verify-ticket.redirect
+
+                                              Showing [249] routes
+

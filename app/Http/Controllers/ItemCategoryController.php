@@ -4,34 +4,43 @@ namespace App\Http\Controllers;
 
 use \App\Models\ItemCategory;
 use Illuminate\Http\Request;
+use Inertia\Inertia;
 
 class ItemCategoryController extends Controller
 {
-     public function index(Request $request)
+    public function index(Request $request)
     {
-           $query = ItemCategory::query();
+        $query = ItemCategory::query();
 
-    // Filter by ID
-    if ($request->filled('id')) {
-        $query->where('id', $request->id);
-    }
+        // Filter by ID
+        if ($request->filled('id')) {
+            $query->where('id', $request->id);
+        }
 
-    // Filter by Category Name
-    if ($request->filled('category_name')) {
-        $query->where('category_name', 'like', '%'.$request->category_name.'%');
-    }
+        // Filter by Category Name
+        if ($request->filled('category_name')) {
+            $query->where('category_name', 'like', '%' . $request->category_name . '%');
+        }
 
-    $categories = $query->get();
-    $total = $categories->count();
+        $categories = $query->with([
+            'items' => function ($q) {
+                $q->select('id', 'item_name', 'item_rate', 'item_lavy', 'item_category_id', 'is_active')
+                    ->orderBy('item_name');
+            }
+        ])->get();
+        $total = $categories->count();
 
-    return view('item_categories.index', compact('categories', 'total'));
+        return Inertia::render('Masters/ItemCategories/Index', [
+            'categories' => $categories,
+            'total' => $total,
+        ]);
 
     }
 
     // Show form to create a new category
     public function create()
     {
-        return view('item_categories.create');
+        return Inertia::render('Masters/ItemCategories/Create');
     }
 
     // Store new category
@@ -48,13 +57,13 @@ class ItemCategoryController extends Controller
         ]);
 
         return redirect()->route('item_categories.index')
-                         ->with('success', 'Item Category added successfully.');
+            ->with('success', 'Item Category added successfully.');
     }
 
     // Show form to edit existing category
     public function edit(ItemCategory $itemCategory)
     {
-        return view('item_categories.edit', compact('itemCategory'));
+        return Inertia::render('Masters/ItemCategories/Edit', ['itemCategory' => $itemCategory]);
     }
 
     // Update existing category
@@ -71,7 +80,7 @@ class ItemCategoryController extends Controller
         ]);
 
         return redirect()->route('item_categories.index')
-                         ->with('success', 'Item Category updated successfully.');
+            ->with('success', 'Item Category updated successfully.');
     }
 
     // Delete a category
@@ -80,7 +89,7 @@ class ItemCategoryController extends Controller
         $itemCategory->delete();
 
         return redirect()->route('item_categories.index')
-                         ->with('success', 'Item Category deleted successfully.');
+            ->with('success', 'Item Category deleted successfully.');
     }
 
 }

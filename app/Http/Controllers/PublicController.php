@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Inertia\Inertia;
 
 class PublicController extends Controller
 {
@@ -148,7 +149,9 @@ class PublicController extends Controller
      */
     public function home()
     {
-        return view('public.home');
+        return Inertia::render('Public/Welcome', [
+            'routes' => array_values($this->routes),
+        ]);
     }
 
     /**
@@ -156,7 +159,7 @@ class PublicController extends Controller
      */
     public function about()
     {
-        return view('public.about');
+        return Inertia::render('Public/About');
     }
 
     /**
@@ -164,7 +167,7 @@ class PublicController extends Controller
      */
     public function contact()
     {
-        return view('public.contact');
+        return Inertia::render('Public/Contact');
     }
 
     /**
@@ -200,7 +203,10 @@ class PublicController extends Controller
         $route = $this->routes[$slug];
         $otherRoutes = array_values($this->routes);
 
-        return view('public.route', compact('route', 'otherRoutes'));
+        return Inertia::render('Public/RouteDetail', [
+            'route' => $route,
+            'otherRoutes' => $otherRoutes,
+        ]);
     }
 
     /**

@@ -36,10 +36,14 @@ return new class extends Migration {
             $table->integer('guests_children')->default(0);
             $table->integer('room_count')->default(1);
             $table->decimal('total_amount', 10, 2);
-            $table->enum('status', ['pending', 'confirmed', 'cancelled', 'completed'])->default('pending');
+            // Use string instead of enum for PostgreSQL compatibility
+            $table->string('status', 20)->default('pending');
             $table->string('booking_reference')->unique(); // For tracking
             $table->timestamps();
         });
+
+        // Add CHECK constraint for status values (PostgreSQL compatible)
+        DB::statement("ALTER TABLE houseboat_bookings ADD CONSTRAINT houseboat_bookings_status_check CHECK (status IN ('pending', 'confirmed', 'cancelled', 'completed'))");
 
         // Insert initial seed data
         DB::table('houseboat_rooms')->insert([

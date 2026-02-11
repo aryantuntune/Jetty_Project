@@ -4,15 +4,16 @@ namespace App\Http\Controllers;
 
 use App\Models\Branch;
 use Illuminate\Http\Request;
+use Inertia\Inertia;
 
 class BranchController extends Controller
 {
-     public function __construct()
+    public function __construct()
     {
         // Protect all actions except index, show, and getBranches (API method)
         $this->middleware(['auth', 'role:1,2'])->except(['index', 'show', 'getBranches']);
     }
-    
+
     public function index(Request $request)
     {
         $user = auth()->user();
@@ -30,13 +31,17 @@ class BranchController extends Controller
         $branches = $query->get();
         $total = $branches->count();
 
-        return view('branches.index', compact('branches', 'total', 'user'));
+        return Inertia::render('Masters/Branches/Index', [
+            'branches' => $branches,
+            'total' => $total,
+            'user' => $user,
+        ]);
     }
 
 
     public function create()
     {
-        return view('branches.create');
+        return Inertia::render('Masters/Branches/Create');
     }
 
     public function store(Request $request)
@@ -53,7 +58,7 @@ class BranchController extends Controller
 
     public function edit(Branch $branch)
     {
-        return view('branches.edit', compact('branch'));
+        return Inertia::render('Masters/Branches/Edit', ['branch' => $branch]);
     }
 
     public function update(Request $request, Branch $branch)

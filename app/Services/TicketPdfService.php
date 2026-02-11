@@ -36,23 +36,29 @@ class TicketPdfService
 
     public function generate($booking)
     {
-        // 1. QR image path
+        // 1. QR image path - use qr_hash if available for security
+        $qrIdentifier = $booking->qr_hash ?? $booking->ticket_id;
         $qrRelativePath = 'qrcodes/ticket_' . $booking->ticket_id . '.png';
         $qrFullPath = storage_path('app/public/' . $qrRelativePath);
 
-        // 2. Generate QR Code (GD based, NO Imagick)
+        // 2. Generate QR Code content - use qr_hash for security (no ticket ID exposure)
+        $qrContent = $booking->qr_hash
+            ? $booking->qr_hash  // New secure: just the hash
+            : url('/scan-ticket/' . $booking->ticket_id);  // Legacy: URL with ID
+
+        // 3. Generate QR Code PNG (GD based, NO Imagick)
         Builder::create()
             ->writer(new PngWriter())
-            ->data(url('/scan-ticket/' . $booking->ticket_id))
+            ->data($qrContent)
             ->size(200)
             ->margin(5)
             ->build()
             ->saveToFile($qrFullPath);
 
-        // 3. Generate PDF
+        // 4. Generate PDF
         return Pdf::loadView('pdf.booking_ticket', [
             'booking' => $booking,
-            'qrImage' => $qrRelativePath, // pass relative path
+            'qrImage' => $qrRelativePath,
         ]);
     }
 }

@@ -4,18 +4,19 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\GuestCategory;
+use Inertia\Inertia;
 
 class GuestCategoryController extends Controller
 {
     public function index()
     {
         $categories = GuestCategory::all();
-        return view('guest_categories.index', compact('categories'));
+        return Inertia::render('Masters/GuestCategories/Index', ['categories' => $categories]);
     }
 
     public function create()
     {
-        return view('guest_categories.create');
+        return Inertia::render('Masters/GuestCategories/Create');
     }
 
     public function store(Request $request)
@@ -30,7 +31,7 @@ class GuestCategoryController extends Controller
 
     public function edit(GuestCategory $guestCategory)
     {
-        return view('guest_categories.edit', compact('guestCategory'));
+        return Inertia::render('Masters/GuestCategories/Edit', ['guestCategory' => $guestCategory]);
     }
 
     public function update(Request $request, GuestCategory $guestCategory)

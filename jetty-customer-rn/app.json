@@ -1,0 +1,52 @@
+{
+  "expo": {
+    "name": "Jetty Ferry Booking",
+    "slug": "jetty-customer-rn",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": true,
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#006994"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.jetty.customer",
+      "infoPlist": {
+        "NSCameraUsageDescription": "This app needs camera access to take profile photos.",
+        "NSPhotoLibraryUsageDescription": "This app needs photo library access to select profile photos."
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#006994"
+      },
+      "package": "com.jetty.customer",
+      "permissions": [
+        "CAMERA",
+        "READ_EXTERNAL_STORAGE",
+        "WRITE_EXTERNAL_STORAGE",
+        "INTERNET"
+      ]
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "extra": {
+      "apiBaseUrl": "https://unfurling.ninja/api",
+      "razorpayKeyId": "rzp_test_SEUHTd7HMk7kIC",
+      "googleClientId": "YOUR_GOOGLE_CLIENT_ID",
+      "eas": {
+        "projectId": "0a4886fe-6ffb-4951-a8a8-f19d8a316222"
+      }
+    },
+    "plugins": [
+      "expo-web-browser"
+    ],
+    "owner": "aryan-dev"
+  }
+}

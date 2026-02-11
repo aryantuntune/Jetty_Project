@@ -10,6 +10,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Symfony\Component\HttpFoundation\StreamedResponse;
+use Inertia\Inertia;
 
 
 class TicketReportController extends Controller
@@ -69,20 +70,20 @@ class TicketReportController extends Controller
         // This uses the index on ticket_date for fast filtering
         $totalAmount = (clone $query)->sum('total_amount');
 
-        return view('reports.tickets', compact(
-            'tickets',
-            'branches',
-            'ferryBoats',
-            'paymentModes',
-            'ferryTypes',
-            'branchId',
-            'paymentMode',
-            'ferryType',
-            'ferryBoatId',
-            'dateFrom',
-            'dateTo',
-            'totalAmount'
-        ));
+        return Inertia::render('Reports/Tickets/Index', [
+            'tickets' => $tickets,
+            'branches' => $branches,
+            'ferryBoats' => $ferryBoats,
+            'paymentModes' => $paymentModes,
+            'ferryTypes' => $ferryTypes,
+            'branchId' => $branchId,
+            'paymentMode' => $paymentMode,
+            'ferryType' => $ferryType,
+            'ferryBoatId' => $ferryBoatId,
+            'dateFrom' => $dateFrom,
+            'dateTo' => $dateTo,
+            'totalAmount' => $totalAmount,
+        ]);
     }
 
 
@@ -149,23 +150,23 @@ class TicketReportController extends Controller
         $totalAmount = (clone $filter)->sum('total_amount');
         $pageTotalAmount = $tickets->sum('total_amount');
 
-        return view('reports.vehicle_tickets', compact(
-            'tickets',
-            'branches',
-            'ferryBoats',
-            'paymentModes',
-            'ferryTypes',
-            'branchId',
-            'paymentMode',
-            'ferryType',
-            'ferryBoatId',
-            'dateFrom',
-            'dateTo',
-            'vehicleName',
-            'vehicleNo',
-            'totalAmount',
-            'pageTotalAmount'
-        ));
+        return Inertia::render('Reports/VehicleTickets/Index', [
+            'tickets' => $tickets,
+            'branches' => $branches,
+            'ferryBoats' => $ferryBoats,
+            'paymentModes' => $paymentModes,
+            'ferryTypes' => $ferryTypes,
+            'branchId' => $branchId,
+            'paymentMode' => $paymentMode,
+            'ferryType' => $ferryType,
+            'ferryBoatId' => $ferryBoatId,
+            'dateFrom' => $dateFrom,
+            'dateTo' => $dateTo,
+            'vehicleName' => $vehicleName,
+            'vehicleNo' => $vehicleNo,
+            'totalAmount' => $totalAmount,
+            'pageTotalAmount' => $pageTotalAmount,
+        ]);
     }
 
 

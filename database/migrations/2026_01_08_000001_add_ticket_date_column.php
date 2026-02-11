@@ -29,7 +29,16 @@ return new class extends Migration {
 
         // Populate ticket_date from created_at for existing records
         \DB::statement('UPDATE tickets SET ticket_date = DATE(created_at) WHERE ticket_date IS NULL');
-        \DB::statement('UPDATE ticket_lines tl JOIN tickets t ON tl.ticket_id = t.id SET tl.ticket_date = t.ticket_date WHERE tl.ticket_date IS NULL');
+
+        // Update ticket_lines with ticket_date from tickets (PostgreSQL/MySQL compatible)
+        $driver = \DB::connection()->getDriverName();
+        if ($driver === 'pgsql') {
+            // PostgreSQL syntax: UPDATE ... FROM ... WHERE
+            \DB::statement('UPDATE ticket_lines SET ticket_date = t.ticket_date FROM tickets t WHERE ticket_lines.ticket_id = t.id AND ticket_lines.ticket_date IS NULL');
+        } else {
+            // MySQL syntax: UPDATE ... JOIN ... SET
+            \DB::statement('UPDATE ticket_lines tl JOIN tickets t ON tl.ticket_id = t.id SET tl.ticket_date = t.ticket_date WHERE tl.ticket_date IS NULL');
+        }
     }
 
     /**

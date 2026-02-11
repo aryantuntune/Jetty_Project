@@ -2,7 +2,7 @@
 
 namespace App\Mail;
 
-use App\Models\Booking;
+use App\Models\Ticket;
 use App\Services\TicketPdfService;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
@@ -12,23 +12,29 @@ class BookingConfirmationMail extends Mailable
 {
     use Queueable, SerializesModels;
 
-    public $booking;
+    public $ticket;
 
-    public function __construct(Booking $booking)
+    public function __construct(Ticket $ticket)
     {
-        $this->booking = $booking;
+        $this->ticket = $ticket;
     }
 
     public function build()
     {
-        // ✅ Resolve service here (SAFE)
-        $pdf = app(TicketPdfService::class)->generate($this->booking);
+        // Generate PDF for the ticket
+        $pdf = app(TicketPdfService::class)->generate($this->ticket);
 
-        return $this->subject('Jetty Booking Confirmation')
+        $ticketNo = $this->ticket->ticket_no ?? $this->ticket->id;
+
+        return $this->subject('Jetty Ferry - Booking Confirmation #' . $ticketNo)
             ->view('emails.booking_confirmation')
+            ->with([
+                'ticket' => $this->ticket,
+                'ticketNo' => $ticketNo,
+            ])
             ->attachData(
                 $pdf->output(),
-                'Jetty_Ticket_' . $this->booking->ticket_id . '.pdf',
+                'Jetty_Ticket_' . $ticketNo . '.pdf',
                 ['mime' => 'application/pdf']
             );
     }

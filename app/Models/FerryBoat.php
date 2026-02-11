@@ -18,6 +18,10 @@ class FerryBoat extends Model
         'updated_by',
     ];
 
+    protected $casts = [
+        'is_active' => 'boolean',
+    ];
+
     public function branch()
     {
         return $this->belongsTo(Branch::class, 'branch_id');

@@ -5,8 +5,7 @@ use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\DB;
 
-return new class extends Migration
-{
+return new class extends Migration {
     /**
      * Schema upgrades to match legacy system's robust patterns:
      * 1. Composite ticket IDs (branch_id + ticket_date + ticket_no)
@@ -24,7 +23,7 @@ return new class extends Migration
                 $table->id();
                 $table->string('vehicle_name', 30);
                 $table->unsignedBigInteger('item_category_id')->nullable();
-                $table->char('is_active', 1)->default('Y');
+                $table->boolean('is_active')->default(true);
                 $table->unsignedBigInteger('created_by')->nullable();
                 $table->unsignedBigInteger('updated_by')->nullable();
                 $table->timestamps();
@@ -41,7 +40,7 @@ return new class extends Migration
         // Branches
         if (!Schema::hasColumn('branches', 'is_active')) {
             Schema::table('branches', function (Blueprint $table) {
-                $table->char('is_active', 1)->default('Y')->after('user_id');
+                $table->boolean('is_active')->default(true)->after('user_id');
                 $table->string('branch_address', 150)->nullable()->after('branch_name');
                 $table->string('branch_phone', 30)->nullable()->after('branch_address');
                 $table->unsignedInteger('dest_branch_id')->nullable()->after('branch_phone');
@@ -55,7 +54,7 @@ return new class extends Migration
         // Ferryboats
         if (!Schema::hasColumn('ferryboats', 'is_active')) {
             Schema::table('ferryboats', function (Blueprint $table) {
-                $table->char('is_active', 1)->default('Y')->after('user_id');
+                $table->boolean('is_active')->default(true)->after('user_id');
                 $table->unsignedBigInteger('created_by')->nullable()->after('is_active');
                 $table->unsignedBigInteger('updated_by')->nullable()->after('created_by');
             });
@@ -65,7 +64,7 @@ return new class extends Migration
         if (!Schema::hasColumn('ferry_schedules', 'is_active')) {
             Schema::table('ferry_schedules', function (Blueprint $table) {
                 $table->time('schedule_time')->nullable()->after('minute');
-                $table->char('is_active', 1)->default('Y')->after('schedule_time');
+                $table->boolean('is_active')->default(true)->after('schedule_time');
                 $table->unsignedBigInteger('created_by')->nullable()->after('is_active');
                 $table->unsignedBigInteger('updated_by')->nullable()->after('created_by');
             });
@@ -74,7 +73,7 @@ return new class extends Migration
         // Item Categories
         if (!Schema::hasColumn('item_categories', 'is_active')) {
             Schema::table('item_categories', function (Blueprint $table) {
-                $table->char('is_active', 1)->default('Y')->after('location_id');
+                $table->boolean('is_active')->default(true)->after('location_id');
                 $table->unsignedBigInteger('created_by')->nullable()->after('is_active');
                 $table->unsignedBigInteger('updated_by')->nullable()->after('created_by');
             });
@@ -88,9 +87,9 @@ return new class extends Migration
                 $table->decimal('item_surcharge_pct', 5, 2)->default(0)->after('item_lavy');
                 $table->decimal('levy_surcharge_pct', 5, 2)->default(0)->after('item_surcharge_pct');
                 $table->decimal('space_units', 10, 2)->default(1)->after('levy_surcharge_pct');
-                $table->char('is_fixed_rate', 1)->default('N')->after('space_units');
-                $table->char('is_vehicle', 1)->default('N')->after('is_fixed_rate');
-                $table->char('is_active', 1)->default('Y')->after('is_vehicle');
+                $table->boolean('is_fixed_rate')->default(false)->after('space_units');
+                $table->boolean('is_vehicle')->default(false)->after('is_fixed_rate');
+                $table->boolean('is_active')->default(true)->after('is_vehicle');
                 $table->unsignedBigInteger('created_by')->nullable()->after('user_id');
                 $table->unsignedBigInteger('updated_by')->nullable()->after('created_by');
             });
@@ -99,7 +98,7 @@ return new class extends Migration
         // Guest Categories
         if (!Schema::hasColumn('guest_categories', 'is_active')) {
             Schema::table('guest_categories', function (Blueprint $table) {
-                $table->char('is_active', 1)->default('Y')->after('user_id');
+                $table->boolean('is_active')->default(true)->after('user_id');
                 $table->unsignedBigInteger('created_by')->nullable()->after('is_active');
                 $table->unsignedBigInteger('updated_by')->nullable()->after('created_by');
             });
@@ -112,7 +111,7 @@ return new class extends Migration
                 $table->string('phone', 30)->nullable()->after('address');
                 $table->string('designation', 30)->nullable()->after('phone');
                 $table->string('remark', 50)->nullable()->after('designation');
-                $table->char('is_active', 1)->default('Y')->after('branch_id');
+                $table->boolean('is_active')->default(true)->after('branch_id');
                 $table->unsignedBigInteger('created_by')->nullable()->after('is_active');
                 $table->unsignedBigInteger('updated_by')->nullable()->after('created_by');
             });
@@ -232,9 +231,16 @@ return new class extends Migration
         Schema::table('ticket_lines', function (Blueprint $table) {
             $table->dropIndex('ticket_lines_legacy_idx');
             $table->dropColumn([
-                'branch_id', 'ticket_date', 'ticket_no',
-                'surcharge_pct', 'levy_surcharge_pct', 'vehicle_id',
-                'unit_no', 'unit_sr_no', 'created_by', 'updated_by'
+                'branch_id',
+                'ticket_date',
+                'ticket_no',
+                'surcharge_pct',
+                'levy_surcharge_pct',
+                'vehicle_id',
+                'unit_no',
+                'unit_sr_no',
+                'created_by',
+                'updated_by'
             ]);
         });
 
@@ -242,10 +248,20 @@ return new class extends Migration
         Schema::table('tickets', function (Blueprint $table) {
             $table->dropUnique('tickets_legacy_unique');
             $table->dropColumn([
-                'ticket_date', 'ticket_no', 'total_levy', 'total_surcharge',
-                'net_amount', 'received_amount', 'balance_amount', 'pending_amount',
-                'dest_branch_id', 'dest_branch_name', 'no_of_units', 'customer_id',
-                'created_by', 'updated_by'
+                'ticket_date',
+                'ticket_no',
+                'total_levy',
+                'total_surcharge',
+                'net_amount',
+                'received_amount',
+                'balance_amount',
+                'pending_amount',
+                'dest_branch_id',
+                'dest_branch_name',
+                'no_of_units',
+                'customer_id',
+                'created_by',
+                'updated_by'
             ]);
         });
 

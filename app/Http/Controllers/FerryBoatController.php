@@ -6,6 +6,7 @@ use App\Models\Branch;
 use App\Models\FerryBoat;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Inertia\Inertia;
 
 class FerryBoatController extends Controller
 {
@@ -19,10 +20,10 @@ class FerryBoatController extends Controller
         $user = Auth::user();
 
         // Role 1 & 2 → see all branches
-        if (in_array($user->role_id, [1,2])) {
+        if (in_array($user->role_id, [1, 2])) {
             $branches = Branch::all();
             $branchId = $request->query('branch_id');
-        } 
+        }
         // Role 3 → only their branch
         else {
             $branches = Branch::where('id', $user->branch_id)->get();
@@ -35,7 +36,12 @@ class FerryBoatController extends Controller
 
         $total = $boats->count();
 
-        return view('ferryboats.index', compact('boats', 'total', 'branches', 'branchId'));
+        return Inertia::render('Masters/FerryBoats/Index', [
+            'boats' => $boats,
+            'total' => $total,
+            'branches' => $branches,
+            'branchId' => $branchId,
+        ]);
     }
 
     public function create()
@@ -43,53 +49,56 @@ class FerryBoatController extends Controller
         $user = Auth::user();
 
         // Role 1 & 2 → all branches, Role 3 → only their branch
-        $branches = in_array($user->role_id, [1,2]) 
-            ? Branch::all() 
+        $branches = in_array($user->role_id, [1, 2])
+            ? Branch::all()
             : Branch::where('id', $user->branch_id)->get();
 
-        return view('ferryboats.create', compact('branches'));
+        return Inertia::render('Masters/FerryBoats/Create', ['branches' => $branches]);
     }
 
     public function store(Request $request)
     {
         $request->validate([
             'number' => 'required',
-            'name'   => 'required',
-            'branch_id'=>'required',
+            'name' => 'required',
+            'branch_id' => 'required',
         ]);
 
         FerryBoat::create([
-            'number'    => $request->number,
-            'name'      => $request->name,
+            'number' => $request->number,
+            'name' => $request->name,
             'branch_id' => $request->branch_id,
         ]);
 
         return redirect()->route('ferryboats.index')
-                         ->with('success', 'Ferry Boat added successfully.');
+            ->with('success', 'Ferry Boat added successfully.');
     }
 
     public function edit(FerryBoat $ferryboat)
     {
         $user = Auth::user();
-        $branches = in_array($user->role_id, [1,2]) 
-            ? Branch::all() 
+        $branches = in_array($user->role_id, [1, 2])
+            ? Branch::all()
             : Branch::where('id', $user->branch_id)->get();
 
-        return view('ferryboats.edit', compact('ferryboat','branches'));
+        return Inertia::render('Masters/FerryBoats/Edit', [
+            'ferryboat' => $ferryboat,
+            'branches' => $branches,
+        ]);
     }
 
     public function update(Request $request, FerryBoat $ferryboat)
     {
         $request->validate([
             'number' => 'required',
-            'name'   => 'required',
+            'name' => 'required',
             'branch_id' => 'required',
         ]);
 
-        $ferryboat->update($request->only('number','name','branch_id'));
+        $ferryboat->update($request->only('number', 'name', 'branch_id'));
 
         return redirect()->route('ferryboats.index')
-                         ->with('success','Ferry Boat updated successfully.');
+            ->with('success', 'Ferry Boat updated successfully.');
     }
 
     public function destroy(FerryBoat $ferryboat)
@@ -97,7 +106,7 @@ class FerryBoatController extends Controller
         $ferryboat->delete();
 
         return redirect()->route('ferryboats.index')
-                         ->with('success','Ferry Boat deleted successfully.');
+            ->with('success', 'Ferry Boat deleted successfully.');
     }
 
     // API Method for Mobile App
@@ -107,12 +116,12 @@ class FerryBoatController extends Controller
             ->select('id', 'number', 'name')
             ->orderBy('name')
             ->get()
-            ->map(function($ferry) {
+            ->map(function ($ferry) {
                 return [
                     'id' => $ferry->id,
                     'name' => $ferry->name,
-                    'capacity' => 100, // Default capacity since column doesn't exist
-                    'description' => $ferry->number,
+                    'number' => $ferry->number,
+                    'capacity' => null, // Not tracked in database
                 ];
             });
 

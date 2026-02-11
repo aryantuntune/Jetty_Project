@@ -6,10 +6,27 @@ namespace App\Models;
 use App\Models\TicketLine;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Str;
 
 class Ticket extends Model
 {
     use HasFactory;
+
+    /**
+     * Boot method to auto-generate qr_hash on creation
+     */
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::creating(function ($ticket) {
+            // Generate cryptographically secure hash for QR code
+            // Using SHA256 of UUID + microtime for uniqueness
+            if (empty($ticket->qr_hash)) {
+                $ticket->qr_hash = hash('sha256', Str::uuid()->toString() . microtime(true));
+            }
+        });
+    }
 
     protected $fillable = [
         // Legacy composite key fields
@@ -43,6 +60,11 @@ class Ticket extends Model
         'checker_id',
         'created_by',
         'updated_by',
+        // Mobile app fields
+        'source',
+        'payment_id',
+        'qr_code',
+        'status',
     ];
 
     protected $casts = [
@@ -73,12 +95,12 @@ class Ticket extends Model
 
     public function branch()
     {
-        return $this->belongsTo(Branch::class, 'branch_id', 'branch_id');
+        return $this->belongsTo(Branch::class, 'branch_id');
     }
 
     public function destBranch()
     {
-        return $this->belongsTo(Branch::class, 'dest_branch_id', 'branch_id');
+        return $this->belongsTo(Branch::class, 'dest_branch_id');
     }
 
     public function user()
@@ -89,6 +111,11 @@ class Ticket extends Model
     public function checker()
     {
         return $this->belongsTo(User::class, 'checker_id');
+    }
+
+    public function customer()
+    {
+        return $this->belongsTo(Customer::class);
     }
 
     public function guest()
@@ -115,7 +142,7 @@ class Ticket extends Model
     public function scopeForMonth($query, $year, $month)
     {
         return $query->whereYear('ticket_date', $year)
-                     ->whereMonth('ticket_date', $month);
+            ->whereMonth('ticket_date', $month);
     }
 
     // Helper to get legacy-style ticket reference

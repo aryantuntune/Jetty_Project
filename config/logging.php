@@ -89,7 +89,7 @@ return [
             'handler_with' => [
                 'host' => env('PAPERTRAIL_URL'),
                 'port' => env('PAPERTRAIL_PORT'),
-                'connectionString' => 'tls://'.env('PAPERTRAIL_URL').':'.env('PAPERTRAIL_PORT'),
+                'connectionString' => 'tls://' . env('PAPERTRAIL_URL') . ':' . env('PAPERTRAIL_PORT'),
             ],
             'processors' => [PsrLogMessageProcessor::class],
         ],
@@ -125,6 +125,37 @@ return [
 
         'emergency' => [
             'path' => storage_path('logs/laravel.log'),
+        ],
+
+        // =====================================================
+        // CUSTOM CHANNELS FOR PRODUCTION DEBUGGING
+        // =====================================================
+
+        // Authentication debug channel - logs login attempts/failures
+        'auth_debug' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/auth.log'),
+            'level' => 'debug',
+            'days' => 7,
+            'replace_placeholders' => true,
+        ],
+
+        // Session debug channel - logs session issues
+        'session_debug' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/session.log'),
+            'level' => 'debug',
+            'days' => 7,
+            'replace_placeholders' => true,
+        ],
+
+        // API requests channel - logs API activity
+        'api' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/api.log'),
+            'level' => 'info',
+            'days' => 14,
+            'replace_placeholders' => true,
         ],
 
     ],

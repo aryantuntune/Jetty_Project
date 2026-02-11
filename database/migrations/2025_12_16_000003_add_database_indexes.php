@@ -5,8 +5,7 @@ use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\DB;
 
-return new class extends Migration
-{
+return new class extends Migration {
     /**
      * Run the migrations.
      */
@@ -141,11 +140,23 @@ return new class extends Migration
     }
 
     /**
-     * Check if index exists
+     * Check if index exists (PostgreSQL and MySQL compatible)
      */
     private function indexExists($table, $index): bool
     {
-        $indexes = DB::select("SHOW INDEX FROM `{$table}` WHERE Key_name = ?", [$index]);
+        $driver = DB::connection()->getDriverName();
+
+        if ($driver === 'pgsql') {
+            // PostgreSQL uses pg_indexes catalog
+            $indexes = DB::select(
+                "SELECT indexname FROM pg_indexes WHERE tablename = ? AND indexname = ?",
+                [$table, $index]
+            );
+        } else {
+            // MySQL uses SHOW INDEX
+            $indexes = DB::select("SHOW INDEX FROM `{$table}` WHERE Key_name = ?", [$index]);
+        }
+
         return count($indexes) > 0;
     }
 };

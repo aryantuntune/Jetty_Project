@@ -7,6 +7,9 @@ use Illuminate\Console\Scheduling\Schedule;
 
 
 return Application::configure(basePath: dirname(__DIR__))
+    ->withProviders([
+        \App\Providers\RouteServiceProvider::class,
+    ])
     ->withRouting(
         web: __DIR__ . '/../routes/web.php',
         api: __DIR__ . '/../routes/api.php',
@@ -14,6 +17,11 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
+        // Add Inertia middleware to web group
+        $middleware->web(append: [
+            \App\Http\Middleware\HandleInertiaRequests::class,
+        ]);
+
         // Add/keep any global middleware here if you need
         $middleware->api(prepend: [
             \Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful::class,
@@ -23,15 +31,16 @@ return Application::configure(basePath: dirname(__DIR__))
             'role' => \App\Http\Middleware\Role::class,
             'blockRole5' => \App\Http\Middleware\BlockRole5::class,
             'auth' => \App\Http\Middleware\Authenticate::class,
-            'customer.api' => \App\Http\Middleware\AuthenticateCustomerApi::class,  // NEW
+            'customer.api' => \App\Http\Middleware\AuthenticateCustomerApi::class,
             'customer.guest' => \App\Http\Middleware\RedirectIfCustomerAuthenticated::class,
             'admin.guest' => \App\Http\Middleware\RedirectIfAdminAuthenticated::class,
             'guest' => \App\Http\Middleware\RedirectIfAuthenticated::class,
+            'legacy.lock' => \App\Http\Middleware\LegacyLock::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //
-
+    
     })
 
     ->withSchedule(function (Schedule $schedule) {

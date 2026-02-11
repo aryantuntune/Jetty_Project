@@ -11,6 +11,7 @@ use App\Models\Ticket;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Validation\ValidationException;
+use Inertia\Inertia;
 
 class TicketEntryController extends Controller
 {
@@ -41,14 +42,16 @@ class TicketEntryController extends Controller
             $ferrySchedulesPerBranch = [];
             foreach ($branches as $b) {
                 $ferrySchedulesPerBranch[$b->id] = FerrySchedule::where('branch_id', $b->id)
-                    ->orderByRaw('CAST(hour AS UNSIGNED), CAST(minute AS UNSIGNED)')
+                    ->orderByRaw('CAST(hour AS INTEGER), CAST(minute AS INTEGER)')
                     ->get()
                     ->map(function ($row) {
                         return [
                             'id' => $row->id,
                             'time' => str_pad($row->hour, 2, '0', STR_PAD_LEFT) . ':' . str_pad($row->minute, 2, '0', STR_PAD_LEFT)
                         ];
-                    });
+                    })
+                    ->unique('time')
+                    ->values();
             }
         } else {
             // --- Normal user: only their branch ---
@@ -68,11 +71,11 @@ class TicketEntryController extends Controller
         // Fetch first and last ferry schedules for this branch
         // Use $branchId (already set above) instead of $user->branch_id for admins
         $first_row_ferry_schedule = FerrySchedule::where('branch_id', $branchId)
-            ->orderByRaw('CAST(hour AS UNSIGNED), CAST(minute AS UNSIGNED)')
+            ->orderByRaw('CAST(hour AS INTEGER), CAST(minute AS INTEGER)')
             ->first();
 
         $last_row_ferry_schedule = FerrySchedule::where('branch_id', $branchId)
-            ->orderByRaw('CAST(hour AS UNSIGNED) DESC, CAST(minute AS UNSIGNED) DESC')
+            ->orderByRaw('CAST(hour AS INTEGER) DESC, CAST(minute AS INTEGER) DESC')
             ->first();
         if ($first_row_ferry_schedule && $last_row_ferry_schedule) {
             $now = Carbon::now('Asia/Kolkata');
@@ -107,7 +110,7 @@ class TicketEntryController extends Controller
         //  dd($beforeFirstFerry);
 
 
-        $paymentModes = ['CASH MEMO', 'CREDIT MEMO', 'GUEST PASS', 'GPay'];
+        $paymentModes = ['Cash', 'UPI', 'Guest Pass'];
 
         // Existing "nextFerryTime" calculation for NON-admins
         $now = Carbon::now('Asia/Kolkata');
@@ -115,8 +118,8 @@ class TicketEntryController extends Controller
 
         $nextRow = FerrySchedule::query()
             ->when($branchId, fn($q) => $q->where('branch_id', $branchId))
-            ->whereRaw('(CAST(`hour` AS UNSIGNED)*60 + CAST(`minute` AS UNSIGNED)) > ?', [$nowMins])
-            ->orderByRaw('(CAST(`hour` AS UNSIGNED)*60 + CAST(`minute` AS UNSIGNED)) ASC')
+            ->whereRaw('(CAST(hour AS INTEGER)*60 + CAST(minute AS INTEGER)) > ?', [$nowMins])
+            ->orderByRaw('(CAST(hour AS INTEGER)*60 + CAST(minute AS INTEGER)) ASC')
             ->first();
 
         if ($nextRow) {
@@ -126,7 +129,7 @@ class TicketEntryController extends Controller
         } else {
             $firstRow = FerrySchedule::query()
                 ->when($branchId, fn($q) => $q->where('branch_id', $branchId))
-                ->orderByRaw('(CAST(`hour` AS UNSIGNED)*60 + CAST(`minute` AS UNSIGNED)) ASC')
+                ->orderByRaw('(CAST(hour AS INTEGER)*60 + CAST(minute AS INTEGER)) ASC')
                 ->first();
 
             $nextFerryTime = $firstRow
@@ -134,21 +137,35 @@ class TicketEntryController extends Controller
                 : $now->format('Y-m-d\TH:i');
         }
 
-        return view('tickets.create', compact(
-            'branches',
-            'branchId',
-            'branchName',
-            'ferryboatsBranch',
-            'ferryBoatsPerBranch',
-            'ferrySchedulesPerBranch', // 🔹 new
-            'paymentModes',
-            'nextFerryTime',
-            'user',
-            'last_row_ferry_schedule',
-            'first_row_ferry_schedule',
-            'hideFerryTime',
-            'beforeFirstFerry'
-        ));
+        // Build destination branches per branch (for To Branch dropdown)
+        $destBranchesPerBranch = [];
+        foreach ($branches as $b) {
+            $destBranchesPerBranch[$b->id] = \App\Models\Route::getDestinationsForBranch($b->id);
+        }
+
+        // Fetch active guests for Guest Pass dropdown
+        $guests = \App\Models\Guest::active()
+            ->with('category:id,name')
+            ->orderBy('name')
+            ->get(['id', 'name', 'category_id']);
+
+        return Inertia::render('TicketEntry/Create', [
+            'branches' => $branches,
+            'branchId' => $branchId,
+            'branchName' => $branchName,
+            'ferryboatsBranch' => $ferryboatsBranch,
+            'ferryBoatsPerBranch' => $ferryBoatsPerBranch,
+            'ferrySchedulesPerBranch' => $ferrySchedulesPerBranch,
+            'destBranchesPerBranch' => $destBranchesPerBranch,
+            'paymentModes' => $paymentModes,
+            'guests' => $guests,
+            'nextFerryTime' => $nextFerryTime,
+            'user' => $user,
+            'last_row_ferry_schedule' => $last_row_ferry_schedule,
+            'first_row_ferry_schedule' => $first_row_ferry_schedule,
+            'hideFerryTime' => $hideFerryTime,
+            'beforeFirstFerry' => $beforeFirstFerry,
+        ]);
     }
 
 
@@ -158,10 +175,12 @@ class TicketEntryController extends Controller
         $now = Carbon::now('Asia/Kolkata');
 
         $data = $request->validate([
-            'payment_mode' => 'required|string|in:Cash,Credit,Guest Pass,GPay',
+            'payment_mode' => 'required|string|in:Cash,UPI,Guest Pass',
+            'guest_id' => 'nullable|integer|exists:guests,id',
             'customer_name' => 'nullable|string|max:120',
             'customer_mobile' => 'nullable|string|max:20|regex:/^\+?\d{10,15}$/',
             'ferry_boat_id' => 'required|integer',
+            'dest_branch_id' => 'nullable|integer|exists:branches,id',
             'ferry_time' => '',
             'discount_pct' => 'nullable|numeric|min:0',
             'discount_rs' => 'nullable|numeric|min:0',
@@ -253,16 +272,24 @@ class TicketEntryController extends Controller
                     ->with('error', 'Duplicate ticket prevented.');
             }
 
-            return response()->json([
-                'ok' => false,
-                'message' => 'Duplicate ticket prevented (already saved recently).'
-            ]);
+            return redirect()->route('ticket-entry.create')
+                ->with('error', 'Duplicate ticket prevented (already saved recently).');
         }
 
 
+        // Get destination branch name if provided
+        $destBranchName = null;
+        if (!empty($data['dest_branch_id'])) {
+            $destBranch = \App\Models\Branch::find($data['dest_branch_id']);
+            $destBranchName = $destBranch?->branch_name;
+        }
+
         // ✅ Create ticket header
         $ticket = \App\Models\Ticket::create([
+            'ticket_date' => $request->input('ticket_date') ?? $now->toDateString(),
             'branch_id' => $branchId,
+            'dest_branch_id' => $data['dest_branch_id'] ?? null,
+            'dest_branch_name' => $destBranchName,
             'ferry_boat_id' => $data['ferry_boat_id'],
             'payment_mode' => $data['payment_mode'],
             'customer_name' => $data['customer_name'] ?? null,
@@ -282,12 +309,21 @@ class TicketEntryController extends Controller
             $ticket->lines()->create($ln);
         }
 
-        return response()->json([
-            'ok' => true,
-            'message' => 'Ticket saved successfully.',
-            'ticket_id' => $ticket->id,
-            'total' => $ticket->total_amount,
-        ]);
+        // Build secure print URL using qr_hash
+        $printUrl = $ticket->qr_hash
+            ? route('tickets.print.secure', ['hash' => $ticket->qr_hash])
+            : route('tickets.print', ['ticket' => $ticket->id]);
+
+        // Return redirect with flash message and ticket info for printing
+        return redirect()->route('ticket-entry.create')
+            ->with('success', 'Ticket created successfully!')
+            ->with('ticket', [
+                'id' => $ticket->id,
+                'ticket_no' => $ticket->ticket_no,
+                'qr_hash' => $ticket->qr_hash,
+                'print_url' => $printUrl,
+                'total' => $ticket->total_amount,
+            ]);
     }
 
 
@@ -363,6 +399,7 @@ class TicketEntryController extends Controller
 
     /**
      * Get all items for a branch (for dropdown)
+     * Items with NULL branch_id are global and available at all branches
      */
     public function listItems(Request $request)
     {
@@ -371,10 +408,14 @@ class TicketEntryController extends Controller
 
         $items = ItemRate::query()
             ->effective($on)
-            ->when($branchId, fn($q) => $q->where('branch_id', $branchId))
+            ->where(function ($q) use ($branchId) {
+                // Include items for this specific branch OR global items (branch_id = NULL)
+                $q->where('branch_id', $branchId)
+                    ->orWhereNull('branch_id');
+            })
             ->orderBy('is_vehicle')
             ->orderBy('item_name')
-            ->get(['id', 'item_name', 'item_rate', 'item_lavy', 'is_vehicle', 'item_category_id']);
+            ->get(['id', 'item_name', 'item_rate', 'item_lavy', 'is_vehicle', 'item_category_id', 'branch_id']);
 
         return response()->json($items);
     }
@@ -382,10 +423,19 @@ class TicketEntryController extends Controller
 
     public function print(Ticket $ticket)
     {
-        $ticket->load(['branch', 'ferryBoat', 'user', 'lines']); // ensure lines appear
-        return view('tickets.print', compact('ticket'));
+        $ticket->load(['branch', 'destBranch', 'ferryBoat', 'user', 'lines']);
+        return Inertia::render('TicketEntry/Print', ['ticket' => $ticket]);
     }
 
+    /**
+     * Print ticket by secure qr_hash (no ticket ID exposure)
+     */
+    public function printByHash(string $hash)
+    {
+        $ticket = Ticket::where('qr_hash', $hash)
+            ->with(['branch', 'destBranch', 'ferryBoat', 'user', 'lines'])
+            ->firstOrFail();
 
-
+        return Inertia::render('TicketEntry/Print', ['ticket' => $ticket]);
+    }
 }

@@ -6,23 +6,24 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Facades\Auth;
+use Inertia\Inertia;
 
 class ResetPasswordController extends Controller
 {
-   public function showResetForm(Request $request, $token)
-{
-    return view('customer.auth.reset-password', [
-        'token' => $token,
-        'email' => $request->email,
-    ]);
-}
+    public function showResetForm(Request $request, $token)
+    {
+        return Inertia::render('Customer/ResetPassword', [
+            'token' => $token,
+            'email' => $request->email,
+        ]);
+    }
 
 
     public function resetPassword(Request $request)
     {
         $request->validate([
-            'token'    => 'required',
-            'email'    => 'required|email',
+            'token' => 'required',
+            'email' => 'required|email',
             'password' => 'required|confirmed|min:6',
         ]);
 
@@ -36,7 +37,7 @@ class ResetPasswordController extends Controller
         );
 
         return $status === Password::PASSWORD_RESET
-                ? redirect()->route('customer.login')->with('success', 'Password updated successfully.')
-                : back()->withErrors(['email' => __($status)]);
+            ? redirect()->route('customer.login')->with('success', 'Password updated successfully.')
+            : back()->withErrors(['email' => __($status)]);
     }
 }

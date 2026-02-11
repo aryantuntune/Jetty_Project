@@ -5,8 +5,7 @@ use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\DB;
 
-return new class extends Migration
-{
+return new class extends Migration {
     /**
      * Run the migrations.
      */
@@ -132,18 +131,33 @@ return new class extends Migration
     }
 
     /**
-     * Check if foreign key exists
+     * Check if foreign key exists (PostgreSQL and MySQL compatible)
      */
     private function foreignKeyExists($table, $name): bool
     {
-        $result = DB::select("
-            SELECT CONSTRAINT_NAME
-            FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS
-            WHERE TABLE_SCHEMA = DATABASE()
-            AND TABLE_NAME = ?
-            AND CONSTRAINT_NAME = ?
-            AND CONSTRAINT_TYPE = 'FOREIGN KEY'
-        ", [$table, $name]);
+        $driver = DB::connection()->getDriverName();
+
+        if ($driver === 'pgsql') {
+            // PostgreSQL query - uses current schema
+            $result = DB::select("
+                SELECT constraint_name
+                FROM information_schema.table_constraints
+                WHERE table_schema = 'public'
+                AND table_name = ?
+                AND constraint_name = ?
+                AND constraint_type = 'FOREIGN KEY'
+            ", [$table, $name]);
+        } else {
+            // MySQL query
+            $result = DB::select("
+                SELECT CONSTRAINT_NAME
+                FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS
+                WHERE TABLE_SCHEMA = DATABASE()
+                AND TABLE_NAME = ?
+                AND CONSTRAINT_NAME = ?
+                AND CONSTRAINT_TYPE = 'FOREIGN KEY'
+            ", [$table, $name]);
+        }
 
         return count($result) > 0;
     }

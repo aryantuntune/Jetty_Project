@@ -1,0 +1,6 @@
+export { Home } from './Home';
+export { About } from './About';
+export { Contact } from './Contact';
+export { FerryRoutes } from './FerryRoutes';
+export { FerryRouteDetail } from './FerryRouteDetail';
+export { HouseboatBooking } from './HouseboatBooking';

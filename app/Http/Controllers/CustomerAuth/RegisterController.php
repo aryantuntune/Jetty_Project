@@ -6,12 +6,13 @@ use App\Models\Customer;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
+use Inertia\Inertia;
 
 class RegisterController
 {
     public function showRegisterForm()
     {
-        return view('customer.register');
+        return Inertia::render('Customer/Register');
     }
 
     // STEP 1: SEND OTP
@@ -19,10 +20,10 @@ class RegisterController
     {
         $request->validate([
             'first_name' => 'required',
-            'last_name'  => 'required',
-            'mobile'     => 'required',
-            'email'      => 'required|email',
-            'password'   => 'required|min:6',
+            'last_name' => 'required',
+            'mobile' => 'required',
+            'email' => 'required|email',
+            'password' => 'required|min:6',
         ]);
 
         // --------------------------------------------
@@ -45,10 +46,10 @@ class RegisterController
         session([
             'pending_user' => [
                 'first_name' => $request->first_name,
-                'last_name'  => $request->last_name,
-                'mobile'     => $request->mobile,
-                'email'      => $request->email,
-                'password'   => $request->password
+                'last_name' => $request->last_name,
+                'mobile' => $request->mobile,
+                'email' => $request->email,
+                'password' => $request->password
             ],
             'otp' => $otp
         ]);

@@ -7,6 +7,7 @@ use App\Models\Branch;
 use App\Models\FerryBoat;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Inertia\Inertia;
 
 class ManagerController extends Controller
 {
@@ -21,7 +22,7 @@ class ManagerController extends Controller
             ->with(['branch', 'ferryboat'])
             ->paginate(10);
 
-        return view('manager.index', compact('managers'));
+        return Inertia::render('Manager/Index', ['managers' => $managers]);
     }
 
     public function create()
@@ -29,29 +30,32 @@ class ManagerController extends Controller
         $branches = Branch::all();
         $ferryboats = FerryBoat::all();
 
-        return view('manager.create', compact('branches', 'ferryboats'));
+        return Inertia::render('Manager/Create', [
+            'branches' => $branches,
+            'ferryboats' => $ferryboats,
+        ]);
     }
 
     public function store(Request $request)
     {
         $request->validate([
-            'name'        => 'required|string|max:255',
-            'email'       => 'required|email|unique:users,email',
-            'password'    => 'required|string|min:6',
-            'mobile'      => 'nullable|string|max:20',
-            'branch_id'   => 'nullable',
-            'ferry_boat_id'=> 'nullable',
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|unique:users,email',
+            'password' => 'required|string|min:6',
+            'mobile' => 'nullable|string|max:20',
+            'branch_id' => 'nullable',
+            'ferry_boat_id' => 'nullable',
         ]);
 
         User::create([
-            'name'        => $request->name,
-            'email'       => $request->email,
-            'password'    => Hash::make($request->password),
-            'mobile'      => $request->mobile,
-            'branch_id'   => $request->branch_id,
-            'ferry_boat_id'=> $request->ferryboat_id,
-            'role_id'     => 3, // Manager role
-            'role'        => 'Manager',
+            'name' => $request->name,
+            'email' => $request->email,
+            'password' => Hash::make($request->password),
+            'mobile' => $request->mobile,
+            'branch_id' => $request->branch_id,
+            'ferry_boat_id' => $request->ferryboat_id,
+            'role_id' => 3, // Manager role
+            'role' => 'Manager',
         ]);
 
         return redirect()->route('manager.index')->with('success', 'Manager created successfully!');
@@ -60,7 +64,7 @@ class ManagerController extends Controller
     public function show(User $manager)
     {
         abort_if($manager->role_id != 3, 404);
-        return view('manager.show', compact('manager'));
+        return Inertia::render('Manager/Show', ['manager' => $manager->load(['branch', 'ferryboat'])]);
     }
 
     public function edit(User $manager)
@@ -70,7 +74,11 @@ class ManagerController extends Controller
         $branches = Branch::all();
         $ferryboats = FerryBoat::all();
 
-        return view('manager.edit', compact('manager', 'branches', 'ferryboats'));
+        return Inertia::render('Manager/Edit', [
+            'manager' => $manager,
+            'branches' => $branches,
+            'ferryboats' => $ferryboats,
+        ]);
     }
 
     public function update(Request $request, User $manager)
@@ -78,22 +86,22 @@ class ManagerController extends Controller
         abort_if($manager->role_id != 3, 404);
 
         $request->validate([
-            'name'        => 'required|string|max:255',
-            'email'       => 'required|email|unique:users,email,' . $manager->id,
-            'password'    => 'nullable|string|min:6',
-            'mobile'      => 'nullable|string|max:20',
-            'branch_id'   => 'nullable|exists:branches,id',
-            'ferry_boat_id'=> 'nullable|exists:ferryboats,id',
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|unique:users,email,' . $manager->id,
+            'password' => 'nullable|string|min:6',
+            'mobile' => 'nullable|string|max:20',
+            'branch_id' => 'nullable|exists:branches,id',
+            'ferry_boat_id' => 'nullable|exists:ferryboats,id',
         ]);
 
         $manager->update([
-            'name'        => $request->name,
-            'email'       => $request->email,
-            'mobile'      => $request->mobile,
-            'branch_id'   => $request->branch_id,
-            'ferry_boat_id'=> $request->ferryboat_id,
-            'role_id'     => 3,
-            'role'        => 'Manager',
+            'name' => $request->name,
+            'email' => $request->email,
+            'mobile' => $request->mobile,
+            'branch_id' => $request->branch_id,
+            'ferry_boat_id' => $request->ferryboat_id,
+            'role_id' => 3,
+            'role' => 'Manager',
         ]);
 
         if ($request->filled('password')) {

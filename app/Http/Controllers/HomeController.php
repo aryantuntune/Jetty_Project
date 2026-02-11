@@ -8,6 +8,7 @@ use App\Models\FerryBoat;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Inertia\Inertia;
 
 class HomeController extends Controller
 {
@@ -90,12 +91,24 @@ class HomeController extends Controller
 
         // Get recent tickets for activity feed - only last 5, very fast query
         $recentTicketsQuery = Ticket::with(['user:id,name', 'ferryBoat:id,name', 'branch:id,branch_name'])
-            ->select('id', 'ticket_date', 'ticket_no', 'total_amount', 'payment_mode', 'user_id', 'ferry_boat_id', 'branch_id', 'created_at');
+            ->select('id', 'ticket_date', 'ticket_no', 'total_amount', 'payment_mode', 'user_id', 'ferry_boat_id', 'branch_id', 'created_at', 'verified_at');
         $this->applyRoleFilter($recentTicketsQuery, $user);
         $recentTickets = $recentTicketsQuery
             ->orderByDesc('id')  // Use primary key for fastest ordering
             ->limit(5)
-            ->get();
+            ->get()
+            ->map(function ($ticket) {
+                return [
+                    'id' => $ticket->id,
+                    'ticket_no' => $ticket->ticket_no,
+                    'total_amount' => $ticket->total_amount,
+                    'ticket_date' => $ticket->ticket_date,
+                    'verified_at' => $ticket->verified_at,
+                    'ferry_name' => $ticket->ferryBoat->name ?? 'N/A',
+                    'operator_name' => $ticket->user->name ?? 'Unknown',
+                    'created_at_human' => $ticket->created_at->diffForHumans(),
+                ];
+            });
 
         // Skip comparison queries for performance - just show 0% change
         $prevTicketsCount = 0;
@@ -119,22 +132,46 @@ class HomeController extends Controller
         ];
         $roleName = $roleNames[$user->role_id] ?? 'Staff';
 
-        return view('home', compact(
-            'ticketsCount',
-            'totalRevenue',
-            'ferryBoatsCount',
-            'pendingVerifications',
-            'recentTickets',
-            'viewMode',
-            'selectedDate',
-            'selectedMonth',
-            'periodLabel',
-            'ticketsChange',
-            'revenueChange',
-            'date',
-            'monthStart',
-            'roleName'
-        ));
+        // Determine scope info  
+        $scopeType = in_array($user->role_id, [1, 2]) ? 'global' : ($user->role_id == 3 ? 'route' : 'branch');
+        $scope = $user->role_id == 3
+            ? ($user->ferryBoat->name ?? 'Unknown Route')
+            : ($user->branch->branch_name ?? 'Unknown Branch');
+
+        return Inertia::render('Dashboard', [
+            'stats' => [
+                'ticketsCount' => $ticketsCount,
+                'totalRevenue' => (float) $totalRevenue,
+                'ferryBoatsCount' => $ferryBoatsCount,
+                'pendingVerifications' => $pendingVerifications,
+                'ticketsChange' => $ticketsChange,
+                'revenueChange' => $revenueChange,
+            ],
+            'filters' => [
+                'viewMode' => $viewMode,
+                'selectedDate' => $selectedDate,
+                'selectedMonth' => $selectedMonth,
+                'periodLabel' => $periodLabel,
+                'isToday' => $date->isToday(),
+                'isCurrentMonth' => $monthStart->isSameMonth(Carbon::now()),
+                'prevDate' => $date->copy()->subDay()->format('Y-m-d'),
+                'nextDate' => $date->copy()->addDay()->format('Y-m-d'),
+                'prevMonth' => $monthStart->copy()->subMonth()->format('Y-m'),
+                'nextMonth' => $monthStart->copy()->addMonth()->format('Y-m'),
+            ],
+            'recentTickets' => $recentTickets,
+            'userContext' => [
+                'roleName' => $roleName,
+                'scopeType' => $scopeType,
+                'scope' => $scope,
+            ],
+            'routes' => [
+                'ticketEntry' => route('ticket-entry.create'),
+                'reports' => route('reports.tickets'),
+                'guests' => route('guests.index'),
+                'ferryBoats' => route('ferryboats.index'),
+            ],
+        ]);
     }
 
     /**

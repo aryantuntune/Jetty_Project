@@ -4,9 +4,9 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\HouseboatRoom;
-
 use Illuminate\Support\Str;
 use App\Models\HouseboatBooking;
+use Inertia\Inertia;
 
 class HouseboatController extends Controller
 {
@@ -22,7 +22,12 @@ class HouseboatController extends Controller
         $checkOut = $request->input('check_out', date('Y-m-d', strtotime('+1 day')));
         $guests = $request->input('guests', 2);
 
-        return view('houseboat.index', compact('rooms', 'checkIn', 'checkOut', 'guests'));
+        return Inertia::render('Houseboat/Booking', [
+            'rooms' => $rooms,
+            'checkIn' => $checkIn,
+            'checkOut' => $checkOut,
+            'guests' => $guests,
+        ]);
     }
 
     /**
@@ -76,7 +81,13 @@ class HouseboatController extends Controller
             $grandTotal = $totalPrice;
         }
 
-        return view('houseboat.checkout', compact('cartItems', 'checkIn', 'checkOut', 'nights', 'grandTotal'));
+        return Inertia::render('Houseboat/Checkout', [
+            'cartItems' => $cartItems,
+            'checkIn' => $checkIn,
+            'checkOut' => $checkOut,
+            'nights' => $nights,
+            'grandTotal' => $grandTotal,
+        ]);
     }
 
     /**

@@ -37,8 +37,17 @@ use Illuminate\Support\Facades\Route;
 
 
 
+use App\Http\Controllers\HealthController;
+
 // Homepage - carferry.in style
 Route::get('/', [PublicController::class, 'home'])->name('public.home');
+
+// ============================================
+// HEALTH CHECK ENDPOINTS (No Auth Required)
+// Used by load balancers and monitoring
+// ============================================
+Route::get('/health', [HealthController::class, 'check'])->name('health.check');
+Route::get('/ping', [HealthController::class, 'ping'])->name('health.ping');
 
 // Houseboat Booking
 Route::get('/houseboat-booking', [\App\Http\Controllers\HouseboatController::class, 'index'])->name('houseboat.index');
@@ -59,10 +68,7 @@ Route::get('/route/{slug}', [PublicController::class, 'route'])->name('public.ro
 Route::get('/book', fn() => redirect('/customer/login'))->name('book.redirect');
 Route::get('/verify-ticket', fn() => redirect('/verify'))->name('verify-ticket.redirect');
 
-// Keep old welcome page accessible for testing
-Route::get('/welcome-old', function () {
-    return view('welcome');
-});
+
 
 Route::middleware('admin.guest')->group(function () {
     Auth::routes(); // admin login/register
@@ -79,6 +85,12 @@ Route::middleware('admin.guest')->group(function () {
 Route::middleware(['auth', 'blockRole5'])->group(function () {
     Route::get('/home', [HomeController::class, 'index'])->name('home');
     Route::get('/dashboard', [HomeController::class, 'index'])->name('dashboard'); // Alias for /home
+
+    // Change Password routes
+    Route::get('/password/change', [\App\Http\Controllers\Auth\ChangePasswordController::class, 'showChangeForm'])
+        ->name('password.change');
+    Route::post('/password/change', [\App\Http\Controllers\Auth\ChangePasswordController::class, 'update'])
+        ->name('password.change.update');
 });
 
 Auth::routes();
@@ -87,6 +99,10 @@ Auth::routes();
 
 Route::middleware(['auth', 'blockRole5'])->group(function () {
     // Route::get('/admin', [App\Http\Controllers\AdminController::class, 'index'])->name('admin.dashboard');
+
+    // Routes Management (Admin only)
+    Route::resource('routes', \App\Http\Controllers\RouteController::class)
+        ->middleware(['auth', 'role:1,2']);
 
     // List all categories
     Route::get('/item-categories', [ItemCategoryController::class, 'index'])->name('item_categories.index');
@@ -171,6 +187,11 @@ Route::middleware(['auth', 'blockRole5'])->group(function () {
 
     Route::get('/tickets/{ticket}/print', [\App\Http\Controllers\TicketEntryController::class, 'print'])
         ->name('tickets.print');
+
+    // Secure print route using qr_hash (no ticket ID exposure)
+    Route::get('/t/{hash}/print', [\App\Http\Controllers\TicketEntryController::class, 'printByHash'])
+        ->name('tickets.print.secure')
+        ->where('hash', '[a-f0-9]{64}');
 
 
 
@@ -267,6 +288,7 @@ Route::middleware('auth:customer')->group(function () {
 
     Route::get('/booking/items/{branchId}', [BookingController::class, 'getItems']);
     Route::get('/booking/item-rate/{itemRateId}', [BookingController::class, 'getItemRate']);
+    Route::get('/booking/schedules/{branchId}', [BookingController::class, 'getSchedules']);
 
     Route::post('/payment/create-order', [BookingController::class, 'createOrder'])->name('payment.createOrder');
 

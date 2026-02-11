@@ -18,8 +18,9 @@ class FerrySchedule extends Model
     ];
 
     protected $casts = [
-        'hour'   => 'integer',
+        'hour' => 'integer',
         'minute' => 'integer',
+        'is_active' => 'boolean',
     ];
 
     public function getScheduleTimeAttribute()

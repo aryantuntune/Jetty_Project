@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\HouseboatBooking;
 use App\Models\HouseboatRoom;
+use Inertia\Inertia;
 
 class HouseboatAdminController extends Controller
 {
@@ -20,7 +21,12 @@ class HouseboatAdminController extends Controller
         $activeBookings = HouseboatBooking::where('status', 'confirmed')->count();
         $pendingBookings = HouseboatBooking::where('status', 'pending')->count();
 
-        return view('admin.houseboat.dashboard', compact('bookings', 'totalRevenue', 'activeBookings', 'pendingBookings'));
+        return Inertia::render('Houseboat/Dashboard', [
+            'bookings' => $bookings,
+            'totalRevenue' => $totalRevenue,
+            'activeBookings' => $activeBookings,
+            'pendingBookings' => $pendingBookings,
+        ]);
     }
 
     /**
@@ -29,7 +35,7 @@ class HouseboatAdminController extends Controller
     public function rooms()
     {
         $rooms = HouseboatRoom::all();
-        return view('admin.houseboat.rooms', compact('rooms'));
+        return Inertia::render('Houseboat/Rooms', ['rooms' => $rooms]);
     }
 
     /**

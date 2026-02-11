@@ -32,10 +32,12 @@ class ItemRate extends Model
 
     protected $casts = [
         'starting_date' => 'date',
-        'ending_date'   => 'date',
-        'item_rate'     => 'decimal:2',
-        'item_lavy'     => 'decimal:2',
-
+        'ending_date' => 'date',
+        'item_rate' => 'decimal:2',
+        'item_lavy' => 'decimal:2',
+        'is_fixed_rate' => 'boolean',
+        'is_vehicle' => 'boolean',
+        'is_active' => 'boolean',
     ];
 
     // Relationships (adjust table/model names if yours differ)

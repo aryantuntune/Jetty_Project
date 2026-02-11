@@ -5,15 +5,16 @@ use App\Models\User;
 use App\Models\Branch;
 use App\Models\BranchTransfer;
 use Illuminate\Http\Request;
+use Inertia\Inertia;
 
 class EmployeeTransferController extends Controller
 {
 
     public function transferPage()
-{
-    $users = User::with('branch')->get(); // get all employees
-    return view('employees.transfer_index', compact('users'));
-}
+    {
+        $users = User::with('branch')->get(); // get all employees
+        return Inertia::render('Employees/TransferIndex', ['users' => $users]);
+    }
 
 
     public function showTransferForm($id)
@@ -21,7 +22,10 @@ class EmployeeTransferController extends Controller
         $user = User::with('branch')->findOrFail($id);
         $branches = Branch::all();
 
-        return view('employees.transfer', compact('user', 'branches'));
+        return Inertia::render('Employees/Transfer', [
+            'user' => $user,
+            'branches' => $branches,
+        ]);
     }
 
     public function transfer(Request $request, $id)
@@ -30,12 +34,12 @@ class EmployeeTransferController extends Controller
 
         $request->validate([
             'to_branch_id' => 'required|exists:branches,id|different:current_branch_id',
-        ],[
+        ], [
             'to_branch_id.different' => 'The new branch must be different from current branch.'
         ]);
 
         $fromBranchId = $user->branch_id;
-        $toBranchId   = $request->to_branch_id;
+        $toBranchId = $request->to_branch_id;
 
         // Update user table
         $user->update([
@@ -49,7 +53,7 @@ class EmployeeTransferController extends Controller
             'to_branch_id' => $toBranchId,
         ]);
 
-       return redirect()->route('employees.transfer.index')
-                     ->with('success', 'Employee transferred successfully.');
+        return redirect()->route('employees.transfer.index')
+            ->with('success', 'Employee transferred successfully.');
     }
 }

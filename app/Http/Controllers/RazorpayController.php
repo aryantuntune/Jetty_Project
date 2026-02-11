@@ -52,7 +52,8 @@ class RazorpayController extends Controller
                 'data' => [
                     'order_id' => $razorpayOrder->id,
                     'amount' => $razorpayOrder->amount,
-                    'currency' => $razorpayOrder->currency
+                    'currency' => $razorpayOrder->currency,
+                    'key_id' => config('services.razorpay.key'),
                 ]
             ]);
 
@@ -98,53 +99,95 @@ class RazorpayController extends Controller
 
             $this->razorpay->utility->verifyPaymentSignature($attributes);
 
-            // Payment verified, create booking
+            // Payment verified, create ticket
             DB::beginTransaction();
 
-            // Calculate total amount from items
+            // Calculate total amount and prepare ticket lines
             $totalAmount = 0;
+            $ticketLines = [];
             foreach ($request->items as $item) {
                 $itemRate = \App\Models\ItemRate::find($item['item_rate_id']);
                 if ($itemRate) {
-                    $totalAmount += ($itemRate->item_rate + $itemRate->item_lavy) * $item['quantity'];
+                    $qty = $item['quantity'];
+                    $rate = $itemRate->item_rate;
+                    $levy = $itemRate->item_lavy ?? 0;
+                    $amount = ($rate + $levy) * $qty;
+                    $totalAmount += $amount;
+
+                    $ticketLines[] = [
+                        'item_rate_id' => $itemRate->id,
+                        'item_name' => $itemRate->item_name,
+                        'quantity' => $qty,
+                        'rate' => $rate,
+                        'levy' => $levy,
+                        'amount' => $amount,
+                    ];
                 }
             }
 
-            // Generate QR code
-            $qrCode = 'JETTY-' . strtoupper(uniqid());
+            // Generate ticket number and QR hash
+            $ticketNo = 'TKT' . date('Ymd') . str_pad(Ticket::whereDate('created_at', today())->count() + 1, 4, '0', STR_PAD_LEFT);
+            $qrHash = hash('sha256', $ticketNo . time() . $request->razorpay_payment_id);
 
-            // Create booking record
-            $booking = Booking::create([
+            // Create ticket record (using correct Ticket model and fields)
+            $ticket = Ticket::create([
+                'ticket_no' => $ticketNo,
                 'customer_id' => $request->user()->id,
-                'ferry_id' => $request->ferry_id,
-                'from_branch' => $request->from_branch_id,
-                'to_branch' => $request->to_branch_id,
-                'booking_date' => $request->booking_date,
-                'departure_time' => $request->departure_time,
-                'items' => json_encode($request->items),
+                'customer_name' => $request->user()->first_name . ' ' . $request->user()->last_name,
+                'customer_mobile' => $request->user()->mobile,
+                'ferry_boat_id' => $request->ferry_id,
+                'branch_id' => $request->from_branch_id,
+                'dest_branch_id' => $request->to_branch_id,
+                'ticket_date' => $request->booking_date,
+                'ferry_time' => $request->departure_time,
+                'no_of_units' => array_sum(array_column($ticketLines, 'quantity')),
                 'total_amount' => $totalAmount,
+                'net_amount' => $totalAmount,
+                'payment_mode' => 'online',
                 'payment_id' => $request->razorpay_payment_id,
-                'qr_code' => $qrCode,
-                'status' => 'confirmed'
+                'qr_hash' => $qrHash,
+                'source' => 'mobile_app',
+                'status' => 'confirmed',
             ]);
 
+            // Create ticket lines
+            foreach ($ticketLines as $line) {
+                TicketLine::create([
+                    'ticket_id' => $ticket->id,
+                    'item_rate_id' => $line['item_rate_id'],
+                    'item_name' => $line['item_name'],
+                    'quantity' => $line['quantity'],
+                    'rate' => $line['rate'],
+                    'levy' => $line['levy'],
+                    'amount' => $line['amount'],
+                ]);
+            }
+
             DB::commit();
+
+            // Load relationships for response
+            $ticket->load(['branch', 'destBranch', 'ferryBoat']);
 
             return response()->json([
                 'success' => true,
                 'message' => 'Payment verified and booking created successfully',
                 'data' => [
-                    'id' => $booking->id,
-                    'customer_id' => $booking->customer_id,
-                    'ferry_id' => $booking->ferry_id,
-                    'from_branch_id' => $booking->from_branch,
-                    'to_branch_id' => $booking->to_branch,
-                    'booking_date' => $booking->booking_date,
-                    'departure_time' => $booking->departure_time,
-                    'total_amount' => floatval($booking->total_amount),
-                    'status' => $booking->status,
-                    'qr_code' => $booking->qr_code,
-                    'created_at' => $booking->created_at->toIso8601String(),
+                    'id' => $ticket->id,
+                    'ticket_id' => $ticket->ticket_no,
+                    'customer_id' => $ticket->customer_id,
+                    'ferry_id' => $ticket->ferry_boat_id,
+                    'ferry_boat' => $ticket->ferryBoat?->name,
+                    'from_branch_id' => $ticket->branch_id,
+                    'from_branch' => $ticket->branch?->branch_name,
+                    'to_branch_id' => $ticket->dest_branch_id,
+                    'to_branch' => $ticket->destBranch?->branch_name,
+                    'booking_date' => $ticket->ticket_date,
+                    'departure_time' => $ticket->ferry_time,
+                    'items' => $ticketLines,
+                    'total_amount' => floatval($ticket->total_amount),
+                    'status' => $ticket->status,
+                    'qr_code' => $ticket->qr_hash,
+                    'created_at' => $ticket->created_at->toIso8601String(),
                 ]
             ]);
 

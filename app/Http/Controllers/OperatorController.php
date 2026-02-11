@@ -8,6 +8,7 @@ use App\Models\FerryBoat;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
+use Inertia\Inertia;
 
 class OperatorController extends Controller
 {
@@ -60,7 +61,10 @@ class OperatorController extends Controller
         $operators = $this->getFilteredQuery()->paginate(10);
         $isManager = Auth::user()->role_id == 3;
 
-        return view('operator.index', compact('operators', 'isManager'));
+        return Inertia::render('Operator/Index', [
+            'operators' => $operators,
+            'isManager' => $isManager,
+        ]);
     }
 
     public function create()
@@ -76,7 +80,10 @@ class OperatorController extends Controller
             $ferryboats = FerryBoat::all();
         }
 
-        return view('operator.create', compact('branches', 'ferryboats'));
+        return Inertia::render('Operator/Create', [
+            'branches' => $branches,
+            'ferryboats' => $ferryboats,
+        ]);
     }
 
     public function store(Request $request)
@@ -84,11 +91,11 @@ class OperatorController extends Controller
         $user = Auth::user();
 
         $request->validate([
-            'name'        => 'required|string|max:255',
-            'email'       => 'required|email|unique:users,email',
-            'password'    => 'required|string|min:6',
-            'mobile'      => 'nullable|string|max:20',
-            'branch_id'   => 'nullable|exists:branches,id',
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|unique:users,email',
+            'password' => 'required|string|min:6',
+            'mobile' => 'nullable|string|max:20',
+            'branch_id' => 'nullable|exists:branches,id',
             'ferry_boat_id' => 'nullable|exists:ferryboats,id',
         ]);
 
@@ -99,13 +106,13 @@ class OperatorController extends Controller
         }
 
         User::create([
-            'name'        => $request->name,
-            'email'       => $request->email,
-            'password'    => Hash::make($request->password),
-            'mobile'      => $request->mobile,
-            'branch_id'   => $request->branch_id,
+            'name' => $request->name,
+            'email' => $request->email,
+            'password' => Hash::make($request->password),
+            'mobile' => $request->mobile,
+            'branch_id' => $request->branch_id,
             'ferry_boat_id' => $ferryBoatId,
-            'role_id'     => 4, // Operator role
+            'role_id' => 4, // Operator role
         ]);
 
         return redirect()->route('operator.index')->with('success', 'Operator created successfully!');
@@ -116,7 +123,7 @@ class OperatorController extends Controller
         abort_if($operator->role_id != 4, 404);
         abort_if(!$this->canManage($operator), 403);
 
-        return view('operator.show', compact('operator'));
+        return Inertia::render('Operator/Show', ['operator' => $operator->load(['branch', 'ferryboat'])]);
     }
 
     public function edit(User $operator)
@@ -135,7 +142,11 @@ class OperatorController extends Controller
             $ferryboats = FerryBoat::all();
         }
 
-        return view('operator.edit', compact('operator', 'branches', 'ferryboats'));
+        return Inertia::render('Operator/Edit', [
+            'operator' => $operator,
+            'branches' => $branches,
+            'ferryboats' => $ferryboats,
+        ]);
     }
 
     public function update(Request $request, User $operator)
@@ -146,11 +157,11 @@ class OperatorController extends Controller
         $user = Auth::user();
 
         $request->validate([
-            'name'        => 'required|string|max:255',
-            'email'       => 'required|email|unique:users,email,' . $operator->id,
-            'password'    => 'nullable|string|min:6',
-            'mobile'      => 'nullable|string|max:20',
-            'branch_id'   => 'nullable|exists:branches,id',
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|unique:users,email,' . $operator->id,
+            'password' => 'nullable|string|min:6',
+            'mobile' => 'nullable|string|max:20',
+            'branch_id' => 'nullable|exists:branches,id',
             'ferry_boat_id' => 'nullable|exists:ferryboats,id',
         ]);
 
@@ -161,12 +172,12 @@ class OperatorController extends Controller
         }
 
         $operator->update([
-            'name'        => $request->name,
-            'email'       => $request->email,
-            'mobile'      => $request->mobile,
-            'branch_id'   => $request->branch_id,
+            'name' => $request->name,
+            'email' => $request->email,
+            'mobile' => $request->mobile,
+            'branch_id' => $request->branch_id,
             'ferry_boat_id' => $ferryBoatId,
-            'role_id'     => 4,
+            'role_id' => 4,
         ]);
 
         if ($request->filled('password')) {

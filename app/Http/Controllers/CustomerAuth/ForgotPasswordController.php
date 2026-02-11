@@ -7,12 +7,13 @@ use App\Models\Customer;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Facades\Mail;
+use Inertia\Inertia;
 
 class ForgotPasswordController extends Controller
 {
     public function showLinkForm()
     {
-        return view('customer.auth.forgot-password');
+        return Inertia::render('Customer/ForgotPassword');
     }
 
     public function sendResetLink(Request $request)

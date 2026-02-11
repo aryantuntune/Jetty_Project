@@ -1,0 +1,49 @@
+{
+  "expo": {
+    "name": "Jetty Checker",
+    "slug": "jetty-checker",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": true,
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#0066cc"
+    },
+    "ios": {
+      "supportsTablet": false
+    },
+    "android": {
+      "package": "com.jetty.checker",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#0066cc"
+      },
+      "permissions": [
+        "CAMERA",
+        "android.permission.CAMERA",
+        "android.permission.RECORD_AUDIO"
+      ]
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Allow Jetty Checker to access your camera for scanning ticket QR codes."
+        }
+      ]
+    ],
+    "extra": {
+      "apiBaseUrl": "https://unfurling.ninja/api",
+      "eas": {
+        "projectId": "7558dded-f1d0-44c5-95e6-67b259d639ed"
+      }
+    },
+    "owner": "aryan-dev"
+  }
+}
