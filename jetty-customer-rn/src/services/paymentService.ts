@@ -65,7 +65,7 @@ export const initiatePayment = async (options: PaymentOptions): Promise<PaymentR
     try {
         const razorpayOptions = {
             description: options.description,
-            image: 'https://unfurling.ninja/assets/logo.png', // Your app logo
+            image: 'https://carferry.online/assets/logo.png', // Your app logo
             currency: options.currency || 'INR',
             key: RAZORPAY_KEY_ID,
             amount: options.amount, // Amount in paise

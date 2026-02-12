@@ -3,7 +3,7 @@ import axios, { AxiosInstance, AxiosRequestConfig, AxiosError } from 'axios';
 import Constants from 'expo-constants';
 import { storageService } from './storageService';
 
-const API_BASE_URL = Constants.expoConfig?.extra?.apiBaseUrl || 'https://unfurling.ninja/api';
+const API_BASE_URL = Constants.expoConfig?.extra?.apiBaseUrl || 'https://carferry.online/api';
 
 // Create Axios instance with 15s timeout (shorter for checker app)
 const apiClient: AxiosInstance = axios.create({

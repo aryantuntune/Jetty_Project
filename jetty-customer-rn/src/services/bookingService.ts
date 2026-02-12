@@ -312,7 +312,7 @@ export const bookingService = {
         console.log('[BookingService] Downloading ticket PDF for booking:', bookingId);
 
         // Get base URL from API config (removes /api suffix for web routes)
-        const baseUrl = (Constants.expoConfig?.extra?.apiBaseUrl || 'https://unfurling.ninja/api').replace('/api', '');
+        const baseUrl = (Constants.expoConfig?.extra?.apiBaseUrl || 'https://carferry.online/api').replace('/api', '');
         const pdfUrl = `${baseUrl}/booking/${bookingId}/ticket`;
 
         console.log('[BookingService] PDF URL:', pdfUrl);

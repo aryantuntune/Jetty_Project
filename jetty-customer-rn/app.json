@@ -37,7 +37,7 @@
       "favicon": "./assets/favicon.png"
     },
     "extra": {
-      "apiBaseUrl": "https://unfurling.ninja/api",
+      "apiBaseUrl": "https://carferry.online/api",
       "razorpayKeyId": "rzp_test_SEUHTd7HMk7kIC",
       "googleClientId": "YOUR_GOOGLE_CLIENT_ID",
       "eas": {
