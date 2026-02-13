@@ -26,6 +26,7 @@ use App\Http\Controllers\SpecialChargeController;
 use App\Http\Controllers\TicketEntryController;
 use App\Http\Controllers\TicketReportController;
 use App\Http\Controllers\TicketVerifyController;
+use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
@@ -135,6 +136,7 @@ Route::middleware(['auth', 'blockRole5'])->group(function () {
     Route::resource('guests', GuestController::class);
     Route::resource('ferry_schedules', FerryScheduleController::class);
 
+    Route::get('/users', [UserController::class, 'index'])->name('users.index')->middleware(['auth', 'role:1,2']);
     Route::resource('admin', AdministratorController::class);
     Route::resource('manager', ManagerController::class);
     Route::resource('operator', OperatorController::class);

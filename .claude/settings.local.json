@@ -3,7 +3,7 @@
     "allow": [
       "Bash(git rebase:*)",
       "Bash(python3:*)",
-      "Bash(\"TOKEN=10|lXLhsz3jLcZ2Oamq9ixqFwYwjwMRmjAil595qcrIc7a205b6\" curl -X GET https://unfurling.ninja/api/customer/branch -H 'Authorization: Bearer $TOKEN' -H 'Accept: application/json')",
+      "Bash(\"TOKEN=10|lXLhsz3jLcZ2Oamq9ixqFwYwjwMRmjAil595qcrIc7a205b6\" curl -X GET https://carferry.online/api/customer/branch -H 'Authorization: Bearer $TOKEN' -H 'Accept: application/json')",
       "Bash(TOKEN=\"10|lXLhsz3jLcZ2Oamq9ixqFwYwjwMRmjAil595qcrIc7a205b6\")",
       "Bash(echo \"Run these commands on your server in order:\n\n# 1. First run the migration to create the routes table\nphp artisan migrate\n\n# 2. Then seed the routes data\nphp artisan db:seed --class=RoutesSeeder\n\n# 3. Clear caches\nphp artisan config:clear\nphp artisan cache:clear\n\n# 4. Restart PHP\nsudo systemctl restart php8.3-fpm\")",
       "Bash(TOKEN=\"13|hBDL8eXftzDktv7pB6KLAyhfxNfRpgQLCLF2GlEb38a4a96f\")",

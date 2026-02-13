@@ -53,10 +53,7 @@ const navItems = [
         label: 'Houseboat',
         icon: Anchor,
         roles: [1, 2],
-        children: [
-            { id: 'houseboat-dashboard', label: 'Dashboard', href: 'houseboat.dashboard' },
-            { id: 'houseboat-rooms', label: 'Rooms', href: 'admin.houseboat.rooms' },
-        ],
+        comingSoon: true,
     },
     { id: 'transfer', label: 'Transfer', href: 'employees.transfer.index', icon: ArrowLeftRight, roles: [1, 2] },
     { id: 'verify', label: 'Verify Ticket', href: 'verify.index', icon: CheckCircle, roles: [1, 2, 5] },
@@ -87,6 +84,21 @@ function NavItem({ item, userRoleId, isCollapsed, onExpandSidebar }) {
     // Check if user can access this item
     const canAccess = !item.roles || item.roles.includes(userRoleId);
     if (!canAccess) return null;
+
+    // Coming Soon items
+    if (item.comingSoon) {
+        return (
+            <div className="sidebar-link opacity-60 cursor-not-allowed">
+                <Icon className="w-5 h-5 flex-shrink-0" />
+                {!isCollapsed && (
+                    <>
+                        <span className="flex-1 text-left">{item.label}</span>
+                        <span className="text-[10px] bg-amber-500/20 text-amber-300 px-1.5 py-0.5 rounded-full font-medium">Soon</span>
+                    </>
+                )}
+            </div>
+        );
+    }
 
     // Check if any child is active
     const isChildActive = item.children?.some(child => {
