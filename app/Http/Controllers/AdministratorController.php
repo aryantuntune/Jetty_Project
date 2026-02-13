@@ -13,8 +13,8 @@ class AdministratorController extends Controller
 {
     public function __construct()
     {
-        // Protect all actions
-        $this->middleware(['auth', 'role:1']);
+        // Admins and SuperAdmin can access
+        $this->middleware(['auth', 'role:1,2']);
     }
     public function index()
     {

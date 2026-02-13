@@ -78,8 +78,8 @@ export default function PublicLayout({ children }) {
                                         key={link.label}
                                         href={link.href}
                                         className={`px-4 py-2 rounded-xl font-medium transition-colors ${isActive(link.href)
-                                                ? 'bg-sky-100 text-sky-700'
-                                                : 'text-slate-600 hover:bg-sky-50 hover:text-sky-700'
+                                            ? 'bg-sky-100 text-sky-700'
+                                            : 'text-slate-600 hover:bg-sky-50 hover:text-sky-700'
                                             }`}
                                     >
                                         {link.label}
@@ -89,8 +89,8 @@ export default function PublicLayout({ children }) {
                                         key={link.label}
                                         href={route(link.routeName)}
                                         className={`px-4 py-2 rounded-xl font-medium transition-colors ${isActive(link.href)
-                                                ? 'bg-sky-100 text-sky-700'
-                                                : 'text-slate-600 hover:bg-sky-50 hover:text-sky-700'
+                                            ? 'bg-sky-100 text-sky-700'
+                                            : 'text-slate-600 hover:bg-sky-50 hover:text-sky-700'
                                             }`}
                                     >
                                         {link.label}
@@ -137,8 +137,8 @@ export default function PublicLayout({ children }) {
                                         href={link.href}
                                         onClick={() => setIsMobileOpen(false)}
                                         className={`block px-4 py-3 rounded-xl font-medium transition-colors ${isActive(link.href)
-                                                ? 'bg-sky-100 text-sky-700'
-                                                : 'text-slate-600 hover:bg-sky-50'
+                                            ? 'bg-sky-100 text-sky-700'
+                                            : 'text-slate-600 hover:bg-sky-50'
                                             }`}
                                     >
                                         {link.label}
@@ -149,8 +149,8 @@ export default function PublicLayout({ children }) {
                                         href={route(link.routeName)}
                                         onClick={() => setIsMobileOpen(false)}
                                         className={`block px-4 py-3 rounded-xl font-medium transition-colors ${isActive(link.href)
-                                                ? 'bg-sky-100 text-sky-700'
-                                                : 'text-slate-600 hover:bg-sky-50'
+                                            ? 'bg-sky-100 text-sky-700'
+                                            : 'text-slate-600 hover:bg-sky-50'
                                             }`}
                                     >
                                         {link.label}
@@ -260,6 +260,8 @@ export default function PublicLayout({ children }) {
                     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex flex-col md:flex-row items-center justify-between gap-4">
                         <p className="text-sky-300 text-sm">
                             &copy; {new Date().getFullYear()} Suvarnadurga Shipping & Marine Services. All rights reserved.
+                            <span className="mx-2 text-sky-700">|</span>
+                            <Link href={route('login')} className="text-sky-500 hover:text-sky-300 transition-colors">Staff Login</Link>
                         </p>
                         <div className="flex items-center gap-4">
                             <a href="#" className="w-10 h-10 rounded-full bg-sky-800 hover:bg-amber-500 flex items-center justify-center transition-colors">

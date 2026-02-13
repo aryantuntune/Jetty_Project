@@ -179,9 +179,6 @@ export default function UsersIndex({ counts, auth }) {
                 <h3 className="font-semibold text-slate-800 mb-3">Role Permissions</h3>
                 <div className="space-y-2 text-sm text-slate-600">
                     <p>
-                        <span className="font-medium text-red-600">Administrators</span> have full system access including user management and configuration.
-                    </p>
-                    <p>
                         <span className="font-medium text-blue-600">Managers</span> can manage operators and checkers within their assigned branches.
                     </p>
                     <p>
