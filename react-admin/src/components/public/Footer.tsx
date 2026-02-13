@@ -1,6 +1,8 @@
 import { Link } from 'react-router-dom';
 import { Ship, Phone, Mail, MapPin, Facebook, Twitter, Instagram, Anchor } from 'lucide-react';
 
+const logoWhite = '/images/carferry/logo-white.png';
+
 export function Footer() {
     return (
         <footer className="bg-gradient-to-b from-slate-800 to-slate-900 text-white">
@@ -10,8 +12,8 @@ export function Footer() {
                     {/* Brand */}
                     <div>
                         <div className="flex items-center gap-2 mb-4">
-                            <div className="w-10 h-10 bg-gradient-to-br from-cyan-500 to-cyan-600 rounded-xl flex items-center justify-center">
-                                <Ship className="w-6 h-6 text-white" />
+                            <div className="w-10 h-10 bg-gradient-to-br from-cyan-500 to-cyan-600 rounded-xl flex items-center justify-center p-1.5">
+                                <img src={logoWhite} alt="Jetty Ferry" className="w-full h-full object-contain" />
                             </div>
                             <div>
                                 <span className="text-xl font-bold">Jetty Ferry</span>

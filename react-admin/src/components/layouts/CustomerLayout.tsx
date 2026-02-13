@@ -1,5 +1,5 @@
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
-import { Ship, LayoutDashboard, Ticket, History, User, LogOut, Menu, X } from 'lucide-react';
+import { LayoutDashboard, Ticket, History, User, LogOut, Menu, X } from 'lucide-react';
 import { useCustomerAuthStore } from '@/store/customerAuthStore';
 import { Button } from '../ui';
 import { useState } from 'react';
@@ -39,7 +39,9 @@ export function CustomerLayout() {
                             {sidebarOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
                         </button>
                         <Link to="/" className="flex items-center gap-2">
-                            <Ship className="w-8 h-8 text-blue-600" />
+                            <div className="w-10 h-10 bg-gradient-to-br from-cyan-500 to-cyan-600 rounded-xl flex items-center justify-center p-1.5">
+                                <img src="/images/carferry/logo-white.png" alt="Jetty Ferry" className="w-full h-full object-contain" />
+                            </div>
                             <span className="text-xl font-bold text-gray-900">Jetty Ferry</span>
                         </Link>
                     </div>

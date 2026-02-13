@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useMutation } from '@tanstack/react-query';
 import { Button, Input, Card } from '@/components/ui';
 import { useCustomerAuthStore } from '@/store/customerAuthStore';
-import { Ship, Mail, Lock, Eye, EyeOff } from 'lucide-react';
+import { Mail, Lock, Eye, EyeOff } from 'lucide-react';
 import { toast } from 'sonner';
 import apiClient from '@/lib/axios';
 
@@ -64,8 +64,8 @@ export function CustomerLogin() {
 
                 <Card className="p-8 shadow-2xl border-0">
                     <div className="text-center mb-8">
-                        <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-cyan-500 to-cyan-600 mb-4 shadow-lg shadow-cyan-500/30">
-                            <Ship className="w-8 h-8 text-white" />
+                        <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-cyan-500 to-cyan-600 mb-4 shadow-lg shadow-cyan-500/30 p-3">
+                            <img src="/images/carferry/logo-white.png" alt="Jetty Ferry" className="w-full h-full object-contain" />
                         </div>
                         <h1 className="text-2xl font-bold text-slate-800 mb-2">Welcome Back!</h1>
                         <p className="text-slate-500">Login to book your ferry tickets</p>

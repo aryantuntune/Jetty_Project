@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Button, Input, Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui';
 import { useAuthStore } from '@/store';
 import { authService } from '@/services';
-import { Ship, Lock, Mail } from 'lucide-react';
+import { Lock, Mail } from 'lucide-react';
 
 export function Login() {
     const [email, setEmail] = useState('');
@@ -51,8 +51,8 @@ export function Login() {
 
             <Card className="w-full max-w-md mx-4 relative z-10 shadow-2xl border-0">
                 <CardHeader className="text-center pb-2">
-                    <div className="mx-auto mb-4 w-16 h-16 bg-gradient-to-br from-cyan-500 to-cyan-600 rounded-2xl flex items-center justify-center shadow-lg shadow-cyan-500/30">
-                        <Ship className="w-8 h-8 text-white" />
+                    <div className="mx-auto mb-4 w-16 h-16 bg-gradient-to-br from-cyan-500 to-cyan-600 rounded-2xl flex items-center justify-center shadow-lg shadow-cyan-500/30 p-3">
+                        <img src="/images/carferry/logo-white.png" alt="Jetty Ferry" className="w-full h-full object-contain" />
                     </div>
                     <CardTitle className="text-2xl font-bold text-slate-800">
                         Jetty Ferry Admin

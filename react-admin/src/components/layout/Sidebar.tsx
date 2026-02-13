@@ -147,7 +147,9 @@ export function Sidebar() {
         <div className="w-64 bg-white border-r border-gray-200 flex flex-col h-full">
             {/* Logo */}
             <div className="h-16 flex items-center px-6 border-b border-gray-200">
-                <Ship className="w-8 h-8 text-blue-600 mr-3" />
+                <div className="w-10 h-10 bg-gradient-to-br from-cyan-500 to-cyan-600 rounded-xl flex items-center justify-center p-1.5 mr-3">
+                    <img src="/images/carferry/logo-white.png" alt="Jetty Ferry" className="w-full h-full object-contain" />
+                </div>
                 <div>
                     <h1 className="text-lg font-bold text-gray-900">Jetty Ferry</h1>
                     <p className="text-xs text-gray-500">Admin Panel</p>
