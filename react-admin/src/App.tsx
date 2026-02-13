@@ -10,7 +10,7 @@ import { PublicLayout, CustomerLayout } from './components/layouts';
 import { Login } from './pages/auth';
 
 // Public pages
-import { Home, About, Contact, FerryRoutes, FerryRouteDetail, HouseboatBooking } from './pages/public';
+import { Home, About, Contact, FerryRoutes, FerryRouteDetail, HouseboatBooking, PrivacyPolicy, TermsOfService, RefundPolicy } from './pages/public';
 
 // Customer pages
 import {
@@ -82,6 +82,9 @@ function App() {
             <Route path="/routes" element={<FerryRoutes />} />
             <Route path="/routes/:routeId" element={<FerryRouteDetail />} />
             <Route path="/houseboat" element={<HouseboatBooking />} />
+            <Route path="/privacy" element={<PrivacyPolicy />} />
+            <Route path="/terms" element={<TermsOfService />} />
+            <Route path="/refund-policy" element={<RefundPolicy />} />
           </Route>
 
           {/* ===================== CUSTOMER AUTH ===================== */}

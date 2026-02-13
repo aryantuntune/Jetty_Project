@@ -108,8 +108,8 @@ export function Footer() {
                                     <Phone className="w-4 h-4 text-cyan-400" />
                                 </div>
                                 <div className="text-slate-400">
-                                    +91 02358-234567<br />
-                                    +91 02358-234568
+                                    +91 02348-248900<br />
+                                    +91 9767248900
                                 </div>
                             </li>
                             <li className="flex items-start gap-3">
@@ -117,7 +117,7 @@ export function Footer() {
                                     <Mail className="w-4 h-4 text-orange-400" />
                                 </div>
                                 <div className="text-slate-400">
-                                    info@jettyferry.com
+                                    ssmsdapoli@rediffmail.com
                                 </div>
                             </li>
                             <li className="flex items-start gap-3">
@@ -125,8 +125,8 @@ export function Footer() {
                                     <MapPin className="w-4 h-4 text-cyan-400" />
                                 </div>
                                 <div className="text-slate-400">
-                                    Dabhol Jetty, Ratnagiri<br />
-                                    Maharashtra, India - 415612
+                                    Dabhol FerryBoat Jetty, Dapoli<br />
+                                    Dist. Ratnagiri, Maharashtra - 415712
                                 </div>
                             </li>
                         </ul>
@@ -147,6 +147,9 @@ export function Footer() {
                             </Link>
                             <Link to="/terms" className="text-slate-400 hover:text-cyan-400 transition-colors">
                                 Terms of Service
+                            </Link>
+                            <Link to="/refund-policy" className="text-slate-400 hover:text-cyan-400 transition-colors">
+                                Refund Policy
                             </Link>
                         </div>
                     </div>

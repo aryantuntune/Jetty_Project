@@ -32,19 +32,19 @@ export function Contact() {
         {
             icon: Phone,
             title: 'Phone',
-            details: ['+91 02358-234567', '+91 02358-234568'],
+            details: ['+91 02348-248900', '+91 9767248900'],
             color: 'bg-cyan-500',
         },
         {
             icon: Mail,
             title: 'Email',
-            details: ['info@jettyferry.com', 'support@jettyferry.com'],
+            details: ['ssmsdapoli@rediffmail.com'],
             color: 'bg-orange-500',
         },
         {
             icon: MapPin,
             title: 'Head Office',
-            details: ['Dabhol Jetty', 'Ratnagiri, Maharashtra 415612'],
+            details: ['Dabhol FerryBoat Jetty, Dapoli', 'Dist. Ratnagiri, Maharashtra - 415712'],
             color: 'bg-cyan-600',
         },
         {
@@ -205,7 +205,7 @@ export function Contact() {
                                             <MapPin className="w-8 h-8 text-slate-500" />
                                         </div>
                                         <p className="font-medium text-slate-600">Map will be displayed here</p>
-                                        <p className="text-sm">Dabhol Jetty, Ratnagiri</p>
+                                        <p className="text-sm">Dabhol FerryBoat Jetty, Dapoli</p>
                                     </div>
                                 </div>
                             </Card>
@@ -232,7 +232,7 @@ export function Contact() {
                                 <p className="text-orange-100 mb-2">
                                     For urgent matters or emergencies:
                                 </p>
-                                <p className="text-2xl font-bold">+91 02358-234599</p>
+                                <p className="text-2xl font-bold">+91 9767248900</p>
                             </Card>
                         </div>
                     </div>

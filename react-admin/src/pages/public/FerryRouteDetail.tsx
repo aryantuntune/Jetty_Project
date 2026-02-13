@@ -204,7 +204,7 @@ export function FerryRouteDetail() {
                                         <div className="w-8 h-8 bg-cyan-100 rounded-lg flex items-center justify-center">
                                             <Phone className="w-4 h-4 text-cyan-600" />
                                         </div>
-                                        <span className="text-slate-600">+91 02358-234567</span>
+                                        <span className="text-slate-600">+91 02348-248900</span>
                                     </div>
                                     <div className="flex items-center gap-3">
                                         <div className="w-8 h-8 bg-orange-100 rounded-lg flex items-center justify-center">

@@ -182,7 +182,7 @@ export function About() {
                         <h2 className="text-3xl md:text-4xl font-bold mb-8 text-slate-800">From Humble Beginnings</h2>
                         <div className="prose prose-lg max-w-none text-slate-600 space-y-6">
                             <p>
-                                Jetty Ferry Services was established in 2003 with the inauguration of the Dabhol-Dhopave route, the first of its kind in Maharashtra. What started as a small operation has grown into the region's most trusted ferry service provider.
+                                Suvarnadurga Shipping & Marine Services Pvt. Ltd. was established in October 2003 by Dr. Mokal C.J. with the inauguration of the Dabhol-Dhopave route, the first of its kind in Maharashtra. What started as a small operation has grown into the region's most trusted ferry service provider.
                             </p>
                             <p>
                                 Over the years, we have expanded our services to include four major routes connecting various coastal towns and villages. Our fleet has grown from a single ferry to a modern fleet of well-maintained vessels, each equipped with safety equipment and amenities for passenger comfort.

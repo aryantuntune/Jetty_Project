@@ -4,3 +4,6 @@ export { Contact } from './Contact';
 export { FerryRoutes } from './FerryRoutes';
 export { FerryRouteDetail } from './FerryRouteDetail';
 export { HouseboatBooking } from './HouseboatBooking';
+export { RefundPolicy } from './RefundPolicy';
+export { PrivacyPolicy } from './PrivacyPolicy';
+export { TermsOfService } from './TermsOfService';
