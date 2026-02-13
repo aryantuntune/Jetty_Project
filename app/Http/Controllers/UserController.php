@@ -17,6 +17,11 @@ class UserController extends Controller
             'checkers' => User::where('role_id', 5)->count(),
         ];
 
+        // Only superadmin can see superadmin count
+        if ((int) auth()->user()->role_id === 1) {
+            $counts['admins'] += User::where('role_id', 1)->count();
+        }
+
         return Inertia::render('Users/Index', [
             'counts' => $counts,
         ]);

@@ -18,10 +18,16 @@ class AdministratorController extends Controller
     }
     public function index()
     {
-        // Show both Super Admins (role_id=1) and Administrators (role_id=2)
-        $administrators = User::whereIn('role_id', [1, 2])
-            ->with(['branch', 'ferryboat'])
-            ->paginate(10);
+        $query = User::with(['branch', 'ferryboat']);
+
+        // Only show superadmin to themselves
+        if ((int) auth()->user()->role_id === 1) {
+            $query->whereIn('role_id', [1, 2]);
+        } else {
+            $query->where('role_id', 2); // Hide superadmin from admins
+        }
+
+        $administrators = $query->paginate(10);
 
         return Inertia::render('Admin/Index', ['administrators' => $administrators]);
     }
@@ -65,12 +71,16 @@ class AdministratorController extends Controller
     public function show(User $admin)
     {
         abort_if(!in_array($admin->role_id, [1, 2]), 404);
+        // Hide superadmin from non-superadmin users
+        abort_if($admin->role_id == 1 && (int) auth()->user()->role_id !== 1, 404);
         return Inertia::render('Admin/Show', ['admin' => $admin->load(['branch', 'ferryboat'])]);
     }
 
     public function edit(User $admin)
     {
         abort_if(!in_array($admin->role_id, [1, 2]), 404);
+        // Hide superadmin from non-superadmin users
+        abort_if($admin->role_id == 1 && (int) auth()->user()->role_id !== 1, 404);
 
         $branches = Branch::all();
         $ferryboats = FerryBoat::all();
