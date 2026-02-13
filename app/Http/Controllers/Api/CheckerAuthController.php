@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Booking;
 use App\Models\Ticket;
 use App\Models\User;
+use App\Services\AuditService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -28,6 +29,9 @@ class CheckerAuthController extends Controller
             ->first();
 
         if (!$user || !Hash::check($request->password, $user->password)) {
+            // Audit failed login attempt
+            AuditService::loginAttempt($request->email, false);
+
             return response()->json([
                 'success' => false,
                 'message' => 'Invalid credentials',
@@ -37,6 +41,9 @@ class CheckerAuthController extends Controller
 
         // Create Sanctum token
         $token = $user->createToken('checker-token')->plainTextToken;
+
+        // Audit successful login
+        AuditService::loginAttempt($request->email, true, $user);
 
         return response()->json([
             'success' => true,
@@ -232,6 +239,9 @@ class CheckerAuthController extends Controller
         $ticket->verified_at = $now;
         $ticket->checker_id = $user->id;
         $ticket->save();
+
+        // Audit ticket verification
+        AuditService::ticketVerification($ticket, $user, true);
 
         // Return success with ticket details including route info
         return response()->json([

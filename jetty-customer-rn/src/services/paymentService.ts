@@ -3,13 +3,44 @@
 // In Expo Go, it will fallback to simulated payment
 
 import Constants from 'expo-constants';
+import api from './api';
 
-// Get Razorpay key from app.json config
-const RAZORPAY_KEY_ID = Constants.expoConfig?.extra?.razorpayKeyId || 'YOUR_RAZORPAY_KEY_ID';
+// Cached Razorpay key (fetched from backend)
+let cachedRazorpayKey: string | null = null;
 
-// Check if we have a real Razorpay key configured
-const isRazorpayConfigured = (): boolean => {
-    return RAZORPAY_KEY_ID && RAZORPAY_KEY_ID !== 'YOUR_RAZORPAY_KEY_ID';
+/**
+ * Fetch Razorpay key from backend API
+ * This prevents hardcoding the key in the app bundle
+ */
+const getRazorpayKey = async (): Promise<string> => {
+    // Return cached key if available
+    if (cachedRazorpayKey) {
+        return cachedRazorpayKey;
+    }
+
+    try {
+        const response = await api.get('/config/razorpay-key');
+        cachedRazorpayKey = response.data.key;
+
+        if (!cachedRazorpayKey) {
+            throw new Error('Razorpay key not configured on server');
+        }
+
+        return cachedRazorpayKey;
+    } catch (error) {
+        console.error('[PaymentService] Failed to fetch Razorpay key:', error);
+        throw new Error('Payment service is unavailable. Please try again later.');
+    }
+};
+
+// Check if Razorpay key is valid
+const isRazorpayConfigured = async (): Promise<boolean> => {
+    try {
+        const key = await getRazorpayKey();
+        return key && key.startsWith('rzp_');
+    } catch {
+        return false;
+    }
 };
 
 export interface PaymentOptions {
@@ -56,18 +87,21 @@ try {
 export const initiatePayment = async (options: PaymentOptions): Promise<PaymentResult> => {
     console.log('[PaymentService] Initiating payment:', options);
 
-    // If Razorpay is not configured or not available, simulate payment
-    if (!isRazorpayConfigured() || !RazorpayModule) {
-        console.log('[PaymentService] Using simulated payment (Expo Go mode)');
+    // Check if Razorpay module is available (only in EAS build)
+    if (!RazorpayModule) {
+        console.log('[PaymentService] Razorpay module not available (Expo Go mode), using simulated payment');
         return simulatePayment(options);
     }
 
     try {
+        // Fetch Razorpay key from backend
+        const razorpayKey = await getRazorpayKey();
+
         const razorpayOptions = {
             description: options.description,
             image: 'https://carferry.online/assets/logo.png', // Your app logo
             currency: options.currency || 'INR',
-            key: RAZORPAY_KEY_ID,
+            key: razorpayKey, // Dynamic key from backend
             amount: options.amount, // Amount in paise
             name: 'Jetty Ferry Booking',
             order_id: options.orderId || '', // Only if using Razorpay Orders
@@ -120,28 +154,46 @@ const simulatePayment = async (options: PaymentOptions): Promise<PaymentResult> 
 };
 
 /**
- * Verify payment with backend (optional - for extra security)
+ * Verify payment with backend (REQUIRED for production)
+ * Verifies Razorpay signature to prevent payment tampering
  */
 export const verifyPayment = async (
     paymentId: string,
     orderId?: string,
     signature?: string
 ): Promise<boolean> => {
-    // If simulated payment, skip verification
-    if (paymentId.startsWith('sim_')) {
-        console.log('[PaymentService] Skipping verification for simulated payment');
+    // If simulated payment (development only), skip verification
+    if (__DEV__ && paymentId.startsWith('sim_')) {
+        console.log('[PaymentService] Skipping verification for simulated payment (DEV mode)');
         return true;
     }
 
-    try {
-        // TODO: Call your backend API to verify the payment
-        // const response = await api.post('/payments/verify', { paymentId, orderId, signature });
-        // return response.verified;
+    // Production mode or real payment - MUST verify signature
+    if (!signature) {
+        console.error('[PaymentService] No signature provided for verification');
+        return false;
+    }
 
-        console.log('[PaymentService] Payment verification skipped (not implemented)');
-        return true;
+    try {
+        console.log('[PaymentService] Verifying payment signature with backend...');
+
+        const response = await api.post('/payments/verify', {
+            razorpay_payment_id: paymentId,
+            razorpay_order_id: orderId,
+            razorpay_signature: signature
+        });
+
+        if (response.data && response.data.verified === true) {
+            console.log('[PaymentService] Payment signature verified successfully');
+            return true;
+        }
+
+        console.error('[PaymentService] Payment verification failed: Invalid signature');
+        return false;
+
     } catch (error) {
-        console.error('[PaymentService] Payment verification failed:', error);
+        console.error('[PaymentService] Payment verification error:', error);
+        // In production, treat verification errors as payment failure
         return false;
     }
 };

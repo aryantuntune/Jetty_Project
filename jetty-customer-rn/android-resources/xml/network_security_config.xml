@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Android Network Security Configuration for SSL Certificate Pinning
+
+    This file pins the SSL certificate for carferry.online to prevent MITM attacks.
+
+    To update the pin hash:
+    1. Run: openssl s_client -connect carferry.online:443 -servername carferry.online < /dev/null 2>/dev/null | \
+             openssl x509 -pubkey -noout | openssl pkey -pubin -outform DER | openssl dgst -sha256 -binary | base64
+    2. Replace the pin digest below with the new hash
+    3. Rebuild the app
+
+    IMPORTANT: Always include a backup pin (e.g., from a backup certificate)
+    to prevent lockouts if the primary certificate is rotated.
+-->
+<network-security-config>
+    <!-- Production domain with certificate pinning -->
+    <domain-config cleartextTrafficPermitted="false">
+        <domain includeSubdomains="true">carferry.online</domain>
+        <pin-set expiration="2027-02-12">
+            <!--
+                REPLACE_WITH_ACTUAL_HASH: Run the openssl command above
+                against carferry.online to get the actual hash.
+                Example: <pin digest="SHA-256">AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</pin>
+            -->
+            <pin digest="SHA-256">REPLACE_WITH_ACTUAL_HASH</pin>
+            <!-- Backup pin (use a different CA or backup cert hash) -->
+            <pin digest="SHA-256">REPLACE_WITH_BACKUP_HASH</pin>
+        </pin-set>
+    </domain-config>
+
+    <!-- Allow cleartext for localhost in debug builds -->
+    <domain-config cleartextTrafficPermitted="true">
+        <domain includeSubdomains="false">localhost</domain>
+        <domain includeSubdomains="false">10.0.2.2</domain>
+    </domain-config>
+</network-security-config>

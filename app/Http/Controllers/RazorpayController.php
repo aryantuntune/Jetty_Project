@@ -65,6 +65,62 @@ class RazorpayController extends Controller
         }
     }
 
+    /**
+     * Simple payment signature verification (for mobile app)
+     * Does NOT create booking - just verifies signature
+     */
+    public function verifySignature(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'razorpay_payment_id' => 'required|string',
+            'razorpay_order_id' => 'nullable|string',
+            'razorpay_signature' => 'required|string',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'verified' => false,
+                'message' => 'Validation failed',
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        try {
+            // Build attributes for signature verification
+            $attributes = [
+                'razorpay_payment_id' => $request->razorpay_payment_id,
+                'razorpay_signature' => $request->razorpay_signature
+            ];
+
+            // Add order_id if provided
+            if ($request->razorpay_order_id) {
+                $attributes['razorpay_order_id'] = $request->razorpay_order_id;
+            }
+
+            // Verify signature using Razorpay SDK
+            $this->razorpay->utility->verifyPaymentSignature($attributes);
+
+            // Signature is valid
+            return response()->json([
+                'verified' => true,
+                'message' => 'Payment signature verified successfully'
+            ]);
+
+        } catch (\Razorpay\Api\Errors\SignatureVerificationError $e) {
+            return response()->json([
+                'verified' => false,
+                'message' => 'Invalid payment signature',
+                'error' => $e->getMessage()
+            ], 400);
+        } catch (\Exception $e) {
+            return response()->json([
+                'verified' => false,
+                'message' => 'Verification failed',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
     public function verifyPayment(Request $request)
     {
         $validator = Validator::make($request->all(), [

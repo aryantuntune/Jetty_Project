@@ -1584,7 +1584,7 @@ npm run build
 ```nginx
 server {
     listen 80;
-    server_name unfurling.ninja;
+    server_name carferry.online;
     root /var/www/jetty-react/dist;
     index index.html;
 

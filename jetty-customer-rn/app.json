@@ -38,7 +38,6 @@
     },
     "extra": {
       "apiBaseUrl": "https://carferry.online/api",
-      "razorpayKeyId": "rzp_test_SEUHTd7HMk7kIC",
       "googleClientId": "YOUR_GOOGLE_CLIENT_ID",
       "eas": {
         "projectId": "0a4886fe-6ffb-4951-a8a8-f19d8a316222"

@@ -29,15 +29,77 @@ apiClient.interceptors.request.use(
     }
 );
 
-// Response interceptor to handle 401 errors
+// Token refresh state
+let isRefreshing = false;
+let failedQueue: Array<{ resolve: (token: string) => void; reject: (error: unknown) => void }> = [];
+
+const processQueue = (error: unknown, token: string | null = null) => {
+    failedQueue.forEach((prom) => {
+        if (token) {
+            prom.resolve(token);
+        } else {
+            prom.reject(error);
+        }
+    });
+    failedQueue = [];
+};
+
+// Response interceptor with automatic token refresh
 apiClient.interceptors.response.use(
     (response) => response,
     async (error: AxiosError) => {
-        if (error.response?.status === 401) {
-            // Token expired or invalid - clear storage
-            await storageService.clearAll();
-            // The app will redirect to login via auth state change
+        const originalRequest = error.config as AxiosRequestConfig & { _retry?: boolean };
+
+        if (error.response?.status === 401 && !originalRequest._retry) {
+            const currentToken = await storageService.getToken();
+            if (!currentToken) {
+                await storageService.clearAll();
+                return Promise.reject(error);
+            }
+
+            if (isRefreshing) {
+                return new Promise((resolve, reject) => {
+                    failedQueue.push({
+                        resolve: (token: string) => {
+                            if (originalRequest.headers) {
+                                originalRequest.headers.Authorization = `Bearer ${token}`;
+                            }
+                            resolve(apiClient(originalRequest));
+                        },
+                        reject,
+                    });
+                });
+            }
+
+            originalRequest._retry = true;
+            isRefreshing = true;
+
+            try {
+                const response = await axios.post(
+                    `${API_BASE_URL}/checker/refresh-token`,
+                    {},
+                    { headers: { Authorization: `Bearer ${currentToken}` } }
+                );
+
+                const newToken = response.data?.data?.token;
+                if (newToken) {
+                    await storageService.saveToken(newToken);
+                    processQueue(null, newToken);
+
+                    if (originalRequest.headers) {
+                        originalRequest.headers.Authorization = `Bearer ${newToken}`;
+                    }
+                    return apiClient(originalRequest);
+                }
+            } catch (refreshError) {
+                processQueue(refreshError, null);
+                await storageService.clearAll();
+                return Promise.reject(refreshError);
+            } finally {
+                isRefreshing = false;
+            }
         }
+
         return Promise.reject(error);
     }
 );

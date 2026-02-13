@@ -35,7 +35,7 @@ Enable online ferry ticket booking, offline counter ticketing, and operational m
 - **Administrators**: Manage system-wide configuration and users
 
 ### Production URL
-https://unfurling.ninja
+https://carferry.online
 
 ### Key Ferry Routes
 The system manages 4 established ferry routes:
@@ -988,7 +988,7 @@ All endpoints use Bearer token authentication via Laravel Sanctum.
 ## API Documentation
 
 ### Base URL
-- **Production**: `https://unfurling.ninja/api`
+- **Production**: `https://carferry.online/api`
 - **Local**: `http://localhost/api`
 
 ### Authentication
@@ -2275,7 +2275,7 @@ Edit `lib/services/api_service.dart`:
 ```dart
 static const String baseUrl = 'http://10.0.2.2:8000/api'; // Android emulator
 // static const String baseUrl = 'http://localhost:8000/api'; // iOS simulator
-// static const String baseUrl = 'https://unfurling.ninja/api'; // Production
+// static const String baseUrl = 'https://carferry.online/api'; // Production
 ```
 
 #### Checker App
@@ -2363,7 +2363,7 @@ sudo nano .env
 APP_NAME="Jetty Ferry Management"
 APP_ENV=production
 APP_DEBUG=false
-APP_URL=https://unfurling.ninja
+APP_URL=https://carferry.online
 
 DB_CONNECTION=pgsql
 DB_HOST=localhost
@@ -2404,7 +2404,7 @@ sudo nano /etc/nginx/sites-available/jetty
 ```nginx
 server {
     listen 80;
-    server_name unfurling.ninja www.unfurling.ninja;
+    server_name carferry.online www.carferry.online;
     root /var/www/jetty/public;
 
     add_header X-Frame-Options "SAMEORIGIN";
@@ -2444,7 +2444,7 @@ sudo systemctl restart nginx
 #### 6. SSL Certificate (Let's Encrypt)
 ```bash
 sudo apt install certbot python3-certbot-nginx
-sudo certbot --nginx -d unfurling.ninja -d www.unfurling.ninja
+sudo certbot --nginx -d carferry.online -d www.carferry.online
 ```
 
 #### 7. Setup Cron for Scheduled Tasks
@@ -2903,5 +2903,5 @@ For detailed implementation guides, API documentation, and migration instruction
 
 **Project Version**: 1.0.0
 **Last Updated**: 2026-01-11
-**Production URL**: https://unfurling.ninja
+**Production URL**: https://carferry.online
 **License**: Proprietary

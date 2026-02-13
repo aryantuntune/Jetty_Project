@@ -425,7 +425,7 @@ APP_DEBUG=false
 APP_MAINTENANCE_MODE=false
 
 # Set proper URL
-APP_URL=https://unfurling.ninja
+APP_URL=https://carferry.online
 
 # Timezone (for ferry schedules)
 APP_TIMEZONE=Asia/Kolkata
@@ -951,7 +951,7 @@ return [
     
     'allowed_origins' => [
         env('APP_URL'),
-        'https://unfurling.ninja',
+        'https://carferry.online',
     ],
     
     'allowed_origins_patterns' => [],
@@ -1188,7 +1188,7 @@ tail -f storage/logs/laravel.log
 sudo apt install apache2-utils
 
 # Test 1000 requests with 10 concurrent users
-ab -n 1000 -c 10 https://unfurling.ninja/
+ab -n 1000 -c 10 https://carferry.online/
 
 # Check results - should have no failed requests
 ```

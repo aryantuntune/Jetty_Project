@@ -24,7 +24,6 @@ class TicketEntryController extends Controller
             $branches = Branch::orderBy('branch_name')->get(['id', 'branch_name']);
             $branchId = $branches->first()->id ?? null;
             $branchName = $branches->first()->branch_name ?? '';
-            // dd($branchId);
             // Boats per branch (unique names)
             $ferryBoatsPerBranch = [];
             foreach ($branches as $b) {
@@ -37,7 +36,6 @@ class TicketEntryController extends Controller
 
             $ferryboatsBranch = $ferryBoatsPerBranch[$branchId] ?? collect();
 
-            // dd($ferryboatsBranch);
             // Schedules per branch
             $ferrySchedulesPerBranch = [];
             foreach ($branches as $b) {
@@ -95,8 +93,6 @@ class TicketEntryController extends Controller
             // Hide Ferry Time if current time is **after last ferry schedule**
             $hideFerryTime = $now->greaterThan($lastSchedule);
 
-            // dd($lastSchedule);
-
             $oneHourBeforeFirst = $firstSchedule->copy()->subHour();
             $beforeFirstFerry = $now->greaterThanOrEqualTo($oneHourBeforeFirst)
                 && $now->lessThan($firstSchedule);
@@ -107,8 +103,6 @@ class TicketEntryController extends Controller
             $firstSchedule = null;
             $lastSchedule = null;
         }
-        //  dd($beforeFirstFerry);
-
 
         $paymentModes = ['Cash', 'UPI', 'Guest Pass'];
 

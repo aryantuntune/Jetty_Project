@@ -29,15 +29,83 @@ apiClient.interceptors.request.use(
     }
 );
 
-// Response interceptor to handle errors
+// Token refresh state
+let isRefreshing = false;
+let failedQueue: Array<{ resolve: (token: string) => void; reject: (error: unknown) => void }> = [];
+
+const processQueue = (error: unknown, token: string | null = null) => {
+    failedQueue.forEach((prom) => {
+        if (token) {
+            prom.resolve(token);
+        } else {
+            prom.reject(error);
+        }
+    });
+    failedQueue = [];
+};
+
+// Response interceptor with automatic token refresh
 apiClient.interceptors.response.use(
     (response) => response,
     async (error: AxiosError) => {
-        if (error.response?.status === 401) {
-            // Token expired or invalid - clear storage and logout
-            await storageService.clearAll();
-            // The app will redirect to login via auth state change
+        const originalRequest = error.config as AxiosRequestConfig & { _retry?: boolean };
+
+        // If 401 and we haven't already tried to refresh
+        if (error.response?.status === 401 && !originalRequest._retry) {
+            // Check if we have a token (if no token, user never logged in)
+            const currentToken = await storageService.getToken();
+            if (!currentToken) {
+                await storageService.clearAll();
+                return Promise.reject(error);
+            }
+
+            if (isRefreshing) {
+                // Queue this request until refresh completes
+                return new Promise((resolve, reject) => {
+                    failedQueue.push({
+                        resolve: (token: string) => {
+                            if (originalRequest.headers) {
+                                originalRequest.headers.Authorization = `Bearer ${token}`;
+                            }
+                            resolve(apiClient(originalRequest));
+                        },
+                        reject,
+                    });
+                });
+            }
+
+            originalRequest._retry = true;
+            isRefreshing = true;
+
+            try {
+                // Attempt token refresh
+                const response = await axios.post(
+                    `${API_BASE_URL}/auth/refresh`,
+                    {},
+                    { headers: { Authorization: `Bearer ${currentToken}` } }
+                );
+
+                const newToken = response.data?.data?.token;
+                if (newToken) {
+                    await storageService.saveToken(newToken);
+                    processQueue(null, newToken);
+
+                    // Retry original request with new token
+                    if (originalRequest.headers) {
+                        originalRequest.headers.Authorization = `Bearer ${newToken}`;
+                    }
+                    return apiClient(originalRequest);
+                }
+            } catch (refreshError) {
+                processQueue(refreshError, null);
+                // Refresh failed - token is truly expired, clear and logout
+                await storageService.clearAll();
+                return Promise.reject(refreshError);
+            } finally {
+                isRefreshing = false;
+            }
         }
+
         return Promise.reject(error);
     }
 );

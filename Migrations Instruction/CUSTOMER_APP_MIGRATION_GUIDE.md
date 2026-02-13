@@ -19,7 +19,7 @@
 - [ ] Set up `app.json` with app name, bundle identifiers, permissions, splash screen, icon
 
 **Critical Configuration Points:**
-- API base URL in `app.json` extra config: `https://unfurling.ninja/api`
+- API base URL in `app.json` extra config: `https://carferry.online/api`
 - Razorpay key ID in extra config
 - iOS permissions: Camera, Photo Library
 - Android permissions: Camera, Storage, Internet

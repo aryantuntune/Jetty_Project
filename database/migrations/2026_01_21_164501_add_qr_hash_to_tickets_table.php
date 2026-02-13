@@ -1,33 +1,22 @@
 <?php
 
 use Illuminate\Database\Migrations\Migration;
-use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\Schema;
 
+/**
+ * DEPRECATED: This migration has been superseded by
+ * 2026_02_12_191243_add_qr_hash_to_tickets_table.php
+ * which also populates existing ticket hashes.
+ *
+ * This file is intentionally empty to prevent duplicate column creation.
+ */
 return new class extends Migration {
-    /**
-     * Run the migrations.
-     * Adds qr_hash column for secure QR code verification
-     */
     public function up(): void
     {
-        Schema::table('tickets', function (Blueprint $table) {
-            // Add qr_hash column - 64 chars for SHA256 hex output
-            $table->string('qr_hash', 64)->nullable()->after('id');
-
-            // Add unique index for fast lookups
-            $table->unique('qr_hash');
-        });
+        // Handled by 2026_02_12 migration
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
-        Schema::table('tickets', function (Blueprint $table) {
-            $table->dropUnique(['qr_hash']);
-            $table->dropColumn('qr_hash');
-        });
+        // Handled by 2026_02_12 migration
     }
 };

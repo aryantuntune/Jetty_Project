@@ -10,7 +10,7 @@ echo "=========================================="
 echo ""
 
 # Navigate to project directory
-cd /var/www/unfurling.ninja || { echo "ERROR: Cannot find project directory"; exit 1; }
+cd /var/www/carferry.online || { echo "ERROR: Cannot find project directory"; exit 1; }
 
 echo "Step 1: Pulling latest code from GitHub..."
 git pull origin master

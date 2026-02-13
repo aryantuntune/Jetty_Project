@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\ApiController;
 use App\Http\Controllers\Api\CheckerAuthController;
+use App\Http\Controllers\Api\ConfigController;
 use App\Http\Controllers\BranchController;
 use App\Http\Controllers\CustomerAuth\CustomerProfileController;
 use App\Http\Controllers\CustomerAuth\ForgotPasswordController;
@@ -25,8 +26,8 @@ use Illuminate\Support\Facades\Route;
 // ADMIN API AUTH (for React Admin Panel)
 // ============================================
 Route::prefix('admin')->group(function () {
-    // Login
-    Route::post('/login', function (Request $request) {
+    // Login (Smart Rate Limited: 5 attempts per minute per email+IP)
+    Route::middleware('throttle:login')->post('/login', function (Request $request) {
         $credentials = $request->validate([
             'email' => 'required|email',
             'password' => 'required',
@@ -489,6 +490,16 @@ Route::prefix('admin/item-categories')->group(function () {
     })->middleware('auth:sanctum');
 });
 
+// ============================================
+// CONFIG API ROUTES (Public - No Auth Required)
+// ============================================
+// Configuration endpoints for mobile apps
+Route::prefix('config')->group(function () {
+    Route::get('/razorpay-key', [ConfigController::class, 'getRazorpayKey']);
+    Route::get('/app-config', [ConfigController::class, 'getAppConfig']);
+    Route::get('/server-identity', [ConfigController::class, 'getServerIdentity']);
+});
+
 // Public routes (read-only for dropdowns)
 Route::get('branches', [BranchController::class, 'getBranches']);
 Route::get('ferries/branch/{id}', [FerryBoatController::class, 'getFerriesByBranch']);
@@ -654,6 +665,35 @@ Route::prefix('customer')->group(function () {
     Route::post('password-reset/reset', [ApiController::class, 'resetPassword']);
 });
 
+// Token refresh endpoint (outside auth middleware so expired tokens can still refresh)
+// Accepts any bearer token that exists in DB, even if Sanctum considers it expired
+Route::post('auth/refresh', function (Request $request) {
+    $bearerToken = $request->bearerToken();
+    if (!$bearerToken) {
+        return response()->json(['success' => false, 'message' => 'No token provided'], 401);
+    }
+
+    $accessToken = \Laravel\Sanctum\PersonalAccessToken::findToken($bearerToken);
+    if (!$accessToken) {
+        return response()->json(['success' => false, 'message' => 'Invalid token'], 401);
+    }
+
+    $user = $accessToken->tokenable;
+    if (!$user) {
+        return response()->json(['success' => false, 'message' => 'User not found'], 401);
+    }
+
+    // Revoke old token and issue new one
+    $accessToken->delete();
+    $newToken = $user->createToken('mobile-app')->plainTextToken;
+
+    return response()->json([
+        'success' => true,
+        'message' => 'Token refreshed',
+        'data' => ['token' => $newToken],
+    ]);
+});
+
 // Protected routes (require authentication with customer token)
 Route::middleware('customer.api')->group(function () {
 
@@ -688,21 +728,60 @@ Route::middleware('customer.api')->group(function () {
     Route::post('razorpay/order', [RazorpayController::class, 'createOrder']);
     Route::post('razorpay/verify', [RazorpayController::class, 'verifyPayment']);
 
-    // Bookings
+    // Simple signature verification (for mobile app) - Smart rate limited
+    Route::middleware('throttle:payment')->post('payments/verify', [RazorpayController::class, 'verifySignature']);
+
+    // Bookings (Rate Limited)
     Route::get('bookings/success', [ApiController::class, 'getSuccessfulBookings']);
     Route::get('bookings', [ApiController::class, 'index']);
-    Route::post('bookings', [ApiController::class, 'store']);
+
+    // Create booking: Smart rate limited (60/min for auth users, handles last-minute rush)
+    Route::middleware('throttle:booking')->post('bookings', [ApiController::class, 'store']);
+
     Route::get('bookings/{id}', [ApiController::class, 'show']);
     Route::post('bookings/{id}/cancel', [ApiController::class, 'cancel']);
 });
 
 
+// ============================================
+// CHECKER API ROUTES (Rate Limited for Security)
+// ============================================
 Route::prefix('checker')->group(function () {
-    Route::post('/login', [CheckerAuthController::class, 'login']);
+    // Login: Smart rate limited (5 per minute per email+IP)
+    Route::middleware('throttle:login')->post('/login', [CheckerAuthController::class, 'login']);
+
+    // Token refresh (outside auth:sanctum so expired tokens can still refresh)
+    Route::post('/refresh-token', function (Request $request) {
+        $bearerToken = $request->bearerToken();
+        if (!$bearerToken) {
+            return response()->json(['success' => false, 'message' => 'No token provided'], 401);
+        }
+
+        $accessToken = \Laravel\Sanctum\PersonalAccessToken::findToken($bearerToken);
+        if (!$accessToken) {
+            return response()->json(['success' => false, 'message' => 'Invalid token'], 401);
+        }
+
+        $user = $accessToken->tokenable;
+        if (!$user || $user->role_id !== 5) {
+            return response()->json(['success' => false, 'message' => 'Unauthorized'], 401);
+        }
+
+        $accessToken->delete();
+        $newToken = $user->createToken('checker-token')->plainTextToken;
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Token refreshed',
+            'data' => ['token' => $newToken],
+        ]);
+    });
 
     Route::middleware('auth:sanctum')->group(function () {
         Route::post('/logout', [CheckerAuthController::class, 'logout']);
         Route::get('/profile', [CheckerAuthController::class, 'profile']);
-        Route::post('/verify-ticket', [CheckerAuthController::class, 'verifyTicket']);
+
+        // Ticket verification: Smart rate limited (120/min for auth checkers)
+        Route::middleware('throttle:checker-verify')->post('/verify-ticket', [CheckerAuthController::class, 'verifyTicket']);
     });
 });

@@ -425,7 +425,7 @@ export default {
 ```bash
 # API Configuration
 VITE_API_URL=http://localhost  # Local Laravel
-# VITE_API_URL=https://unfurling.ninja  # Production
+# VITE_API_URL=https://carferry.online  # Production
 
 # App Configuration
 VITE_APP_NAME=Jetty Ferry Admin

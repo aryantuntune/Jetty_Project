@@ -1,5 +1,6 @@
-// Storage Service for Checker App
+// Storage Service for Checker App - Secure storage for sensitive data
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as SecureStore from 'expo-secure-store';
 import { Checker, VerificationCount } from '../types/models';
 
 const STORAGE_KEYS = {
@@ -15,17 +16,48 @@ const getTodayDateString = (): string => {
 };
 
 export const storageService = {
-    // Token methods
+    // Token methods - Using SecureStore for encryption
+    // SecureStore uses iOS Keychain and Android Keystore for secure storage
     saveToken: async (token: string): Promise<void> => {
-        await AsyncStorage.setItem(STORAGE_KEYS.AUTH_TOKEN, token);
+        try {
+            await SecureStore.setItemAsync(STORAGE_KEYS.AUTH_TOKEN, token);
+        } catch (error) {
+            console.error('[StorageService] Failed to save token securely:', error);
+            // Fallback to AsyncStorage only in development if SecureStore fails
+            if (__DEV__) {
+                console.warn('[StorageService] Falling back to AsyncStorage (DEV ONLY)');
+                await AsyncStorage.setItem(STORAGE_KEYS.AUTH_TOKEN, token);
+            } else {
+                throw error;
+            }
+        }
     },
 
     getToken: async (): Promise<string | null> => {
-        return AsyncStorage.getItem(STORAGE_KEYS.AUTH_TOKEN);
+        try {
+            return await SecureStore.getItemAsync(STORAGE_KEYS.AUTH_TOKEN);
+        } catch (error) {
+            console.error('[StorageService] Failed to get token from SecureStore:', error);
+            // Fallback to AsyncStorage only in development
+            if (__DEV__) {
+                return await AsyncStorage.getItem(STORAGE_KEYS.AUTH_TOKEN);
+            }
+            return null;
+        }
     },
 
     clearToken: async (): Promise<void> => {
-        await AsyncStorage.removeItem(STORAGE_KEYS.AUTH_TOKEN);
+        try {
+            await SecureStore.deleteItemAsync(STORAGE_KEYS.AUTH_TOKEN);
+        } catch (error) {
+            console.error('[StorageService] Failed to clear token from SecureStore:', error);
+        }
+        // Also clear from AsyncStorage (for migration from old storage)
+        try {
+            await AsyncStorage.removeItem(STORAGE_KEYS.AUTH_TOKEN);
+        } catch (error) {
+            // Ignore errors
+        }
     },
 
     // Checker methods

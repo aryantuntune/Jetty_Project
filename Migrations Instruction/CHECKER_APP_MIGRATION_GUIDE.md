@@ -16,7 +16,7 @@
 - [ ] Set up `app.json` with app name, bundle identifiers, permissions, splash screen, icon
 
 **Critical Configuration Points:**
-- API base URL in `app.json` extra config: `https://unfurling.ninja/api`
+- API base URL in `app.json` extra config: `https://carferry.online/api`
 - **Platform**: Android ONLY (optimized for checker devices at gates)
 - Camera permissions: Required for QR scanning
 - App icon (1024x1024), Splash screen with blue theme (#0066cc)

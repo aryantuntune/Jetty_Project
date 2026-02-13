@@ -20,16 +20,11 @@ class BookingController extends Controller
     {
         // Get all branch IDs that appear in the routes table
         $branchIds = DB::table('routes')->pluck('branch_id')->toArray();
-        //dd( $branchIds);
-        // Fetch branches that exist in routes
         $branches = Branch::whereIn('id', $branchIds)
             ->select('id', 'branch_name')
             ->orderBy('branch_name')
             ->get();
 
-        // Check in debug if this returns data
-        // dd($branches); // Uncomment this line temporarily if still empty
-        //  dd( $branches);
         return Inertia::render('Customer/Booking', ['branches' => $branches]);
     }
 

@@ -110,6 +110,19 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | QR Code Secret
+    |--------------------------------------------------------------------------
+    |
+    | This secret is used to generate secure QR code hashes for tickets.
+    | It should be a random 64-character string and NEVER changed in production.
+    | Generate with: php artisan tinker, then: \Illuminate\Support\Str::random(64)
+    |
+    */
+
+    'qr_secret' => env('QR_SECRET', env('APP_KEY')),
+
+    /*
+    |--------------------------------------------------------------------------
     | Maintenance Mode Driver
     |--------------------------------------------------------------------------
     |

@@ -21,11 +21,45 @@ class Ticket extends Model
 
         static::creating(function ($ticket) {
             // Generate cryptographically secure hash for QR code
-            // Using SHA256 of UUID + microtime for uniqueness
             if (empty($ticket->qr_hash)) {
-                $ticket->qr_hash = hash('sha256', Str::uuid()->toString() . microtime(true));
+                $ticket->qr_hash = $ticket->generateQrHash();
             }
         });
+    }
+
+    /**
+     * Generate secure QR hash for this ticket
+     * Uses ticket data + secret key to create non-enumerable hash
+     *
+     * @return string 64-character SHA-256 hash
+     */
+    public function generateQrHash(): string
+    {
+        // Get QR secret from config (should be set in .env)
+        $secret = config('app.qr_secret', config('app.key'));
+
+        // Combine multiple fields to create unique, non-guessable hash
+        $data = implode('|', [
+            Str::uuid()->toString(),           // Random UUID for uniqueness
+            microtime(true),                   // High precision timestamp
+            $secret,                           // Secret key from env
+            $this->id ?? 0,                    // Ticket ID (if available)
+            $this->branch_id ?? 0,             // Branch context
+            $this->booking_id ?? 0,            // Booking context
+        ]);
+
+        return hash('sha256', $data);
+    }
+
+    /**
+     * Verify if a QR hash matches this ticket
+     *
+     * @param string $hash The hash to verify
+     * @return bool True if hash matches
+     */
+    public function verifyQrHash(string $hash): bool
+    {
+        return hash_equals($this->qr_hash, $hash);
     }
 
     protected $fillable = [
@@ -64,6 +98,7 @@ class Ticket extends Model
         'source',
         'payment_id',
         'qr_code',
+        'qr_hash',  // Secure QR code hash
         'status',
     ];
 

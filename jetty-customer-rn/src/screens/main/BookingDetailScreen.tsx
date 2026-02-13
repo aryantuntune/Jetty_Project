@@ -193,10 +193,16 @@ export const BookingDetailScreen: React.FC = () => {
                 {/* QR Code */}
                 <View style={styles.qrSection}>
                     <QRCode
-                        value={currentBooking.ticket?.id.toString() || currentBooking.id.toString()}
+                        value={currentBooking.ticket?.qr_hash || currentBooking.ticket?.id.toString() || 'INVALID'}
                         size={150}
+                        ecl="H"
                     />
                     <Text style={styles.qrText}>Show this code at the boarding gate</Text>
+                    {__DEV__ && currentBooking.ticket?.qr_hash && (
+                        <Text style={styles.debugText}>
+                            Hash: {currentBooking.ticket.qr_hash.substring(0, 16)}...
+                        </Text>
+                    )}
                 </View>
 
                 {/* Verified Status */}
