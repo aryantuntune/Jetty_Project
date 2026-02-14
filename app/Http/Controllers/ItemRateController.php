@@ -35,13 +35,17 @@ class ItemRateController extends Controller
 
         // Determine which branches to show in dropdown
         if (in_array($user->role_id, [1, 2])) {
-            // Admin/Manager: show all branches
             $branches = \App\Models\Branch::orderBy('branch_name')->get(['id', 'branch_name']);
+            $branchQuery = $request->branch_id ? $request->branch_id : null;
+        } elseif ($user->role_id == 3 && $user->route_id) {
+            // Manager: show branches on their route
+            $routeBranchIds = $user->getRouteBranchIds();
+            $branches = \App\Models\Branch::whereIn('id', $routeBranchIds)->orderBy('branch_name')->get(['id', 'branch_name']);
             $branchQuery = $request->branch_id ? $request->branch_id : null;
         } else {
             // Branch user: only their branch
             $branches = \App\Models\Branch::where('id', $user->branch_id)->get(['id', 'branch_name']);
-            $branchQuery = $user->branch_id; // restrict query automatically
+            $branchQuery = $user->branch_id;
         }
 
         // Get categories for filter dropdown
@@ -77,11 +81,10 @@ class ItemRateController extends Controller
         // Manager (role 3) sees only their branch
         if (in_array($user->role_id, [1, 2])) {
             $branches = Branch::orderBy('branch_name')->get(['id', 'branch_name']);
+        } elseif ($user->role_id == 3 && $user->route_id) {
+            $branches = Branch::whereIn('id', $user->getRouteBranchIds())->orderBy('branch_name')->get(['id', 'branch_name']);
         } else {
-            // Manager sees their branch only
-            $branches = Branch::where('id', $user->branch_id)
-                ->orderBy('branch_name')
-                ->get(['id', 'branch_name']);
+            $branches = Branch::where('id', $user->branch_id)->orderBy('branch_name')->get(['id', 'branch_name']);
         }
 
         return Inertia::render('Masters/ItemRates/Create', [
@@ -146,11 +149,10 @@ class ItemRateController extends Controller
         // Manager (role 3) sees only their branch
         if (in_array($user->role_id, [1, 2])) {
             $branches = Branch::orderBy('branch_name')->get(['id', 'branch_name']);
+        } elseif ($user->role_id == 3 && $user->route_id) {
+            $branches = Branch::whereIn('id', $user->getRouteBranchIds())->orderBy('branch_name')->get(['id', 'branch_name']);
         } else {
-            // Manager sees their branch only
-            $branches = Branch::where('id', $user->branch_id)
-                ->orderBy('branch_name')
-                ->get(['id', 'branch_name']);
+            $branches = Branch::where('id', $user->branch_id)->orderBy('branch_name')->get(['id', 'branch_name']);
         }
 
         return Inertia::render('Masters/ItemRates/Edit', [

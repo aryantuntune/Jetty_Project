@@ -151,7 +151,6 @@ export default function Create({
     };
 
     const submitTicket = (shouldPrint) => {
-        setData('print_receipt', shouldPrint);
         post(route('ticket-entry.store'), {
             onSuccess: (page) => {
                 reset();

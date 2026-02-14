@@ -21,9 +21,15 @@ class TicketReportController extends Controller
 
         // Branch filtering based on role
         if (in_array($user->role_id, [1, 2])) {
-            // Admin / Manager → show all branches
+            // Super Admin / Admin → show all branches
             $branches = Branch::all();
             $branchRestriction = null;
+        } elseif ($user->role_id == 3 && $user->route_id) {
+            // Manager → only branches on their route
+            $routeBranchIds = $user->getRouteBranchIds();
+            $branches = Branch::whereIn('id', $routeBranchIds)->get();
+            $branchRestriction = null; // let them filter within their route branches
+            // Auto-restrict query to route branches
         } else {
             // Other users → only their branch
             $branches = Branch::where('id', $user->branch_id)->get();
@@ -51,6 +57,11 @@ class TicketReportController extends Controller
 
             // Restrict to login user's branch if not admin/manager
             ->when($branchRestriction, fn($q) => $q->where('branch_id', $branchRestriction))
+
+            // Manager route restriction
+            ->when($user->role_id == 3 && $user->route_id, function ($q) use ($user) {
+                $q->whereIn('branch_id', $user->getRouteBranchIds());
+            })
 
             // Filters
             ->when($branchId, fn($q) => $q->where('branch_id', $branchId))
@@ -98,7 +109,16 @@ class TicketReportController extends Controller
 
     public function vehicleWiseIndex(Request $request)
     {
-        $branches = Branch::orderBy('branch_name')->get();
+        $user = Auth::user();
+
+        if (in_array($user->role_id, [1, 2])) {
+            $branches = Branch::orderBy('branch_name')->get();
+        } elseif ($user->role_id == 3 && $user->route_id) {
+            $branches = Branch::whereIn('id', $user->getRouteBranchIds())->orderBy('branch_name')->get();
+        } else {
+            $branches = Branch::where('id', $user->branch_id)->orderBy('branch_name')->get();
+        }
+
         $ferryBoats = FerryBoat::all();
         $paymentModes = ['CASH MEMO', 'CREDIT MEMO', 'GUEST PASS', 'GPay'];
         $ferryTypes = ['REGULAR', 'SPECIAL'];
@@ -123,6 +143,10 @@ class TicketReportController extends Controller
             ->when($paymentMode, fn($q) => $q->where('payment_mode', $paymentMode))
             ->when($ferryType, fn($q) => $q->where('ferry_type', $ferryType))
             ->when($ferryBoatId, fn($q) => $q->where('ferry_boat_id', $ferryBoatId))
+            // Manager route restriction
+            ->when($user->role_id == 3 && $user->route_id, function ($q) use ($user) {
+                $q->whereIn('branch_id', $user->getRouteBranchIds());
+            })
             ->when($vehicleNo, fn($q) => $q->whereHas('lines', fn($l) => $l->where('vehicle_no', 'like', "%{$vehicleNo}%")))
             ->when($vehicleName, fn($q) => $q->whereHas('lines', fn($l) => $l->where('vehicle_name', 'like', "%{$vehicleName}%")));
 

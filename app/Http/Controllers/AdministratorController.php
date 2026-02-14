@@ -18,14 +18,9 @@ class AdministratorController extends Controller
     }
     public function index()
     {
-        $query = User::with(['branch', 'ferryboat']);
-
-        // Only show superadmin to themselves
-        if ((int) auth()->user()->role_id === 1) {
-            $query->whereIn('role_id', [1, 2]);
-        } else {
-            $query->where('role_id', 2); // Hide superadmin from admins
-        }
+        // Always show only role_id=2 (Admin) — never expose superadmin
+        $query = User::with(['branch', 'ferryboat'])
+            ->where('role_id', 2);
 
         $administrators = $query->paginate(10);
 

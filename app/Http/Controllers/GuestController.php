@@ -18,15 +18,18 @@ class GuestController extends Controller
 
         // Branch dropdown
         if (in_array($user->role_id, [1, 2])) {
-            $branches = Branch::all(); // all branches
+            $branches = Branch::all();
+        } elseif ($user->role_id == 3 && $user->route_id) {
+            $branches = Branch::whereIn('id', $user->getRouteBranchIds())->get();
         } else {
-            $branches = Branch::where('id', $user->branch_id)->get(); // only user's branch
+            $branches = Branch::where('id', $user->branch_id)->get();
         }
 
         // Guests query
         $guests = Guest::with('category', 'branch')
-            ->when($user->role_id == 3, fn($q) => $q->where('branch_id', $user->branch_id)) // role 3 sees only own branch
-            ->when($branchId && in_array($user->role_id, [1, 2]), fn($q) => $q->where('branch_id', $branchId)) // filter by dropdown for 1,2
+            ->when($user->role_id == 3 && $user->route_id, fn($q) => $q->whereIn('branch_id', $user->getRouteBranchIds()))
+            ->when($user->role_id == 3 && !$user->route_id, fn($q) => $q->where('branch_id', $user->branch_id))
+            ->when($branchId && in_array($user->role_id, [1, 2, 3]), fn($q) => $q->where('branch_id', $branchId))
             ->get();
 
         $total = $guests->count();
@@ -44,7 +47,13 @@ class GuestController extends Controller
     {
         $categories = GuestCategory::all();
         $user = Auth::user();
-        $branches = in_array($user->role_id, [1, 2]) ? Branch::all() : Branch::where('id', $user->branch_id)->get();
+        if (in_array($user->role_id, [1, 2])) {
+            $branches = Branch::all();
+        } elseif ($user->role_id == 3 && $user->route_id) {
+            $branches = Branch::whereIn('id', $user->getRouteBranchIds())->get();
+        } else {
+            $branches = Branch::where('id', $user->branch_id)->get();
+        }
         return Inertia::render('Masters/Guests/Create', [
             'categories' => $categories,
             'branches' => $branches,
@@ -66,7 +75,7 @@ class GuestController extends Controller
             'name' => $request->name,
             'category_id' => $request->category_id,
             'user_id' => $user->id,
-            'branch_id' => in_array($user->role_id, [1, 2]) ? $request->branch_id : $user->branch_id,
+            'branch_id' => in_array($user->role_id, [1, 2, 3]) ? $request->branch_id : $user->branch_id,
         ]);
 
         return redirect()->route('guests.index')->with('success', 'Guest added successfully!');
@@ -76,7 +85,13 @@ class GuestController extends Controller
     {
         $categories = GuestCategory::all();
         $user = Auth::user();
-        $branches = in_array($user->role_id, [1, 2]) ? Branch::all() : Branch::where('id', $user->branch_id)->get();
+        if (in_array($user->role_id, [1, 2])) {
+            $branches = Branch::all();
+        } elseif ($user->role_id == 3 && $user->route_id) {
+            $branches = Branch::whereIn('id', $user->getRouteBranchIds())->get();
+        } else {
+            $branches = Branch::where('id', $user->branch_id)->get();
+        }
 
         return Inertia::render('Masters/Guests/Edit', [
             'guest' => $guest,
@@ -100,7 +115,7 @@ class GuestController extends Controller
             'name' => $request->name,
             'category_id' => $request->category_id,
             'user_id' => $user->id,
-            'branch_id' => in_array($user->role_id, [1, 2]) ? $request->branch_id : $user->branch_id,
+            'branch_id' => in_array($user->role_id, [1, 2, 3]) ? $request->branch_id : $user->branch_id,
         ]);
 
         return redirect()->route('guests.index')->with('success', 'Guest updated successfully!');

@@ -15,7 +15,7 @@ import {
 export default function GuestsIndex({ guests, branches, total, filters }) {
     const { auth } = usePage().props;
     const user = auth?.user;
-    const canManage = user && [1, 2].includes(user.role_id);
+    const canManage = user && [1, 2, 3].includes(user.role_id);
 
     const [searchFilters, setSearchFilters] = useState({
         branch_id: filters?.branch_id || '',
