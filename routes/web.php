@@ -205,7 +205,7 @@ Route::middleware(['auth', 'blockRole5'])->group(function () {
     Route::get('/verify', [TicketVerifyController::class, 'index'])->name('verify.index')->middleware(['auth', 'role:1,2,5']);
     Route::post('/verify', [TicketVerifyController::class, 'verify'])->name('verify.ticket')->middleware(['auth', 'role:1,2,5']);
 
-    Route::middleware(['auth', 'role:1,2'])->group(function () {
+    Route::middleware(['auth', 'role:1,2,3'])->group(function () {
         Route::resource('checker', CheckerController::class);
     });
 

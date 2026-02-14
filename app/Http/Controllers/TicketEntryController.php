@@ -20,7 +20,7 @@ class TicketEntryController extends Controller
         $user = $request->user();
 
         if (in_array($user->role_id, [1, 2])) {
-            // --- Admin/Manager ---
+            // --- Super Admin / Admin: see ALL branches ---
             $branches = Branch::orderBy('branch_name')->get(['id', 'branch_name']);
             $branchId = $branches->first()->id ?? null;
             $branchName = $branches->first()->branch_name ?? '';
@@ -51,8 +51,42 @@ class TicketEntryController extends Controller
                     ->unique('time')
                     ->values();
             }
+        } elseif ($user->role_id == 3 && $user->route_id) {
+            // --- Manager: see both branches on their route ---
+            $routeBranchIds = $user->getRouteBranchIds();
+            $branches = Branch::whereIn('id', $routeBranchIds)->orderBy('branch_name')->get(['id', 'branch_name']);
+            $branchId = $branches->first()->id ?? null;
+            $branchName = $branches->first()->branch_name ?? '';
+
+            // Boats per branch
+            $ferryBoatsPerBranch = [];
+            foreach ($branches as $b) {
+                $ferryBoatsPerBranch[$b->id] = $b->ferryboats()
+                    ->orderBy('name')
+                    ->get(['id', 'name'])
+                    ->unique('name')
+                    ->values();
+            }
+
+            $ferryboatsBranch = $ferryBoatsPerBranch[$branchId] ?? collect();
+
+            // Schedules per branch
+            $ferrySchedulesPerBranch = [];
+            foreach ($branches as $b) {
+                $ferrySchedulesPerBranch[$b->id] = FerrySchedule::where('branch_id', $b->id)
+                    ->orderByRaw('CAST(hour AS INTEGER), CAST(minute AS INTEGER)')
+                    ->get()
+                    ->map(function ($row) {
+                        return [
+                            'id' => $row->id,
+                            'time' => str_pad($row->hour, 2, '0', STR_PAD_LEFT) . ':' . str_pad($row->minute, 2, '0', STR_PAD_LEFT)
+                        ];
+                    })
+                    ->unique('time')
+                    ->values();
+            }
         } else {
-            // --- Normal user: only their branch ---
+            // --- Operator / Checker: only their branch ---
             $branches = Branch::where('id', $user->branch_id)->get(['id', 'branch_name']);
             $branchId = $user->branch_id;
             $branchName = optional($user->branch)->branch_name ?? '';
@@ -217,7 +251,7 @@ class TicketEntryController extends Controller
         }
 
         $user = $request->user();
-        $branchId = in_array($user->role_id, [1, 2])
+        $branchId = in_array($user->role_id, [1, 2, 3])
             ? $request->input('branch_id')
             : $user->branch_id;
 
