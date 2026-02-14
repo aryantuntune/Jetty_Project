@@ -11,8 +11,9 @@ export default function ManagerIndex({ managers }) {
                 role="manager"
                 data={managers}
                 Icon={UserCog}
-                showBranch={true}
-                showFerry={true}
+                showBranch={false}
+                showFerry={false}
+                showRoute={true}
             />
         </>
     );

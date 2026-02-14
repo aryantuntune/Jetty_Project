@@ -14,7 +14,7 @@ use Laravel\Sanctum\HasApiTokens;
 class User extends Authenticatable
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasApiTokens,HasFactory, Notifiable;
+    use HasApiTokens, HasFactory, Notifiable;
 
     /**
      * The attributes that are mass assignable.
@@ -22,20 +22,21 @@ class User extends Authenticatable
      * @var list<string>
      */
     protected $fillable = [
-    'name',
-    'email',
-    'password',
-    'mobile',
-    'branch_id',
-    'ferry_boat_id',
-    'role_id',
-    'role'
-];
+        'name',
+        'email',
+        'password',
+        'mobile',
+        'branch_id',
+        'ferry_boat_id',
+        'route_id',
+        'role_id',
+        'role'
+    ];
 
 
 
-protected $guarded = [];
-    
+    protected $guarded = [];
+
     /**
      * The attributes that should be hidden for serialization.
      *
@@ -60,13 +61,23 @@ protected $guarded = [];
     }
 
     public function branch()
-{
-    return $this->belongsTo(Branch::class);
-}
+    {
+        return $this->belongsTo(Branch::class);
+    }
 
-public function ferryboat()
-{
-    return $this->belongsTo(FerryBoat::class);
-}
+    public function ferryboat()
+    {
+        return $this->belongsTo(FerryBoat::class);
+    }
+
+    /**
+     * Get all branch IDs that belong to this user's route.
+     */
+    public function getRouteBranchIds()
+    {
+        if (!$this->route_id)
+            return collect();
+        return Route::where('route_id', $this->route_id)->pluck('branch_id');
+    }
 
 }

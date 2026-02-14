@@ -24,8 +24,10 @@ export default function StaffForm({
     staff = null,
     branches = [],
     ferryboats = [],
+    routes = [],
     showBranch = true,
     showFerry = true,
+    showRoute = false,
     branchRequired = false,
     ferryRequired = false,
 }) {
@@ -40,6 +42,7 @@ export default function StaffForm({
         mobile: staff?.mobile || '',
         branch_id: staff?.branch_id || '',
         ferry_boat_id: staff?.ferry_boat_id || '',
+        route_id: staff?.route_id || '',
     });
 
     const handleSubmit = (e) => {
@@ -112,9 +115,8 @@ export default function StaffForm({
                                 id="name"
                                 value={form.data.name}
                                 onChange={(e) => form.setData('name', e.target.value)}
-                                className={`w-full px-4 py-3 rounded-xl border transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 ${
-                                    form.errors.name ? 'border-red-500' : 'border-slate-200'
-                                }`}
+                                className={`w-full px-4 py-3 rounded-xl border transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 ${form.errors.name ? 'border-red-500' : 'border-slate-200'
+                                    }`}
                                 placeholder="John Doe"
                                 required
                                 autoFocus
@@ -131,9 +133,8 @@ export default function StaffForm({
                                 id="email"
                                 value={form.data.email}
                                 onChange={(e) => form.setData('email', e.target.value)}
-                                className={`w-full px-4 py-3 rounded-xl border transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 ${
-                                    form.errors.email ? 'border-red-500' : 'border-slate-200'
-                                }`}
+                                className={`w-full px-4 py-3 rounded-xl border transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 ${form.errors.email ? 'border-red-500' : 'border-slate-200'
+                                    }`}
                                 placeholder={`${role}@example.com`}
                                 required
                             />
@@ -151,9 +152,8 @@ export default function StaffForm({
                                     id="password"
                                     value={form.data.password}
                                     onChange={(e) => form.setData('password', e.target.value)}
-                                    className={`w-full px-4 py-3 pr-12 rounded-xl border transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 ${
-                                        form.errors.password ? 'border-red-500' : 'border-slate-200'
-                                    }`}
+                                    className={`w-full px-4 py-3 pr-12 rounded-xl border transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 ${form.errors.password ? 'border-red-500' : 'border-slate-200'
+                                        }`}
                                     placeholder="Minimum 6 characters"
                                     required={!isEdit}
                                 />
@@ -184,8 +184,32 @@ export default function StaffForm({
                             />
                         </div>
 
+                        {/* Route (for managers) */}
+                        {showRoute && (
+                            <div>
+                                <label htmlFor="route_id" className="block text-sm font-medium text-slate-700 mb-2">
+                                    Assigned Route <span className="text-red-500">*</span>
+                                </label>
+                                <select
+                                    id="route_id"
+                                    value={form.data.route_id}
+                                    onChange={(e) => form.setData('route_id', e.target.value)}
+                                    className={`w-full px-4 py-3 rounded-xl border transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 ${form.errors.route_id ? 'border-red-500' : 'border-slate-200'
+                                        }`}
+                                    required
+                                >
+                                    <option value="">Select Route</option>
+                                    {routes.map((r) => (
+                                        <option key={r.route_id} value={r.route_id}>
+                                            {r.label}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+                        )}
+
                         {/* Branch */}
-                        {showBranch && (
+                        {showBranch && !showRoute && (
                             <div>
                                 <label htmlFor="branch_id" className="block text-sm font-medium text-slate-700 mb-2">
                                     Branch {branchRequired && <span className="text-red-500">*</span>}
@@ -194,9 +218,8 @@ export default function StaffForm({
                                     id="branch_id"
                                     value={form.data.branch_id}
                                     onChange={(e) => form.setData('branch_id', e.target.value)}
-                                    className={`w-full px-4 py-3 rounded-xl border transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 ${
-                                        form.errors.branch_id ? 'border-red-500' : 'border-slate-200'
-                                    }`}
+                                    className={`w-full px-4 py-3 rounded-xl border transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 ${form.errors.branch_id ? 'border-red-500' : 'border-slate-200'
+                                        }`}
                                     required={branchRequired}
                                 >
                                     <option value="">Select Branch {branchRequired ? '' : '(Optional)'}</option>
@@ -210,7 +233,7 @@ export default function StaffForm({
                         )}
 
                         {/* Ferry Boat */}
-                        {showFerry && (
+                        {showFerry && !showRoute && (
                             <div>
                                 <label htmlFor="ferry_boat_id" className="block text-sm font-medium text-slate-700 mb-2">
                                     Ferry Boat {ferryRequired && <span className="text-red-500">*</span>}
@@ -219,9 +242,8 @@ export default function StaffForm({
                                     id="ferry_boat_id"
                                     value={form.data.ferry_boat_id}
                                     onChange={(e) => form.setData('ferry_boat_id', e.target.value)}
-                                    className={`w-full px-4 py-3 rounded-xl border transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 ${
-                                        form.errors.ferry_boat_id ? 'border-red-500' : 'border-slate-200'
-                                    }`}
+                                    className={`w-full px-4 py-3 rounded-xl border transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 ${form.errors.ferry_boat_id ? 'border-red-500' : 'border-slate-200'
+                                        }`}
                                     required={ferryRequired}
                                 >
                                     <option value="">Select Ferry Boat {ferryRequired ? '' : '(Optional)'}</option>

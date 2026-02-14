@@ -95,7 +95,8 @@ class AdministratorController extends Controller
     public function update(Request $request, User $admin)
     {
         abort_if(!in_array($admin->role_id, [1, 2]), 404);
-
+        // Prevent non-superadmin from modifying superadmin
+        abort_if($admin->role_id == 1 && (int) auth()->user()->role_id !== 1, 404);
         $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email,' . $admin->id,
@@ -126,6 +127,8 @@ class AdministratorController extends Controller
     public function destroy(User $admin)
     {
         abort_if(!in_array($admin->role_id, [1, 2]), 404);
+        // Prevent non-superadmin from even seeing or deleting superadmin
+        abort_if($admin->role_id == 1 && (int) auth()->user()->role_id !== 1, 404);
 
         // Prevent deletion of superadmin (role_id = 1)
         if ($admin->role_id == 1) {

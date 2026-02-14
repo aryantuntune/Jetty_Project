@@ -64,7 +64,7 @@ const adminItems = [
         id: 'user-management',
         label: 'User Management',
         icon: Users,
-        roles: [1, 2],
+        roles: [1, 2, 3],
         children: [
             { id: 'admin-overview', label: 'Staff Overview', href: 'users.index', roles: [1, 2] },
             { id: 'admin-admins', label: 'Administrators', href: 'admin.index', roles: [1, 2] },

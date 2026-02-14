@@ -2,17 +2,17 @@ import { UserCog } from 'lucide-react';
 import Layout from '@/Layouts/Layout';
 import StaffForm from '@/Components/StaffForm';
 
-export default function ManagerCreate({ branches, ferryboats }) {
+export default function ManagerCreate({ branches, ferryboats, routes }) {
     return (
         <StaffForm
             role="manager"
             Icon={UserCog}
             branches={branches}
             ferryboats={ferryboats}
-            showBranch={true}
-            showFerry={true}
-            branchRequired={true}
-            ferryRequired={true}
+            routes={routes}
+            showBranch={false}
+            showFerry={false}
+            showRoute={true}
         />
     );
 }

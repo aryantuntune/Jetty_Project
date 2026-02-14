@@ -88,6 +88,7 @@ export default function StaffTable({
     Icon,
     showBranch = false,
     showFerry = false,
+    showRoute = false,
 }) {
     const { flash } = usePage().props;
     const config = roleConfig[role];
@@ -162,12 +163,17 @@ export default function StaffTable({
                                 <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
                                     Mobile
                                 </th>
-                                {showBranch && (
+                                {showRoute && (
+                                    <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
+                                        Route
+                                    </th>
+                                )}
+                                {showBranch && !showRoute && (
                                     <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
                                         Branch
                                     </th>
                                 )}
-                                {showFerry && (
+                                {showFerry && !showRoute && (
                                     <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
                                         Ferry
                                     </th>
@@ -195,12 +201,19 @@ export default function StaffTable({
                                         <td className="px-6 py-4 text-slate-600">
                                             {item.mobile || '-'}
                                         </td>
-                                        {showBranch && (
+                                        {showRoute && (
+                                            <td className="px-6 py-4 text-slate-600">
+                                                <span className="inline-flex items-center px-2.5 py-1 rounded-lg bg-blue-50 text-blue-700 text-sm font-medium">
+                                                    {item.route_label || item.branch?.branch_name || '-'}
+                                                </span>
+                                            </td>
+                                        )}
+                                        {showBranch && !showRoute && (
                                             <td className="px-6 py-4 text-slate-600">
                                                 {item.branch?.branch_name || '-'}
                                             </td>
                                         )}
-                                        {showFerry && (
+                                        {showFerry && !showRoute && (
                                             <td className="px-6 py-4 text-slate-600">
                                                 {item.ferryboat?.name || '-'}
                                             </td>
@@ -229,7 +242,7 @@ export default function StaffTable({
                                 ))
                             ) : (
                                 <tr>
-                                    <td colSpan={showBranch && showFerry ? 6 : showBranch || showFerry ? 5 : 4} className="px-6 py-12 text-center">
+                                    <td colSpan={showRoute ? 5 : showBranch && showFerry ? 6 : showBranch || showFerry ? 5 : 4} className="px-6 py-12 text-center">
                                         <div className="flex flex-col items-center">
                                             <div className={`w-16 h-16 rounded-full ${config.iconBg} flex items-center justify-center mb-4`}>
                                                 <Icon className={`w-8 h-8 ${config.iconColor}`} />

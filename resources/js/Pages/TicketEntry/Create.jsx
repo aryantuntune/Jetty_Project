@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { useForm, router, Head } from '@inertiajs/react';
 import { route } from 'ziggy-js';
 import Layout from '@/Layouts/Layout';
+import CashCalculatorModal from '@/Components/CashCalculatorModal';
 import { Plus, X, Ship, Clock, User, Phone, Printer, Save, AlertCircle } from 'lucide-react';
 
 export default function Create({
@@ -25,6 +26,8 @@ export default function Create({
     const [itemRates, setItemRates] = useState([]);
     const [loadingItems, setLoadingItems] = useState(false);
     const [printReceipt, setPrintReceipt] = useState(true);
+    const [showCalculator, setShowCalculator] = useState(false);
+    const [pendingPrint, setPendingPrint] = useState(false);
 
     const { data, setData, post, processing, errors, reset } = useForm({
         branch_id: branchId || '',
@@ -134,11 +137,26 @@ export default function Create({
 
     const handleSubmit = (e, shouldPrint = false) => {
         e.preventDefault();
+
+        // For Cash or GPay, show calculator modal first
+        const mode = data.payment_mode;
+        if (mode === 'Cash' || mode === 'GPay' || mode === 'UPI') {
+            setPendingPrint(shouldPrint);
+            setShowCalculator(true);
+            return;
+        }
+
+        // For other payment modes (Guest Pass, etc.), submit directly
+        submitTicket(shouldPrint);
+    };
+
+    const submitTicket = (shouldPrint) => {
         setData('print_receipt', shouldPrint);
         post(route('ticket-entry.store'), {
             onSuccess: (page) => {
                 reset();
                 setItems([]);
+                setShowCalculator(false);
                 // Get ticket info from flash session
                 const ticket = page.props.flash?.ticket;
                 if (shouldPrint && ticket?.print_url) {
@@ -146,6 +164,11 @@ export default function Create({
                 }
             },
         });
+    };
+
+    const handleCalculatorConfirm = () => {
+        setShowCalculator(false);
+        submitTicket(pendingPrint);
     };
 
     // Get ferry boat info
@@ -674,6 +697,15 @@ export default function Create({
                     </div>
                 </div>
             </form>
+
+            {/* Cash/GPay Calculator Modal */}
+            <CashCalculatorModal
+                isOpen={showCalculator}
+                onClose={() => setShowCalculator(false)}
+                onConfirm={handleCalculatorConfirm}
+                totalAmount={netTotal}
+                paymentMode={data.payment_mode}
+            />
         </>
     );
 }

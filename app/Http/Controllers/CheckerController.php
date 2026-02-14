@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\User;
 use App\Models\Branch;
 use App\Models\FerryBoat;
+use App\Models\Route;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
@@ -19,18 +20,28 @@ class CheckerController extends Controller
     }
 
     /**
+     * Get the branch IDs the current manager's route covers.
+     */
+    private function getManagerBranchIds()
+    {
+        $user = Auth::user();
+        if ($user->role_id != 3)
+            return null;
+        return $user->getRouteBranchIds();
+    }
+
+    /**
      * Get the base query filtered by role
      * - Super Admin/Admin: see all checkers
-     * - Manager: see only checkers on their ferry route
+     * - Manager: see only checkers at branches on their route
      */
     private function getFilteredQuery()
     {
-        $user = Auth::user();
         $query = User::where('role_id', 5)->with(['branch', 'ferryboat']);
 
-        // Manager can only see checkers assigned to their ferry route
-        if ($user->role_id == 3) {
-            $query->where('ferry_boat_id', $user->ferry_boat_id);
+        $branchIds = $this->getManagerBranchIds();
+        if ($branchIds !== null) {
+            $query->whereIn('branch_id', $branchIds);
         }
 
         return $query;
@@ -48,9 +59,10 @@ class CheckerController extends Controller
             return true;
         }
 
-        // Manager can only manage checkers on their route
+        // Manager can only manage checkers on their route's branches
         if ($user->role_id == 3) {
-            return $checker->ferry_boat_id == $user->ferry_boat_id;
+            $branchIds = $user->getRouteBranchIds();
+            return $branchIds->contains($checker->branch_id);
         }
 
         return false;
@@ -72,9 +84,13 @@ class CheckerController extends Controller
         $user = Auth::user();
 
         if ($user->role_id == 3) {
-            // Manager can only create checkers for their route
-            $branches = Branch::all();
-            $ferryboats = FerryBoat::where('id', $user->ferry_boat_id)->get();
+            // Manager can only create checkers for branches on their route
+            $branchIds = $user->getRouteBranchIds();
+            $branches = Branch::whereIn('id', $branchIds)->get();
+            $ferryboats = FerryBoat::whereIn('branch_id', $branchIds)->get();
+            if ($ferryboats->isEmpty()) {
+                $ferryboats = FerryBoat::all();
+            }
         } else {
             $branches = Branch::all();
             $ferryboats = FerryBoat::all();
@@ -99,10 +115,12 @@ class CheckerController extends Controller
             'ferry_boat_id' => 'nullable|exists:ferryboats,id',
         ]);
 
-        // Manager can only create checkers for their route
-        $ferryBoatId = $request->ferryboat_id;
+        // Manager can only create checkers for their route's branches
         if ($user->role_id == 3) {
-            $ferryBoatId = $user->ferry_boat_id;
+            $branchIds = $user->getRouteBranchIds();
+            if ($request->branch_id && !$branchIds->contains($request->branch_id)) {
+                abort(403, 'You can only create checkers for branches on your route.');
+            }
         }
 
         User::create([
@@ -111,7 +129,7 @@ class CheckerController extends Controller
             'password' => Hash::make($request->password),
             'mobile' => $request->mobile,
             'branch_id' => $request->branch_id,
-            'ferry_boat_id' => $ferryBoatId,
+            'ferry_boat_id' => $request->ferryboat_id ?? $request->ferry_boat_id,
             'role_id' => 5,  // CHECKER ROLE
         ]);
 
@@ -134,9 +152,12 @@ class CheckerController extends Controller
         $user = Auth::user();
 
         if ($user->role_id == 3) {
-            // Manager can only assign to their route
-            $branches = Branch::all();
-            $ferryboats = FerryBoat::where('id', $user->ferry_boat_id)->get();
+            $branchIds = $user->getRouteBranchIds();
+            $branches = Branch::whereIn('id', $branchIds)->get();
+            $ferryboats = FerryBoat::whereIn('branch_id', $branchIds)->get();
+            if ($ferryboats->isEmpty()) {
+                $ferryboats = FerryBoat::all();
+            }
         } else {
             $branches = Branch::all();
             $ferryboats = FerryBoat::all();
@@ -165,10 +186,12 @@ class CheckerController extends Controller
             'ferry_boat_id' => 'nullable|exists:ferryboats,id',
         ]);
 
-        // Manager can only assign to their route
-        $ferryBoatId = $request->ferryboat_id;
+        // Manager can only assign to their route's branches
         if ($user->role_id == 3) {
-            $ferryBoatId = $user->ferry_boat_id;
+            $branchIds = $user->getRouteBranchIds();
+            if ($request->branch_id && !$branchIds->contains($request->branch_id)) {
+                abort(403, 'You can only assign checkers to branches on your route.');
+            }
         }
 
         $checker->update([
@@ -176,7 +199,7 @@ class CheckerController extends Controller
             'email' => $request->email,
             'mobile' => $request->mobile,
             'branch_id' => $request->branch_id,
-            'ferry_boat_id' => $ferryBoatId,
+            'ferry_boat_id' => $request->ferryboat_id ?? $request->ferry_boat_id,
             'role_id' => 5,
         ]);
 
