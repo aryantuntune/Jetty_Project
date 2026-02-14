@@ -23,6 +23,24 @@ export default function Print({ ticket }) {
 
     const formatTime = (time) => {
         if (!time) return '-';
+        // Handle full ISO datetime strings like "2026-02-14T10:00:00.000000Z"
+        if (time.includes('T')) {
+            const d = new Date(time);
+            return d.toLocaleTimeString('en-IN', {
+                hour: '2-digit',
+                minute: '2-digit',
+                hour12: true,
+            });
+        }
+        // Handle simple "HH:MM" or "HH:MM:SS" strings
+        const parts = time.split(':');
+        if (parts.length >= 2) {
+            let h = parseInt(parts[0], 10);
+            const m = parts[1].padStart(2, '0');
+            const ampm = h >= 12 ? 'PM' : 'AM';
+            h = h % 12 || 12;
+            return `${h}:${m} ${ampm}`;
+        }
         return time;
     };
 
@@ -33,10 +51,17 @@ export default function Print({ ticket }) {
                 className="max-w-[80mm] mx-auto bg-white p-4 shadow-lg print:shadow-none print:max-w-full"
                 style={{ fontFamily: 'monospace' }}
             >
-                {/* Header */}
+                {/* Header with Logo */}
                 <div className="text-center border-b border-dashed border-gray-400 pb-3 mb-3">
-                    <h1 className="text-lg font-bold">JETTY TICKET</h1>
-                    <p className="text-sm text-gray-600">Ferry Service</p>
+                    <img
+                        src="/images/carferry/logos/logo.png"
+                        alt="Logo"
+                        className="w-12 h-12 mx-auto mb-2 object-contain"
+                    />
+                    <h1 className="text-xs font-bold leading-tight">
+                        SUVARNADURGA SHIPPING & MARINE SERVICES PVT. LTD.
+                    </h1>
+                    <p className="text-xs text-gray-500 mt-1">Ferry Ticket</p>
                 </div>
 
                 {/* Ticket Info */}
@@ -51,7 +76,7 @@ export default function Print({ ticket }) {
                     </div>
                     <div className="flex justify-between text-sm">
                         <span className="text-gray-600">Time:</span>
-                        <span>{ticket?.ferry_time || '-'}</span>
+                        <span>{formatTime(ticket?.ferry_time)}</span>
                     </div>
                 </div>
 
@@ -148,7 +173,8 @@ export default function Print({ ticket }) {
                         -webkit-print-color-adjust: exact;
                     }
                 }
-            `}</style>
+            `}
+            </style>
         </div>
     );
 }
