@@ -54,8 +54,13 @@ export default function Create({
         const today = new Date().toISOString().split('T')[0];
         const selectedDate = data.ticket_date;
 
-        // Future date: show all schedules
-        if (selectedDate > today) return { filteredSchedules: schedules, currentScheduleIndex: 0 };
+        // Future date: show all schedules (extract only time)
+        if (selectedDate > today) {
+            return {
+                filteredSchedules: schedules.map(s => ({ time: s.time, _label: '' })),
+                currentScheduleIndex: 0,
+            };
+        }
 
         // Past date: no schedules
         if (selectedDate < today) return { filteredSchedules: [], currentScheduleIndex: -1 };
@@ -73,20 +78,20 @@ export default function Create({
         // If no future schedule found, everything is past — show last 2 + nothing
         if (nextIdx === -1) nextIdx = schedules.length;
 
-        // Collect: 1 past, current (nextIdx), 1 after
+        // Collect: 1 past, current (nextIdx), 1 after — only extract time string
         const result = [];
         const pastIdx = nextIdx - 1;
         let selectedInResult = -1;
 
         if (pastIdx >= 0) {
-            result.push({ ...schedules[pastIdx], _label: 'Previous' });
+            result.push({ time: schedules[pastIdx].time, _label: 'Previous' });
         }
         if (nextIdx < schedules.length) {
-            result.push({ ...schedules[nextIdx], _label: 'Current' });
+            result.push({ time: schedules[nextIdx].time, _label: 'Current' });
             selectedInResult = result.length - 1;
         }
         if (nextIdx + 1 < schedules.length) {
-            result.push({ ...schedules[nextIdx + 1], _label: 'Next' });
+            result.push({ time: schedules[nextIdx + 1].time, _label: 'Next' });
         }
 
         return { filteredSchedules: result, currentScheduleIndex: selectedInResult };
