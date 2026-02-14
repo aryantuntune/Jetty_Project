@@ -238,7 +238,7 @@ export default function Create({
     };
 
     // Get ferry boat info
-    const selectedBoat = ferryBoatsPerBranch?.[data.branch_id]?.find(fb => fb.id == data.ferry_boat_id);
+    const selectedBoat = toSafeArray(ferryBoatsPerBranch?.[data.branch_id]).find(fb => fb.id == data.ferry_boat_id);
 
     return (
         <>
@@ -362,7 +362,7 @@ export default function Create({
                                                             <optgroup key={groupName} label={groupName}>
                                                                 {routes.map(r => (
                                                                     <option key={r.key} value={r.key}>
-                                                                        {r.from.branch_name} → {r.to.branch_name}
+                                                                        {String(r.from?.branch_name ?? '')} → {String(r.to?.branch_name ?? '')}
                                                                     </option>
                                                                 ))}
                                                             </optgroup>
@@ -372,13 +372,13 @@ export default function Create({
                                                     // For Manager (role 3): Show flat list (no grouping needed for just 2 options)
                                                     return allRoutes.map(r => (
                                                         <option key={r.key} value={r.key}>
-                                                            {r.from.branch_name} → {r.to.branch_name}
+                                                            {String(r.from?.branch_name ?? '')} → {String(r.to?.branch_name ?? '')}
                                                         </option>
                                                     ));
                                                 })()}
                                             </select>
                                         )}
-                                        {errors.branch_id && <p className="text-red-500 text-sm mt-1">{errors.branch_id}</p>}
+                                        {errors.branch_id && <p className="text-red-500 text-sm mt-1">{String(errors.branch_id)}</p>}
                                     </div>
 
                                     {/* Ferry Boat */}
@@ -497,7 +497,7 @@ export default function Create({
                                                         <option value="">Select Item</option>
                                                         {itemRates.map((ir) => (
                                                             <option key={ir.id} value={ir.id}>
-                                                                {ir.id} - {ir.item_name}
+                                                                {String(ir.id ?? '')} - {String(ir.item_name ?? '')}
                                                             </option>
                                                         ))}
                                                     </select>
