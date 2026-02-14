@@ -68,7 +68,7 @@ class SendDailyTicketsReport extends Command
         fclose($fh);
 
         // Email
-        $to = $this->option('email') ?: 'mahesh.zemse@gmail.com';
+        $to = $this->option('email') ?: 'aryantuntune42@gmail.com';
         Mail::to($to)->send(new DailyTicketsReportMail(
             date: $date,
             filePath: $full,
