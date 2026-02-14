@@ -80,9 +80,9 @@ class HomeController extends Controller
 
         // Get ferry boats count with role-based filtering
         $ferryBoatsQuery = FerryBoat::query();
-        if ($user->role_id == 3 && $user->ferry_boat_id) {
-            // Manager sees only their assigned ferry
-            $ferryBoatsQuery->where('id', $user->ferry_boat_id);
+        if ($user->role_id == 3 && $user->route_id) {
+            // Manager sees ferries on their route's branches
+            $ferryBoatsQuery->whereIn('branch_id', $user->getRouteBranchIds());
         } elseif ($user->role_id == 4 && $user->branch_id) {
             // Operator sees only ferries in their branch
             $ferryBoatsQuery->where('branch_id', $user->branch_id);
@@ -134,9 +134,19 @@ class HomeController extends Controller
 
         // Determine scope info  
         $scopeType = in_array($user->role_id, [1, 2]) ? 'global' : ($user->role_id == 3 ? 'route' : 'branch');
-        $scope = $user->role_id == 3
-            ? ($user->ferryBoat->name ?? 'Unknown Route')
-            : ($user->branch->branch_name ?? 'Unknown Branch');
+        if ($user->role_id == 3 && $user->route_id) {
+            // Get route label from the routes table
+            $routeBranches = \App\Models\Route::where('route_id', $user->route_id)
+                ->with('branch:id,branch_name')
+                ->get();
+            $scope = $routeBranches->pluck('branch.branch_name')->filter()->implode(' ↔ ');
+            if (empty($scope))
+                $scope = 'Route ' . $user->route_id;
+        } elseif ($user->role_id == 4) {
+            $scope = $user->branch->branch_name ?? 'Unknown Branch';
+        } else {
+            $scope = 'All Branches';
+        }
 
         return Inertia::render('Dashboard', [
             'stats' => [
@@ -185,9 +195,9 @@ class HomeController extends Controller
                 // No filter needed
                 break;
 
-            case 3: // Manager - sees only their ferry route
-                if ($user->ferry_boat_id) {
-                    $query->where('ferry_boat_id', $user->ferry_boat_id);
+            case 3: // Manager - sees only their route's branches
+                if ($user->route_id) {
+                    $query->whereIn('branch_id', $user->getRouteBranchIds());
                 }
                 break;
 

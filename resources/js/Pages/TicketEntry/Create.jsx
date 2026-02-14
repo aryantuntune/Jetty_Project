@@ -3,7 +3,7 @@ import { useForm, router, Head } from '@inertiajs/react';
 import { route } from 'ziggy-js';
 import Layout from '@/Layouts/Layout';
 import CashCalculatorModal from '@/Components/CashCalculatorModal';
-import { Plus, X, Ship, Clock, User, Phone, Printer, Save, AlertCircle } from 'lucide-react';
+import { Plus, X, Ship, Clock, User, Phone, Printer, Save, AlertCircle, CheckCircle } from 'lucide-react';
 
 export default function Create({
     branches,
@@ -28,6 +28,7 @@ export default function Create({
     const [printReceipt, setPrintReceipt] = useState(true);
     const [showCalculator, setShowCalculator] = useState(false);
     const [pendingPrint, setPendingPrint] = useState(false);
+    const [successInfo, setSuccessInfo] = useState(null); // { ticketNo, total }
 
     const { data, setData, post, processing, errors, reset } = useForm({
         branch_id: branchId || '',
@@ -158,6 +159,14 @@ export default function Create({
                 setShowCalculator(false);
                 // Get ticket info from flash session
                 const ticket = page.props.flash?.ticket;
+
+                // Show success animation
+                setSuccessInfo({
+                    ticketNo: ticket?.ticket_no || ticket?.id || '—',
+                    total: ticket?.total ? Number(ticket.total).toFixed(2) : '0.00',
+                });
+                setTimeout(() => setSuccessInfo(null), 2500);
+
                 if (shouldPrint && ticket?.print_url) {
                     window.open(ticket.print_url, '_blank');
                 }
@@ -705,6 +714,47 @@ export default function Create({
                 totalAmount={netTotal}
                 paymentMode={data.payment_mode}
             />
+
+            {/* Success Animation Overlay */}
+            {successInfo && (
+                <div
+                    className="fixed inset-0 z-[9999] flex items-center justify-center"
+                    style={{
+                        backgroundColor: 'rgba(0,0,0,0.35)',
+                        backdropFilter: 'blur(4px)',
+                        animation: 'fadeIn 0.2s ease-out',
+                    }}
+                >
+                    <div
+                        className="bg-white rounded-3xl shadow-2xl p-10 flex flex-col items-center gap-4 max-w-sm mx-4"
+                        style={{ animation: 'popIn 0.35s cubic-bezier(0.34, 1.56, 0.64, 1)' }}
+                    >
+                        <div className="w-20 h-20 rounded-full bg-gradient-to-br from-green-400 to-emerald-600 flex items-center justify-center shadow-lg shadow-green-200">
+                            <CheckCircle className="w-10 h-10 text-white" strokeWidth={2.5} />
+                        </div>
+                        <h3 className="text-xl font-bold text-gray-900">Ticket Booked!</h3>
+                        <div className="text-center space-y-1">
+                            <p className="text-sm text-gray-500">Ticket No.</p>
+                            <p className="text-2xl font-bold text-indigo-600">#{successInfo.ticketNo}</p>
+                        </div>
+                        <div className="px-5 py-2 rounded-full bg-green-50 border border-green-200">
+                            <span className="text-green-700 font-semibold">₹ {successInfo.total}</span>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Success animation keyframes */}
+            <style>{`
+                @keyframes fadeIn {
+                    from { opacity: 0; }
+                    to { opacity: 1; }
+                }
+                @keyframes popIn {
+                    0% { transform: scale(0.5); opacity: 0; }
+                    100% { transform: scale(1); opacity: 1; }
+                }
+            `}</style>
         </>
     );
 }
