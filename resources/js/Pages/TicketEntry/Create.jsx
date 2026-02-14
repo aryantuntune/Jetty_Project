@@ -48,16 +48,21 @@ export default function Create({
 
     // Filter ferry schedules: show 3 times (1 past, current, next)
     const { filteredSchedules, currentScheduleIndex } = useMemo(() => {
-        const schedules = ferrySchedulesPerBranch?.[data.branch_id] || [];
+        // PHP Collections can serialize as {} instead of [] when empty — guard against that
+        let rawSchedules = ferrySchedulesPerBranch?.[data.branch_id];
+        const schedules = Array.isArray(rawSchedules)
+            ? rawSchedules
+            : (rawSchedules && typeof rawSchedules === 'object' ? Object.values(rawSchedules) : []);
+
         if (!schedules.length) return { filteredSchedules: [], currentScheduleIndex: -1 };
 
         const today = new Date().toISOString().split('T')[0];
-        const selectedDate = data.ticket_date;
+        const selectedDate = data.ticket_date || today;
 
         // Future date: show all schedules (extract only time)
         if (selectedDate > today) {
             return {
-                filteredSchedules: schedules.map(s => ({ time: s.time, _label: '' })),
+                filteredSchedules: schedules.map(s => ({ time: String(s.time || ''), _label: '' })),
                 currentScheduleIndex: 0,
             };
         }
@@ -71,7 +76,7 @@ export default function Create({
 
         // Find the first schedule that is >= current time (next available boat)
         let nextIdx = schedules.findIndex((s) => {
-            const [h, m] = (s.time || '00:00').split(':').map(Number);
+            const [h, m] = String(s.time || '00:00').split(':').map(Number);
             return h * 60 + m >= currentMinutes;
         });
 
@@ -84,14 +89,14 @@ export default function Create({
         let selectedInResult = -1;
 
         if (pastIdx >= 0) {
-            result.push({ time: schedules[pastIdx].time, _label: 'Previous' });
+            result.push({ time: String(schedules[pastIdx].time || ''), _label: 'Previous' });
         }
         if (nextIdx < schedules.length) {
-            result.push({ time: schedules[nextIdx].time, _label: 'Current' });
+            result.push({ time: String(schedules[nextIdx].time || ''), _label: 'Current' });
             selectedInResult = result.length - 1;
         }
         if (nextIdx + 1 < schedules.length) {
-            result.push({ time: schedules[nextIdx + 1].time, _label: 'Next' });
+            result.push({ time: String(schedules[nextIdx + 1].time || ''), _label: 'Next' });
         }
 
         return { filteredSchedules: result, currentScheduleIndex: selectedInResult };
