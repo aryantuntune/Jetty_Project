@@ -12,14 +12,14 @@ class EmployeeTransferController extends Controller
 
     public function transferPage()
     {
-        $users = User::with('branch')->get(); // get all employees
+        $users = User::with('branch')->where('role_id', '!=', 1)->get(); // exclude superadmin
         return Inertia::render('Employees/TransferIndex', ['users' => $users]);
     }
 
 
     public function showTransferForm($id)
     {
-        $user = User::with('branch')->findOrFail($id);
+        $user = User::with('branch')->where('role_id', '!=', 1)->findOrFail($id);
         $branches = Branch::all();
 
         return Inertia::render('Employees/Transfer', [
@@ -30,7 +30,7 @@ class EmployeeTransferController extends Controller
 
     public function transfer(Request $request, $id)
     {
-        $user = User::findOrFail($id);
+        $user = User::where('role_id', '!=', 1)->findOrFail($id);
 
         $request->validate([
             'to_branch_id' => 'required|exists:branches,id|different:current_branch_id',

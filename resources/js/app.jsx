@@ -13,7 +13,7 @@ createInertiaApp({
     resolve: async (name) => {
         const page = await resolvePageComponent(
             `./Pages/${name}.jsx`,
-            import.meta.glob('./Pages/**/*.jsx')
+            import.meta.glob('./Pages/**/*.jsx', { eager: false })
         );
 
         // Only apply default layout if page doesn't have its own layout
@@ -32,3 +32,4 @@ createInertiaApp({
         showSpinner: true,
     },
 });
+

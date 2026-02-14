@@ -15,6 +15,17 @@ export default defineConfig({
         react(),
         tailwindcss(),
     ],
+    build: {
+        rollupOptions: {
+            output: {
+                manualChunks: {
+                    'vendor-react': ['react', 'react-dom'],
+                    'vendor-inertia': ['@inertiajs/react'],
+                },
+            },
+        },
+        chunkSizeWarningLimit: 600,
+    },
     resolve: {
         alias: {
             '@': '/resources/js',
