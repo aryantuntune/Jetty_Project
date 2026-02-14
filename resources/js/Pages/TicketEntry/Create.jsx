@@ -5,6 +5,13 @@ import Layout from '@/Layouts/Layout';
 import CashCalculatorModal from '@/Components/CashCalculatorModal';
 import { Plus, X, Ship, Clock, User, Phone, Printer, Save, AlertCircle, CheckCircle } from 'lucide-react';
 
+// PHP can serialize empty Collections as {} instead of []. This helper ensures we always get an array.
+const toSafeArray = (val) => {
+    if (Array.isArray(val)) return val;
+    if (val && typeof val === 'object') return Object.values(val);
+    return [];
+};
+
 export default function Create({
     branches,
     branchId,
@@ -48,58 +55,54 @@ export default function Create({
 
     // Filter ferry schedules: show 3 times (1 past, current, next)
     const { filteredSchedules, currentScheduleIndex } = useMemo(() => {
-        // PHP Collections can serialize as {} instead of [] when empty — guard against that
-        let rawSchedules = ferrySchedulesPerBranch?.[data.branch_id];
-        const schedules = Array.isArray(rawSchedules)
-            ? rawSchedules
-            : (rawSchedules && typeof rawSchedules === 'object' ? Object.values(rawSchedules) : []);
+        try {
+            const schedules = toSafeArray(ferrySchedulesPerBranch?.[data.branch_id]);
+            if (!schedules.length) return { filteredSchedules: [], currentScheduleIndex: -1 };
 
-        if (!schedules.length) return { filteredSchedules: [], currentScheduleIndex: -1 };
+            const today = new Date().toISOString().split('T')[0];
+            const selectedDate = data.ticket_date || today;
 
-        const today = new Date().toISOString().split('T')[0];
-        const selectedDate = data.ticket_date || today;
+            // Future date: show all schedules
+            if (selectedDate > today) {
+                return {
+                    filteredSchedules: schedules.map(s => ({ time: String(s?.time ?? ''), _label: '' })),
+                    currentScheduleIndex: 0,
+                };
+            }
 
-        // Future date: show all schedules (extract only time)
-        if (selectedDate > today) {
-            return {
-                filteredSchedules: schedules.map(s => ({ time: String(s.time || ''), _label: '' })),
-                currentScheduleIndex: 0,
-            };
+            // Past date: no schedules
+            if (selectedDate < today) return { filteredSchedules: [], currentScheduleIndex: -1 };
+
+            // Today: show 3 times (1 past + current + next)
+            const now = new Date();
+            const currentMinutes = now.getHours() * 60 + now.getMinutes();
+
+            let nextIdx = schedules.findIndex((s) => {
+                const [h, m] = String(s?.time ?? '00:00').split(':').map(Number);
+                return h * 60 + m >= currentMinutes;
+            });
+            if (nextIdx === -1) nextIdx = schedules.length;
+
+            const result = [];
+            const pastIdx = nextIdx - 1;
+            let selectedInResult = -1;
+
+            if (pastIdx >= 0 && schedules[pastIdx]) {
+                result.push({ time: String(schedules[pastIdx].time ?? ''), _label: 'Previous' });
+            }
+            if (nextIdx < schedules.length && schedules[nextIdx]) {
+                result.push({ time: String(schedules[nextIdx].time ?? ''), _label: 'Current' });
+                selectedInResult = result.length - 1;
+            }
+            if (nextIdx + 1 < schedules.length && schedules[nextIdx + 1]) {
+                result.push({ time: String(schedules[nextIdx + 1].time ?? ''), _label: 'Next' });
+            }
+
+            return { filteredSchedules: result, currentScheduleIndex: selectedInResult };
+        } catch (e) {
+            console.error('filteredSchedules error:', e);
+            return { filteredSchedules: [], currentScheduleIndex: -1 };
         }
-
-        // Past date: no schedules
-        if (selectedDate < today) return { filteredSchedules: [], currentScheduleIndex: -1 };
-
-        // Today: show 3 times (1 past + current + next)
-        const now = new Date();
-        const currentMinutes = now.getHours() * 60 + now.getMinutes();
-
-        // Find the first schedule that is >= current time (next available boat)
-        let nextIdx = schedules.findIndex((s) => {
-            const [h, m] = String(s.time || '00:00').split(':').map(Number);
-            return h * 60 + m >= currentMinutes;
-        });
-
-        // If no future schedule found, everything is past — show last 2 + nothing
-        if (nextIdx === -1) nextIdx = schedules.length;
-
-        // Collect: 1 past, current (nextIdx), 1 after — only extract time string
-        const result = [];
-        const pastIdx = nextIdx - 1;
-        let selectedInResult = -1;
-
-        if (pastIdx >= 0) {
-            result.push({ time: String(schedules[pastIdx].time || ''), _label: 'Previous' });
-        }
-        if (nextIdx < schedules.length) {
-            result.push({ time: String(schedules[nextIdx].time || ''), _label: 'Current' });
-            selectedInResult = result.length - 1;
-        }
-        if (nextIdx + 1 < schedules.length) {
-            result.push({ time: String(schedules[nextIdx + 1].time || ''), _label: 'Next' });
-        }
-
-        return { filteredSchedules: result, currentScheduleIndex: selectedInResult };
     }, [ferrySchedulesPerBranch, data.branch_id, data.ticket_date]);
 
     // Auto-select the current/next schedule when schedules change
@@ -111,6 +114,21 @@ export default function Create({
             }
         }
     }, [filteredSchedules, currentScheduleIndex]);
+
+    // Auto-set operator's route (moved from render-time IIFE to prevent render-time state mutation)
+    useEffect(() => {
+        if (user?.role_id >= 4 && branchId && !data.dest_branch_id) {
+            const destinations = toSafeArray(destBranchesPerBranch?.[branchId]);
+            const firstDest = destinations[0];
+            if (firstDest) {
+                setData(prev => ({
+                    ...prev,
+                    branch_id: branchId,
+                    dest_branch_id: firstDest.id,
+                }));
+            }
+        }
+    }, [user?.role_id, branchId, destBranchesPerBranch]);
 
     // Fetch items when branch changes
     useEffect(() => {
@@ -260,22 +278,13 @@ export default function Create({
                                         {/* Operators (role 4+): Fixed route display - no dropdown */}
                                         {user?.role_id >= 4 ? (
                                             (() => {
-                                                // Get the operator's branch and its destination
                                                 const operatorBranch = branches?.find(b => b.id == branchId);
-                                                const destinations = destBranchesPerBranch?.[branchId] || [];
+                                                const destinations = toSafeArray(destBranchesPerBranch?.[branchId]);
                                                 const firstDest = destinations[0];
-
-                                                // Auto-set the route if not already set
-                                                if (operatorBranch && firstDest && !data.dest_branch_id) {
-                                                    setTimeout(() => {
-                                                        setData('branch_id', branchId);
-                                                        setData('dest_branch_id', firstDest.id);
-                                                    }, 0);
-                                                }
 
                                                 return (
                                                     <div className="w-full px-4 py-2.5 bg-slate-100 border border-slate-300 rounded-lg text-slate-700 font-medium">
-                                                        {operatorBranch?.branch_name || 'Unknown'} → {firstDest?.branch_name || 'Unknown'}
+                                                        {String(operatorBranch?.branch_name || 'Unknown')} → {String(firstDest?.branch_name || 'Unknown')}
                                                     </div>
                                                 );
                                             })()
@@ -302,7 +311,7 @@ export default function Create({
                                                         : branches;
 
                                                     branchesToShow?.forEach((b) => {
-                                                        const destinations = destBranchesPerBranch?.[b.id] || [];
+                                                        const destinations = toSafeArray(destBranchesPerBranch?.[b.id]);
                                                         destinations.forEach((dest) => {
                                                             allRoutes.push({
                                                                 from: b,
@@ -318,10 +327,10 @@ export default function Create({
                                                     // For Manager: Also add reverse routes (dest → branch)
                                                     if (user?.role_id === 3) {
                                                         const managerBranch = branches?.find(b => b.id == branchId);
-                                                        const destinations = destBranchesPerBranch?.[branchId] || [];
+                                                        const destinations = toSafeArray(destBranchesPerBranch?.[branchId]);
                                                         destinations.forEach((dest) => {
                                                             // Check if reverse route exists
-                                                            const destRoutes = destBranchesPerBranch?.[dest.id] || [];
+                                                            const destRoutes = toSafeArray(destBranchesPerBranch?.[dest.id]);
                                                             if (destRoutes.some(d => d.id == branchId)) {
                                                                 allRoutes.push({
                                                                     from: dest,
@@ -386,9 +395,9 @@ export default function Create({
                                             className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                                         >
                                             <option value="">Select Ferry Boat</option>
-                                            {ferryBoatsPerBranch?.[data.branch_id]?.map((fb) => (
+                                            {toSafeArray(ferryBoatsPerBranch?.[data.branch_id]).map((fb) => (
                                                 <option key={fb.id} value={fb.id}>
-                                                    {fb.name} (Capacity: {fb.capacity || 'N/A'})
+                                                    {String(fb.name || '')} (Capacity: {String(fb.capacity ?? 'N/A')})
                                                 </option>
                                             ))}
                                         </select>

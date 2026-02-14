@@ -67,7 +67,7 @@ const adminItems = [
         roles: [1, 2, 3],
         children: [
             { id: 'admin-overview', label: 'Staff Overview', href: 'users.index', roles: [1, 2] },
-            { id: 'admin-admins', label: 'Administrators', href: 'admin.index', roles: [1, 2] },
+            { id: 'admin-admins', label: 'Administrators', href: 'admin.index', roles: [1] },
             { id: 'admin-managers', label: 'Managers', href: 'manager.index', roles: [1, 2] },
             { id: 'admin-operators', label: 'Operators', href: 'operator.index', roles: [1, 2, 3] },
             { id: 'admin-checkers', label: 'Checkers', href: 'checker.index', roles: [1, 2, 3] },

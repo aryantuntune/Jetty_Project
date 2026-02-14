@@ -113,7 +113,7 @@ export default function Print({ ticket }) {
                 <div className="note-section">
                     <p>NOTE: Tantrik Durustimule Velevar na sutlyas va ushira pohochlyas company jababdar rahanar nahi.</p>
                     <p>Ferry Boatit TICKET DAKHVAVE.</p>
-                    <p className="happy">HAPPY JOURNEY - www.carferry.in</p>
+                    <p className="happy">HAPPY JOURNEY - www.carferry.online</p>
                 </div>
 
                 <div className="divider" />

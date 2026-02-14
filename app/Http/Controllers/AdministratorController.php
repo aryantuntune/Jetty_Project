@@ -13,8 +13,8 @@ class AdministratorController extends Controller
 {
     public function __construct()
     {
-        // Admins and SuperAdmin can access
-        $this->middleware(['auth', 'role:1,2']);
+        // Only SuperAdmin can manage administrators
+        $this->middleware(['auth', 'role:1']);
     }
     public function index()
     {

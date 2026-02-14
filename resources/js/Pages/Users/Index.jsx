@@ -17,7 +17,7 @@ const userTypes = [
         hoverBg: 'hover:bg-red-50',
         href: 'admin.index',
         createHref: 'admin.create',
-        roles: [1],
+        roles: [1],  // only superadmin can see/manage admins
     },
     {
         id: 'managers',
