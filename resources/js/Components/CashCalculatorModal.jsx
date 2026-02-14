@@ -66,15 +66,18 @@ export default function CashCalculatorModal({
         onConfirm();
     };
 
+    // Ensure guests is always an array (PHP may serialize empty Collections as {})
+    const safeGuests = Array.isArray(guests) ? guests : (guests && typeof guests === 'object' ? Object.values(guests) : []);
+
     // Filter guests by search
     const filteredGuests = useMemo(() => {
-        if (!guestSearch.trim()) return guests;
+        if (!guestSearch.trim()) return safeGuests;
         const q = guestSearch.toLowerCase();
-        return guests.filter(g =>
+        return safeGuests.filter(g =>
             g.name?.toLowerCase().includes(q) ||
             g.category?.name?.toLowerCase().includes(q)
         );
-    }, [guests, guestSearch]);
+    }, [safeGuests, guestSearch]);
 
     // Determine accent color based on payment mode
     const accentColor = isCash ? 'emerald' : isGPay ? 'indigo' : isGuestPass ? 'purple' : 'slate';
@@ -91,12 +94,12 @@ export default function CashCalculatorModal({
             <div className="relative w-full max-w-lg bg-white rounded-2xl shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200 max-h-[90vh] flex flex-col">
                 {/* Header */}
                 <div className={`px-6 py-4 flex items-center justify-between flex-shrink-0 ${isCash
-                        ? 'bg-gradient-to-r from-emerald-600 to-emerald-700'
-                        : isGPay
-                            ? 'bg-gradient-to-r from-indigo-600 to-indigo-700'
-                            : isGuestPass
-                                ? 'bg-gradient-to-r from-purple-600 to-purple-700'
-                                : 'bg-gradient-to-r from-slate-600 to-slate-700'
+                    ? 'bg-gradient-to-r from-emerald-600 to-emerald-700'
+                    : isGPay
+                        ? 'bg-gradient-to-r from-indigo-600 to-indigo-700'
+                        : isGuestPass
+                            ? 'bg-gradient-to-r from-purple-600 to-purple-700'
+                            : 'bg-gradient-to-r from-slate-600 to-slate-700'
                     }`}>
                     <div className="flex items-center gap-3">
                         <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center">
@@ -188,14 +191,14 @@ export default function CashCalculatorModal({
                                         setAmountReceived('');
                                     }}
                                     className={`px-4 py-2 text-sm font-medium rounded-lg transition-all border ${paymentMode === pm
-                                            ? pm === 'Cash'
-                                                ? 'bg-emerald-600 text-white border-emerald-600 shadow-sm'
-                                                : pm === 'GPay' || pm === 'UPI'
-                                                    ? 'bg-indigo-600 text-white border-indigo-600 shadow-sm'
-                                                    : pm === 'Guest Pass'
-                                                        ? 'bg-purple-600 text-white border-purple-600 shadow-sm'
-                                                        : 'bg-slate-700 text-white border-slate-700 shadow-sm'
-                                            : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
+                                        ? pm === 'Cash'
+                                            ? 'bg-emerald-600 text-white border-emerald-600 shadow-sm'
+                                            : pm === 'GPay' || pm === 'UPI'
+                                                ? 'bg-indigo-600 text-white border-indigo-600 shadow-sm'
+                                                : pm === 'Guest Pass'
+                                                    ? 'bg-purple-600 text-white border-purple-600 shadow-sm'
+                                                    : 'bg-slate-700 text-white border-slate-700 shadow-sm'
+                                        : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
                                         }`}
                                 >
                                     {pm}
@@ -230,8 +233,8 @@ export default function CashCalculatorModal({
                                                 type="button"
                                                 onClick={() => onGuestIdChange(String(guest.id))}
                                                 className={`w-full text-left px-3 py-2 text-sm transition-colors ${String(guestId) === String(guest.id)
-                                                        ? 'bg-purple-50 text-purple-700 font-medium'
-                                                        : 'hover:bg-slate-50 text-slate-700'
+                                                    ? 'bg-purple-50 text-purple-700 font-medium'
+                                                    : 'hover:bg-slate-50 text-slate-700'
                                                     }`}
                                             >
                                                 {guest.name}
@@ -242,7 +245,7 @@ export default function CashCalculatorModal({
                                         ))
                                     ) : (
                                         <p className="px-3 py-3 text-sm text-slate-400 text-center">
-                                            {guests.length === 0 ? 'No guests found. Add guests in Guest Master.' : 'No matches'}
+                                            {safeGuests.length === 0 ? 'No guests found. Add guests in Guest Master.' : 'No matches'}
                                         </p>
                                     )}
                                 </div>
