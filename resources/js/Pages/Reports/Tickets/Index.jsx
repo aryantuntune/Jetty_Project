@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { router } from '@inertiajs/react';
 import { route } from 'ziggy-js';
 import Layout from '@/Layouts/Layout';
-import { Download, Filter, Calendar, DollarSign } from 'lucide-react';
+import { Download, Filter, Calendar, DollarSign, Printer } from 'lucide-react';
 
 export default function Index({
     tickets,
@@ -145,6 +145,7 @@ export default function Index({
                                 <th className="text-left px-4 py-3 text-sm font-semibold text-slate-600">Ferry</th>
                                 <th className="text-left px-4 py-3 text-sm font-semibold text-slate-600">Payment</th>
                                 <th className="text-right px-4 py-3 text-sm font-semibold text-slate-600">Amount</th>
+                                <th className="text-center px-4 py-3 text-sm font-semibold text-slate-600">Print</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-100">
@@ -164,11 +165,31 @@ export default function Index({
                                     <td className="px-4 py-3 text-right font-medium text-indigo-600">
                                         {formatCurrency(t.total_amount)}
                                     </td>
+                                    <td className="px-4 py-3 text-center">
+                                        <div className="flex items-center justify-center gap-1">
+                                            <a
+                                                href={`/tickets/${t.id}/print?w=58`}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="px-2 py-1 text-xs bg-slate-100 text-slate-700 rounded hover:bg-slate-200 transition-colors"
+                                            >
+                                                58mm
+                                            </a>
+                                            <a
+                                                href={`/tickets/${t.id}/print?w=80`}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="px-2 py-1 text-xs bg-slate-100 text-slate-700 rounded hover:bg-slate-200 transition-colors"
+                                            >
+                                                80mm
+                                            </a>
+                                        </div>
+                                    </td>
                                 </tr>
                             ))}
                             {(!tickets?.data || tickets.data.length === 0) && (
                                 <tr>
-                                    <td colSpan="6" className="px-4 py-12 text-center text-slate-500">
+                                    <td colSpan="7" className="px-4 py-12 text-center text-slate-500">
                                         No tickets found for the selected filters.
                                     </td>
                                 </tr>

@@ -46,28 +46,61 @@ export default function Create({
         print_receipt: true,
     });
 
-    // Filter ferry schedules based on selected date
-    const filteredSchedules = useMemo(() => {
+    // Filter ferry schedules: show 3 times (1 past, current, next)
+    const { filteredSchedules, currentScheduleIndex } = useMemo(() => {
         const schedules = ferrySchedulesPerBranch?.[data.branch_id] || [];
-        if (!schedules.length) return [];
+        if (!schedules.length) return { filteredSchedules: [], currentScheduleIndex: -1 };
 
         const today = new Date().toISOString().split('T')[0];
         const selectedDate = data.ticket_date;
 
-        if (selectedDate > today) return schedules;
+        // Future date: show all schedules
+        if (selectedDate > today) return { filteredSchedules: schedules, currentScheduleIndex: 0 };
 
-        if (selectedDate === today) {
-            const now = new Date();
-            const currentTimeInMinutes = now.getHours() * 60 + now.getMinutes();
+        // Past date: no schedules
+        if (selectedDate < today) return { filteredSchedules: [], currentScheduleIndex: -1 };
 
-            return schedules.filter((schedule) => {
-                const [hours, minutes] = (schedule.time || '00:00').split(':').map(Number);
-                return hours * 60 + minutes > currentTimeInMinutes - 5;
-            });
+        // Today: show 3 times (1 past + current + next)
+        const now = new Date();
+        const currentMinutes = now.getHours() * 60 + now.getMinutes();
+
+        // Find the first schedule that is >= current time (next available boat)
+        let nextIdx = schedules.findIndex((s) => {
+            const [h, m] = (s.time || '00:00').split(':').map(Number);
+            return h * 60 + m >= currentMinutes;
+        });
+
+        // If no future schedule found, everything is past — show last 2 + nothing
+        if (nextIdx === -1) nextIdx = schedules.length;
+
+        // Collect: 1 past, current (nextIdx), 1 after
+        const result = [];
+        const pastIdx = nextIdx - 1;
+        let selectedInResult = -1;
+
+        if (pastIdx >= 0) {
+            result.push({ ...schedules[pastIdx], _label: 'Previous' });
+        }
+        if (nextIdx < schedules.length) {
+            result.push({ ...schedules[nextIdx], _label: 'Current' });
+            selectedInResult = result.length - 1;
+        }
+        if (nextIdx + 1 < schedules.length) {
+            result.push({ ...schedules[nextIdx + 1], _label: 'Next' });
         }
 
-        return [];
+        return { filteredSchedules: result, currentScheduleIndex: selectedInResult };
     }, [ferrySchedulesPerBranch, data.branch_id, data.ticket_date]);
+
+    // Auto-select the current/next schedule when schedules change
+    useEffect(() => {
+        if (currentScheduleIndex >= 0 && filteredSchedules[currentScheduleIndex]) {
+            const currentTime = filteredSchedules[currentScheduleIndex].time;
+            if (currentTime && !data.ferry_time) {
+                setData('ferry_time', currentTime);
+            }
+        }
+    }, [filteredSchedules, currentScheduleIndex]);
 
     // Fetch items when branch changes
     useEffect(() => {
@@ -136,19 +169,16 @@ export default function Create({
         setData('lines', newItems);
     };
 
+    // Validation: require route, ferry boat, time, and at least 1 item
+    const canSubmit = data.branch_id && data.ferry_boat_id && data.ferry_time && items.length > 0;
+
     const handleSubmit = (e, shouldPrint = false) => {
         e.preventDefault();
+        if (!canSubmit) return;
 
-        // For Cash or GPay, show calculator modal first
-        const mode = data.payment_mode;
-        if (mode === 'Cash' || mode === 'GPay' || mode === 'UPI') {
-            setPendingPrint(shouldPrint);
-            setShowCalculator(true);
-            return;
-        }
-
-        // For other payment modes (Guest Pass, etc.), submit directly
-        submitTicket(shouldPrint);
+        // Always open checkout modal
+        setPendingPrint(shouldPrint);
+        setShowCalculator(true);
     };
 
     const submitTicket = (shouldPrint) => {
@@ -191,9 +221,9 @@ export default function Create({
             </div>
 
             <form onSubmit={(e) => handleSubmit(e, printReceipt)}>
-                <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-                    {/* Left Column - Trip Information */}
-                    <div className="lg:col-span-3 space-y-6">
+                <div className="space-y-6">
+                    {/* Trip Information + Items */}
+                    <div className="space-y-6">
                         {/* Trip Information Card */}
                         <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
                             <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200 bg-slate-50">
@@ -385,7 +415,9 @@ export default function Create({
                                                     {filteredSchedules.length ? 'Select Time' : 'No times available'}
                                                 </option>
                                                 {filteredSchedules.map((s, idx) => (
-                                                    <option key={idx} value={s.time}>{s.time}</option>
+                                                    <option key={idx} value={s.time}>
+                                                        {s.time}{s._label ? ` (${s._label})` : ''}
+                                                    </option>
                                                 ))}
                                             </select>
                                         </div>
@@ -577,7 +609,7 @@ export default function Create({
                                         <div className="flex gap-3">
                                             <button
                                                 type="submit"
-                                                disabled={processing || items.length === 0}
+                                                disabled={processing || !canSubmit}
                                                 className="inline-flex items-center gap-2 px-6 py-2.5 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50 font-medium"
                                             >
                                                 <Save className="w-4 h-4" />
@@ -586,7 +618,7 @@ export default function Create({
                                             <button
                                                 type="button"
                                                 onClick={(e) => handleSubmit(e, true)}
-                                                disabled={processing || items.length === 0}
+                                                disabled={processing || !canSubmit}
                                                 className="inline-flex items-center gap-2 px-6 py-2.5 bg-slate-100 text-slate-700 rounded-lg hover:bg-slate-200 disabled:opacity-50 font-medium border border-slate-300"
                                             >
                                                 <Printer className="w-4 h-4" />
@@ -594,111 +626,6 @@ export default function Create({
                                             </button>
                                         </div>
                                     </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Right Column - Passenger Details */}
-                    <div className="lg:col-span-1">
-                        <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden sticky top-6">
-                            <div className="flex items-center gap-2 px-6 py-4 border-b border-slate-200 bg-slate-50">
-                                <User className="w-5 h-5 text-indigo-600" />
-                                <h2 className="font-semibold text-slate-800">Passenger Details</h2>
-                            </div>
-
-                            <div className="p-6 space-y-4">
-                                <div>
-                                    <label className="block text-sm font-medium text-slate-600 mb-2">
-                                        Customer Name
-                                    </label>
-                                    <input
-                                        type="text"
-                                        value={data.customer_name}
-                                        onChange={(e) => setData('customer_name', e.target.value)}
-                                        placeholder="Enter name (optional)"
-                                        className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
-                                    />
-                                </div>
-
-                                <div>
-                                    <label className="block text-sm font-medium text-slate-600 mb-2">
-                                        Mobile Number
-                                    </label>
-                                    <input
-                                        type="tel"
-                                        value={data.customer_mobile}
-                                        onChange={(e) => setData('customer_mobile', e.target.value)}
-                                        placeholder="Enter mobile (optional)"
-                                        className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
-                                    />
-                                </div>
-
-
-                                {/* Payment Mode */}
-                                <div>
-                                    <label className="block text-sm font-medium text-slate-600 mb-2">
-                                        Payment Mode
-                                    </label>
-                                    <select
-                                        value={data.payment_mode}
-                                        onChange={(e) => {
-                                            setData('payment_mode', e.target.value);
-                                            // Clear guest_id if switching away from Guest Pass
-                                            if (e.target.value !== 'Guest Pass') {
-                                                setData('guest_id', '');
-                                            }
-                                        }}
-                                        className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
-                                    >
-                                        {paymentModes?.map((pm, idx) => (
-                                            <option key={idx} value={pm}>{pm}</option>
-                                        ))}
-                                    </select>
-                                </div>
-
-                                {/* Guest Dropdown - Only shown when Guest Pass is selected */}
-                                {data.payment_mode === 'Guest Pass' && (
-                                    <div>
-                                        <label className="block text-sm font-medium text-slate-600 mb-2">
-                                            Select Guest <span className="text-red-500">*</span>
-                                        </label>
-                                        <select
-                                            value={data.guest_id}
-                                            onChange={(e) => setData('guest_id', e.target.value)}
-                                            className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
-                                            required
-                                        >
-                                            <option value="">Select a guest</option>
-                                            {guests?.map((guest) => (
-                                                <option key={guest.id} value={guest.id}>
-                                                    {guest.name} {guest.category?.name ? `(${guest.category.name})` : ''}
-                                                </option>
-                                            ))}
-                                        </select>
-                                        {!guests?.length && (
-                                            <p className="text-amber-600 text-sm mt-1">
-                                                No guests found. Add guests in Guest Master.
-                                            </p>
-                                        )}
-                                        {errors.guest_id && (
-                                            <p className="text-red-500 text-sm mt-1">{errors.guest_id}</p>
-                                        )}
-                                    </div>
-                                )}
-
-                                {/* Remarks */}
-                                <div>
-                                    <label className="block text-sm font-medium text-slate-600 mb-2">
-                                        Remarks
-                                    </label>
-                                    <textarea
-                                        value={data.remarks}
-                                        onChange={(e) => setData('remarks', e.target.value)}
-                                        placeholder="Optional remarks..."
-                                        rows="3"
-                                        className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 resize-none"
-                                    />
                                 </div>
                             </div>
                         </div>
@@ -712,7 +639,18 @@ export default function Create({
                 onClose={() => setShowCalculator(false)}
                 onConfirm={handleCalculatorConfirm}
                 totalAmount={netTotal}
+                customerName={data.customer_name}
+                onCustomerNameChange={(v) => setData('customer_name', v)}
+                customerMobile={data.customer_mobile}
+                onCustomerMobileChange={(v) => setData('customer_mobile', v)}
                 paymentMode={data.payment_mode}
+                onPaymentModeChange={(v) => setData('payment_mode', v)}
+                paymentModes={paymentModes}
+                guestId={data.guest_id}
+                onGuestIdChange={(v) => setData('guest_id', v)}
+                guests={guests}
+                remarks={data.remarks}
+                onRemarksChange={(v) => setData('remarks', v)}
             />
 
             {/* Success Animation Overlay */}
