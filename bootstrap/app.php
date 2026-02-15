@@ -22,6 +22,13 @@ return Application::configure(basePath: dirname(__DIR__))
             \App\Http\Middleware\HandleInertiaRequests::class,
         ]);
 
+        // Exclude payment routes from CSRF verification
+        // These are JSON API-style endpoints behind auth:customer - CSRF not needed
+        $middleware->validateCsrfTokens(except: [
+            'payment/*',
+            'booking',
+        ]);
+
         // Add/keep any global middleware here if you need
         $middleware->api(prepend: [
             \Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful::class,
