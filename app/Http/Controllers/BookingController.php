@@ -136,8 +136,8 @@ class BookingController extends Controller
         ]);
 
         // Validate Departure Time if booking for today
-        $bookingDate = $request->booking_date ?? now()->toDateString();
-        $departureTime = $request->input('departure_time'); // Ensure this is passed from frontend
+        $bookingDate = $request->date ?? $request->booking_date ?? now()->toDateString();
+        $departureTime = $request->input('departure_time');
 
         if ($departureTime) {
             $now = \Carbon\Carbon::now('Asia/Kolkata');
