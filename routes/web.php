@@ -50,6 +50,19 @@ Route::get('/', [PublicController::class, 'home'])->name('public.home');
 Route::get('/health', [HealthController::class, 'check'])->name('health.check');
 Route::get('/ping', [HealthController::class, 'ping'])->name('health.ping');
 
+// Temporary diagnostic - REMOVE after debugging
+Route::get('/debug/razorpay-check', function () {
+    return response()->json([
+        'key_present' => !empty(config('services.razorpay.key')),
+        'secret_present' => !empty(config('services.razorpay.secret')),
+        'key_first_8' => substr(config('services.razorpay.key') ?? '', 0, 8) . '...',
+        'config_cached' => file_exists(base_path('bootstrap/cache/config.php')),
+        'opcache_enabled' => function_exists('opcache_get_status') ? (opcache_get_status()['opcache_enabled'] ?? false) : 'N/A',
+        'php_version' => PHP_VERSION,
+        'env_file_exists' => file_exists(base_path('.env')),
+    ]);
+});
+
 // Houseboat Booking
 Route::get('/houseboat-booking', [\App\Http\Controllers\HouseboatController::class, 'index'])->name('houseboat.index');
 Route::get('/houseboat-booking/checkout', [\App\Http\Controllers\HouseboatController::class, 'checkout'])->name('houseboat.checkout');

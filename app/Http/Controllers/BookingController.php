@@ -112,10 +112,23 @@ class BookingController extends Controller
     public function createOrder(Request $request)
     {
         // Check if Razorpay keys are configured
-        if (empty(config('services.razorpay.key')) || empty(config('services.razorpay.secret'))) {
+        $rzpKey = config('services.razorpay.key');
+        $rzpSecret = config('services.razorpay.secret');
+
+        if (empty($rzpKey) || empty($rzpSecret)) {
+            Log::error('Razorpay config missing', [
+                'key_set' => !empty($rzpKey),
+                'secret_set' => !empty($rzpSecret),
+                'config_path' => config_path('services.php'),
+                'all_razorpay_config' => config('services.razorpay'),
+            ]);
             return response()->json([
                 'error' => 'Payment gateway not configured. Please contact support.',
                 'message' => 'Missing Razorpay configuration',
+                'debug' => [
+                    'key_present' => !empty($rzpKey),
+                    'secret_present' => !empty($rzpSecret),
+                ],
             ], 500);
         }
 
