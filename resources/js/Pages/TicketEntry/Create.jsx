@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { useForm, router, Head } from '@inertiajs/react';
+import { useForm, router, Head, usePage } from '@inertiajs/react';
 import { route } from 'ziggy-js';
 import Layout from '@/Layouts/Layout';
 import CashCalculatorModal from '@/Components/CashCalculatorModal';
@@ -34,6 +34,38 @@ export default function Create({
     ferryBoatsPerBranch = deepSanitizeMap(ferryBoatsPerBranch);
     ferrySchedulesPerBranch = deepSanitizeMap(ferrySchedulesPerBranch);
     destBranchesPerBranch = deepSanitizeMap(destBranchesPerBranch);
+
+    // ══════ DIAGNOSTIC: dump ALL prop types on every render ══════
+    // Remove this block once the error is identified.
+    const _page = usePage();
+    console.log('[Create.jsx DIAGNOSTIC]', {
+        // Raw prop types
+        branches_type: typeof branches, branches_isArray: Array.isArray(branches), branches_len: branches?.length,
+        guests_type: typeof guests, guests_isArray: Array.isArray(guests),
+        paymentModes_type: typeof paymentModes, paymentModes_isArray: Array.isArray(paymentModes),
+        paymentModes_values: paymentModes,
+        ferryBoatsPerBranch_type: typeof ferryBoatsPerBranch,
+        ferrySchedulesPerBranch_type: typeof ferrySchedulesPerBranch,
+        destBranchesPerBranch_type: typeof destBranchesPerBranch,
+        user_type: typeof user, user_keys: user ? Object.keys(user) : 'null',
+        user_value: user,
+        branchId, branchName,
+        hideFerryTime_type: typeof hideFerryTime, hideFerryTime,
+        beforeFirstFerry_type: typeof beforeFirstFerry, beforeFirstFerry,
+        // Inertia shared data
+        flash: _page.props.flash,
+        flash_ticket: _page.props.flash?.ticket,
+        flash_success: _page.props.flash?.success,
+        flash_error: _page.props.flash?.error,
+        // Ziggy data type
+        ziggy_type: typeof _page.props.ziggy,
+        // last/first schedule
+        last_schedule_type: typeof last_row_ferry_schedule,
+        last_schedule_keys: last_row_ferry_schedule ? Object.keys(last_row_ferry_schedule) : 'null',
+        first_schedule_type: typeof first_row_ferry_schedule,
+        first_schedule_keys: first_row_ferry_schedule ? Object.keys(first_row_ferry_schedule) : 'null',
+    });
+    // ══════ END DIAGNOSTIC ══════
 
 
     const [items, setItems] = useState([]);

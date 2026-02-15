@@ -25,6 +25,7 @@ export default defineConfig({
             },
         },
         chunkSizeWarningLimit: 600,
+        sourcemap: true,  // TEMPORARY: enable source maps for debugging Error #310
     },
     resolve: {
         alias: {
