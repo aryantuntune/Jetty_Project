@@ -112,7 +112,7 @@ class BookingController extends Controller
     public function createOrder(Request $request)
     {
         // Check if Razorpay keys are configured
-        if (empty(env('RAZORPAY_KEY')) || empty(env('RAZORPAY_SECRET'))) {
+        if (empty(config('services.razorpay.key')) || empty(config('services.razorpay.secret'))) {
             return response()->json([
                 'error' => 'Payment gateway not configured. Please contact support.',
                 'message' => 'Missing Razorpay configuration',
@@ -147,7 +147,7 @@ class BookingController extends Controller
         }
 
         try {
-            $api = new Api(env('RAZORPAY_KEY'), env('RAZORPAY_SECRET'));
+            $api = new Api(config('services.razorpay.key'), config('services.razorpay.secret'));
 
             $order = $api->order->create([
                 'receipt' => 'RCPT_' . time(),
@@ -158,7 +158,7 @@ class BookingController extends Controller
             return response()->json([
                 'order_id' => $order['id'],
                 'amount' => $order['amount'],
-                'key' => env('RAZORPAY_KEY'),
+                'key' => config('services.razorpay.key'),
                 'customer' => auth()->guard('customer')->user(),
             ]);
         } catch (\Exception $e) {
@@ -175,7 +175,7 @@ class BookingController extends Controller
         $signatureStatus = false;
 
         try {
-            $api = new Api(env('RAZORPAY_KEY'), env('RAZORPAY_SECRET'));
+            $api = new Api(config('services.razorpay.key'), config('services.razorpay.secret'));
 
             $attributes = [
                 'razorpay_order_id' => $request->razorpay_order_id,

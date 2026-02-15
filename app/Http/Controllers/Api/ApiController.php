@@ -367,7 +367,7 @@ class ApiController extends Controller
             'amount' => 'required|numeric',
         ]);
 
-        $api = new Api(env('RAZORPAY_KEY'), env('RAZORPAY_SECRET'));
+        $api = new Api(config('services.razorpay.key'), config('services.razorpay.secret'));
 
         $order = $api->order->create([
             'receipt' => 'ORD_' . time(),
@@ -380,7 +380,7 @@ class ApiController extends Controller
             'order_id' => $order['id'],
             'amount' => $order['amount'],
             'currency' => 'INR',
-            'key' => env('RAZORPAY_KEY'), // mobile needs this for checkout
+            'key' => config('services.razorpay.key'), // mobile needs this for checkout
         ]);
     }
 
@@ -398,7 +398,7 @@ class ApiController extends Controller
         ]);
 
         try {
-            $api = new Api(env('RAZORPAY_KEY'), env('RAZORPAY_SECRET'));
+            $api = new Api(config('services.razorpay.key'), config('services.razorpay.secret'));
 
             // Verify payment signature
             $api->utility->verifyPaymentSignature([
