@@ -4,7 +4,7 @@ import { route } from 'ziggy-js';
 import Layout from '@/Layouts/Layout';
 import CashCalculatorModal from '@/Components/CashCalculatorModal';
 import { Plus, X, Ship, Clock, User, Phone, Printer, Save, AlertCircle, CheckCircle } from 'lucide-react';
-import { toSafeArray } from '@/utils/safeData';
+import { toSafeArray, deepSanitizeMap } from '@/utils/safeData';
 
 export default function Create({
     branches,
@@ -23,18 +23,18 @@ export default function Create({
     hideFerryTime,
     beforeFirstFerry,
 }) {
-    // ──── Sanitize ALL PHP props once at the top ────
-    // PHP Eloquent Collections serialize as {} when empty, not [].
-    // Associative arrays serialize as {key: value} objects.
-    // This single block prevents ALL #310 errors from object-as-array issues.
+    // ──── NUCLEAR SANITIZE: deep-convert ALL PHP Collections ────
+    // PHP Eloquent serializes Collections as {} objects and nested values
+    // can also be objects. deepSanitize walks every level and converts
+    // numeric-keyed objects ({0: x, 1: y}) → proper arrays [x, y].
     branches = toSafeArray(branches);
     guests = toSafeArray(guests);
     paymentModes = toSafeArray(paymentModes);
-    // These are keyed objects by design ({branchId: [...]}) — no conversion needed,
-    // but ensure they're at least empty objects, not undefined/null.
-    ferryBoatsPerBranch = ferryBoatsPerBranch || {};
-    ferrySchedulesPerBranch = ferrySchedulesPerBranch || {};
-    destBranchesPerBranch = destBranchesPerBranch || {};
+    // Deep-sanitize keyed objects — catches nested collections inside them
+    ferryBoatsPerBranch = deepSanitizeMap(ferryBoatsPerBranch);
+    ferrySchedulesPerBranch = deepSanitizeMap(ferrySchedulesPerBranch);
+    destBranchesPerBranch = deepSanitizeMap(destBranchesPerBranch);
+
 
     const [items, setItems] = useState([]);
     const [itemRates, setItemRates] = useState([]);

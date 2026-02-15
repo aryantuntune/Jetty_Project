@@ -42,11 +42,17 @@ class Route extends Model
         $routeIds = static::where('branch_id', $branchId)->pluck('route_id');
 
         // Get all other branches on those routes
+        // IMPORTANT: ->values() after ->unique() resets keys to sequential 0,1,2...
+        // Without it, PHP serializes as {"0": x, "3": y} (object) instead of [x, y] (array)
+        // which causes React Error #310 on the frontend.
         return static::whereIn('route_id', $routeIds)
             ->where('branch_id', '!=', $branchId)
-            ->with('branch')
+            ->with('branch:id,branch_name')
             ->get()
             ->pluck('branch')
-            ->unique('id');
+            ->filter()  // Remove any null branches
+            ->unique('id')
+            ->values()  // ← CRITICAL: reset to sequential keys for JSON array serialization
+            ->map(fn($b) => ['id' => $b->id, 'branch_name' => $b->branch_name]);
     }
 }
