@@ -119,16 +119,9 @@ class BookingController extends Controller
             Log::error('Razorpay config missing', [
                 'key_set' => !empty($rzpKey),
                 'secret_set' => !empty($rzpSecret),
-                'config_path' => config_path('services.php'),
-                'all_razorpay_config' => config('services.razorpay'),
             ]);
             return response()->json([
                 'error' => 'Payment gateway not configured. Please contact support.',
-                'message' => 'Missing Razorpay configuration',
-                'debug' => [
-                    'key_present' => !empty($rzpKey),
-                    'secret_present' => !empty($rzpSecret),
-                ],
             ], 500);
         }
 
