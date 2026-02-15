@@ -13,8 +13,12 @@ import {
     Save,
     AlertCircle,
 } from 'lucide-react';
+import { toSafeArray } from '@/utils/safeData';
 
 export default function Edit({ operator, branches, ferryboats }) {
+    branches = toSafeArray(branches);
+    ferryboats = toSafeArray(ferryboats);
+
     const [showPassword, setShowPassword] = useState(false);
 
     const { data, setData, put, processing, errors } = useForm({
@@ -90,11 +94,10 @@ export default function Edit({ operator, branches, ferryboats }) {
                                     id="name"
                                     value={data.name}
                                     onChange={(e) => setData('name', e.target.value)}
-                                    className={`w-full pl-12 pr-4 py-3 rounded-xl border transition-all focus:outline-none focus:ring-4 focus:ring-indigo-500/10 ${
-                                        errors.name
+                                    className={`w-full pl-12 pr-4 py-3 rounded-xl border transition-all focus:outline-none focus:ring-4 focus:ring-indigo-500/10 ${errors.name
                                             ? 'border-red-500 focus:border-red-500'
                                             : 'border-slate-200 focus:border-indigo-500'
-                                    }`}
+                                        }`}
                                     placeholder="Enter operator's full name"
                                     required
                                 />
@@ -118,11 +121,10 @@ export default function Edit({ operator, branches, ferryboats }) {
                                     id="email"
                                     value={data.email}
                                     onChange={(e) => setData('email', e.target.value)}
-                                    className={`w-full pl-12 pr-4 py-3 rounded-xl border transition-all focus:outline-none focus:ring-4 focus:ring-indigo-500/10 ${
-                                        errors.email
+                                    className={`w-full pl-12 pr-4 py-3 rounded-xl border transition-all focus:outline-none focus:ring-4 focus:ring-indigo-500/10 ${errors.email
                                             ? 'border-red-500 focus:border-red-500'
                                             : 'border-slate-200 focus:border-indigo-500'
-                                    }`}
+                                        }`}
                                     placeholder="operator@example.com"
                                     required
                                 />
@@ -149,11 +151,10 @@ export default function Edit({ operator, branches, ferryboats }) {
                                     id="password"
                                     value={data.password}
                                     onChange={(e) => setData('password', e.target.value)}
-                                    className={`w-full pl-12 pr-12 py-3 rounded-xl border transition-all focus:outline-none focus:ring-4 focus:ring-indigo-500/10 ${
-                                        errors.password
+                                    className={`w-full pl-12 pr-12 py-3 rounded-xl border transition-all focus:outline-none focus:ring-4 focus:ring-indigo-500/10 ${errors.password
                                             ? 'border-red-500 focus:border-red-500'
                                             : 'border-slate-200 focus:border-indigo-500'
-                                    }`}
+                                        }`}
                                     placeholder="Enter new password to change"
                                 />
                                 <button
@@ -188,11 +189,10 @@ export default function Edit({ operator, branches, ferryboats }) {
                                     id="mobile"
                                     value={data.mobile}
                                     onChange={(e) => setData('mobile', e.target.value)}
-                                    className={`w-full pl-12 pr-4 py-3 rounded-xl border transition-all focus:outline-none focus:ring-4 focus:ring-indigo-500/10 ${
-                                        errors.mobile
+                                    className={`w-full pl-12 pr-4 py-3 rounded-xl border transition-all focus:outline-none focus:ring-4 focus:ring-indigo-500/10 ${errors.mobile
                                             ? 'border-red-500 focus:border-red-500'
                                             : 'border-slate-200 focus:border-indigo-500'
-                                    }`}
+                                        }`}
                                     placeholder="Enter mobile number"
                                 />
                             </div>
@@ -214,11 +214,10 @@ export default function Edit({ operator, branches, ferryboats }) {
                                     id="branch_id"
                                     value={data.branch_id}
                                     onChange={(e) => setData('branch_id', e.target.value)}
-                                    className={`w-full pl-12 pr-4 py-3 rounded-xl border transition-all focus:outline-none focus:ring-4 focus:ring-indigo-500/10 appearance-none bg-white ${
-                                        errors.branch_id
+                                    className={`w-full pl-12 pr-4 py-3 rounded-xl border transition-all focus:outline-none focus:ring-4 focus:ring-indigo-500/10 appearance-none bg-white ${errors.branch_id
                                             ? 'border-red-500 focus:border-red-500'
                                             : 'border-slate-200 focus:border-indigo-500'
-                                    }`}
+                                        }`}
                                 >
                                     <option value="">Select a branch</option>
                                     {branches?.map((branch) => (
@@ -261,11 +260,10 @@ export default function Edit({ operator, branches, ferryboats }) {
                                     id="ferry_boat_id"
                                     value={data.ferry_boat_id}
                                     onChange={(e) => setData('ferry_boat_id', e.target.value)}
-                                    className={`w-full pl-12 pr-4 py-3 rounded-xl border transition-all focus:outline-none focus:ring-4 focus:ring-indigo-500/10 appearance-none bg-white ${
-                                        errors.ferry_boat_id
+                                    className={`w-full pl-12 pr-4 py-3 rounded-xl border transition-all focus:outline-none focus:ring-4 focus:ring-indigo-500/10 appearance-none bg-white ${errors.ferry_boat_id
                                             ? 'border-red-500 focus:border-red-500'
                                             : 'border-slate-200 focus:border-indigo-500'
-                                    }`}
+                                        }`}
                                 >
                                     <option value="">Select a ferry boat</option>
                                     {ferryboats?.map((ferry) => (

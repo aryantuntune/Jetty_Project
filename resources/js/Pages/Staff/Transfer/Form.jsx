@@ -9,8 +9,11 @@ import {
     AlertCircle,
     Building2,
 } from 'lucide-react';
+import { toSafeArray } from '@/utils/safeData';
 
 export default function StaffTransferForm({ user, branches, errors }) {
+    branches = toSafeArray(branches);
+
     const [formData, setFormData] = useState({
         to_branch_id: '',
     });
@@ -104,11 +107,10 @@ export default function StaffTransferForm({ user, branches, errors }) {
                                     id="to_branch_id"
                                     value={formData.to_branch_id}
                                     onChange={(e) => setFormData({ ...formData, to_branch_id: e.target.value })}
-                                    className={`w-full pl-12 pr-4 py-3 rounded-xl border ${
-                                        errors?.to_branch_id
+                                    className={`w-full pl-12 pr-4 py-3 rounded-xl border ${errors?.to_branch_id
                                             ? 'border-red-500 focus:border-red-500 focus:ring-red-500/20'
                                             : 'border-slate-200 focus:border-indigo-500 focus:ring-indigo-500/20'
-                                    } focus:ring-2 outline-none transition-all appearance-none bg-white`}
+                                        } focus:ring-2 outline-none transition-all appearance-none bg-white`}
                                     required
                                 >
                                     <option value="">-- Choose Branch --</option>

@@ -4,13 +4,7 @@ import { route } from 'ziggy-js';
 import Layout from '@/Layouts/Layout';
 import CashCalculatorModal from '@/Components/CashCalculatorModal';
 import { Plus, X, Ship, Clock, User, Phone, Printer, Save, AlertCircle, CheckCircle } from 'lucide-react';
-
-// PHP can serialize empty Collections as {} instead of []. This helper ensures we always get an array.
-const toSafeArray = (val) => {
-    if (Array.isArray(val)) return val;
-    if (val && typeof val === 'object') return Object.values(val);
-    return [];
-};
+import { toSafeArray } from '@/utils/safeData';
 
 export default function Create({
     branches,

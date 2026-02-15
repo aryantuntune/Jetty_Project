@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link, router, usePage } from '@inertiajs/react';
 import { route } from 'ziggy-js';
 import Layout from '@/Layouts/Layout';
+import { toSafeArray } from '@/utils/safeData';
 import {
     Filter,
     Search,
@@ -73,6 +74,12 @@ export default function TicketReports({
     totalAmount,
     auth,
 }) {
+    // Sanitize PHP props
+    branches = toSafeArray(branches);
+    ferryBoats = toSafeArray(ferryBoats);
+    paymentModes = toSafeArray(paymentModes);
+    ferryTypes = toSafeArray(ferryTypes);
+
     const { flash } = usePage().props;
     const userRoleId = auth?.user?.role_id;
     const canExport = [1, 2].includes(userRoleId);
@@ -293,11 +300,10 @@ export default function TicketReports({
                                 type="date"
                                 value={filters.date_from}
                                 onChange={(e) => handleFilterChange('date_from', e.target.value)}
-                                className={`w-full px-3 py-2 rounded-lg border focus:ring-2 outline-none text-sm ${
-                                    dateError
+                                className={`w-full px-3 py-2 rounded-lg border focus:ring-2 outline-none text-sm ${dateError
                                         ? 'border-red-300 focus:border-red-500 focus:ring-red-500/20'
                                         : 'border-slate-200 focus:border-indigo-500 focus:ring-indigo-500/20'
-                                }`}
+                                    }`}
                             />
                         </div>
 
@@ -308,11 +314,10 @@ export default function TicketReports({
                                 type="date"
                                 value={filters.date_to}
                                 onChange={(e) => handleFilterChange('date_to', e.target.value)}
-                                className={`w-full px-3 py-2 rounded-lg border focus:ring-2 outline-none text-sm ${
-                                    dateError
+                                className={`w-full px-3 py-2 rounded-lg border focus:ring-2 outline-none text-sm ${dateError
                                         ? 'border-red-300 focus:border-red-500 focus:ring-red-500/20'
                                         : 'border-slate-200 focus:border-indigo-500 focus:ring-indigo-500/20'
-                                }`}
+                                    }`}
                             />
                         </div>
 

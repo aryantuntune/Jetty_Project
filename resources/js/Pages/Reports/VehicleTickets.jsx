@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link, router, usePage } from '@inertiajs/react';
 import { route } from 'ziggy-js';
 import Layout from '@/Layouts/Layout';
+import { toSafeArray } from '@/utils/safeData';
 import {
     Filter,
     Search,
@@ -66,6 +67,8 @@ export default function VehicleTicketReports({
     pageTotalAmount,
     auth,
 }) {
+    branches = toSafeArray(branches);
+
     const { flash } = usePage().props;
     const userRoleId = auth?.user?.role_id;
     const canExport = [1, 2].includes(userRoleId);

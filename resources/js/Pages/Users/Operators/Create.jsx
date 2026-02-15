@@ -13,8 +13,12 @@ import {
     Save,
     AlertCircle,
 } from 'lucide-react';
+import { toSafeArray } from '@/utils/safeData';
 
 export default function Create({ branches, ferryboats }) {
+    branches = toSafeArray(branches);
+    ferryboats = toSafeArray(ferryboats);
+
     const [showPassword, setShowPassword] = useState(false);
 
     const { data, setData, post, processing, errors } = useForm({

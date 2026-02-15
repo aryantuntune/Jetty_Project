@@ -3,6 +3,7 @@ import { router } from '@inertiajs/react';
 import { route } from 'ziggy-js';
 import Layout from '@/Layouts/Layout';
 import { Download, Filter, Car, DollarSign } from 'lucide-react';
+import { toSafeArray } from '@/utils/safeData';
 
 export default function Index({
     tickets,
@@ -21,6 +22,10 @@ export default function Index({
     totalAmount,
     pageTotalAmount,
 }) {
+    // Sanitize PHP props
+    branches = toSafeArray(branches);
+    ferryBoats = toSafeArray(ferryBoats);
+
     const [filters, setFilters] = useState({
         branch_id: branchId || '',
         payment_mode: paymentMode || '',

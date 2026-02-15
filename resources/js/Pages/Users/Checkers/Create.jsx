@@ -2,8 +2,12 @@ import { useState } from 'react';
 import { Head, Link, useForm } from '@inertiajs/react';
 import { CheckCircle, ArrowLeft, Eye, EyeOff, AlertCircle } from 'lucide-react';
 import Layout from '@/Layouts/Layout';
+import { toSafeArray } from '@/utils/safeData';
 
 export default function CheckersCreate({ branches, ferryboats }) {
+    branches = toSafeArray(branches);
+    ferryboats = toSafeArray(ferryboats);
+
     const [showPassword, setShowPassword] = useState(false);
 
     const form = useForm({
@@ -74,9 +78,8 @@ export default function CheckersCreate({ branches, ferryboats }) {
                                 type="text"
                                 value={form.data.name}
                                 onChange={(e) => form.setData('name', e.target.value)}
-                                className={`w-full px-4 py-3 rounded-xl border transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 ${
-                                    form.errors.name ? 'border-red-500' : 'border-slate-200'
-                                }`}
+                                className={`w-full px-4 py-3 rounded-xl border transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 ${form.errors.name ? 'border-red-500' : 'border-slate-200'
+                                    }`}
                                 placeholder="John Doe"
                                 required
                             />
@@ -91,9 +94,8 @@ export default function CheckersCreate({ branches, ferryboats }) {
                                 type="email"
                                 value={form.data.email}
                                 onChange={(e) => form.setData('email', e.target.value)}
-                                className={`w-full px-4 py-3 rounded-xl border transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 ${
-                                    form.errors.email ? 'border-red-500' : 'border-slate-200'
-                                }`}
+                                className={`w-full px-4 py-3 rounded-xl border transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 ${form.errors.email ? 'border-red-500' : 'border-slate-200'
+                                    }`}
                                 placeholder="checker@example.com"
                                 required
                             />
@@ -109,9 +111,8 @@ export default function CheckersCreate({ branches, ferryboats }) {
                                     type={showPassword ? 'text' : 'password'}
                                     value={form.data.password}
                                     onChange={(e) => form.setData('password', e.target.value)}
-                                    className={`w-full px-4 py-3 pr-12 rounded-xl border transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 ${
-                                        form.errors.password ? 'border-red-500' : 'border-slate-200'
-                                    }`}
+                                    className={`w-full px-4 py-3 pr-12 rounded-xl border transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 ${form.errors.password ? 'border-red-500' : 'border-slate-200'
+                                        }`}
                                     placeholder="Minimum 6 characters"
                                     required
                                 />
