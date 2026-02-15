@@ -43,15 +43,22 @@ self.addEventListener('activate', event => {
     );
 });
 
-// Serve from Cache
+// Serve from Cache (only GET requests — never intercept POST/PUT/DELETE)
 self.addEventListener("fetch", event => {
+    if (event.request.method !== 'GET') {
+        return;
+    }
+
     event.respondWith(
         caches.match(event.request)
             .then(response => {
                 return response || fetch(event.request);
             })
             .catch(() => {
-                return caches.match('offline');
+                return caches.match('offline') || new Response('Offline', {
+                    status: 503,
+                    headers: { 'Content-Type': 'text/plain' },
+                });
             })
     );
 });
