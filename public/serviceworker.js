@@ -43,22 +43,26 @@ self.addEventListener('activate', event => {
     );
 });
 
-// NETWORK-FIRST strategy for HTML/JS/CSS, cache-only for icons/offline
-// This ensures code updates are always loaded from the server.
+// NETWORK-FIRST for same-origin HTML/JS/CSS, CACHE-FIRST for icons/images.
+// Cross-origin requests (CDN scripts like Razorpay) are never intercepted.
 self.addEventListener("fetch", event => {
     // Never intercept non-GET requests (POST, PUT, DELETE, etc.)
     if (event.request.method !== 'GET') {
         return;
     }
 
+    // NEVER intercept cross-origin requests (e.g. Razorpay CDN, analytics, etc.)
+    // The service worker can only reliably cache same-origin resources.
+    if (!event.request.url.startsWith(self.location.origin)) {
+        return;
+    }
+
     const url = new URL(event.request.url);
 
-    // For navigation requests (HTML pages) and JS/CSS assets: NETWORK FIRST
+    // For navigation requests (HTML pages) and build assets: NETWORK FIRST
     // This ensures fresh code is always loaded after deployments.
     if (event.request.mode === 'navigate' ||
-        url.pathname.startsWith('/build/') ||
-        url.pathname.endsWith('.js') ||
-        url.pathname.endsWith('.css')) {
+        url.pathname.startsWith('/build/')) {
         event.respondWith(
             fetch(event.request)
                 .then(response => {
@@ -68,12 +72,18 @@ self.addEventListener("fetch", event => {
                     return response;
                 })
                 .catch(() => {
-                    // Network failed — try cache fallback
+                    // Network failed — try cache, then offline page, then plain text
                     return caches.match(event.request)
-                        .then(cached => cached || caches.match('offline') || new Response('Offline', {
-                            status: 503,
-                            headers: { 'Content-Type': 'text/plain' },
-                        }));
+                        .then(cached => {
+                            if (cached) return cached;
+                            return caches.match('offline');
+                        })
+                        .then(fallback => {
+                            return fallback || new Response('Offline', {
+                                status: 503,
+                                headers: { 'Content-Type': 'text/plain' },
+                            });
+                        });
                 })
         );
         return;
@@ -86,7 +96,7 @@ self.addEventListener("fetch", event => {
                 return response || fetch(event.request);
             })
             .catch(() => {
-                return caches.match('offline') || new Response('Offline', {
+                return new Response('Offline', {
                     status: 503,
                     headers: { 'Content-Type': 'text/plain' },
                 });
