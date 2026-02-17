@@ -191,11 +191,42 @@ export default function Booking({ branches }) {
         }
     };
 
+    // Dynamically load the Razorpay checkout SDK (only loads once)
+    const loadRazorpaySDK = () => {
+        return new Promise((resolve, reject) => {
+            // Already loaded
+            if (window.Razorpay) {
+                resolve();
+                return;
+            }
+            // Check if script tag already exists
+            if (document.querySelector('script[src="https://checkout.razorpay.com/v1/checkout.js"]')) {
+                // Script tag exists but hasn't loaded yet — wait for it
+                const checkInterval = setInterval(() => {
+                    if (window.Razorpay) {
+                        clearInterval(checkInterval);
+                        resolve();
+                    }
+                }, 100);
+                setTimeout(() => { clearInterval(checkInterval); reject(new Error('Razorpay SDK timed out')); }, 10000);
+                return;
+            }
+            const script = document.createElement('script');
+            script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+            script.onload = () => resolve();
+            script.onerror = () => reject(new Error('Failed to load Razorpay SDK. Please check your internet connection and disable any ad blockers.'));
+            document.body.appendChild(script);
+        });
+    };
+
     // Handle payment (Razorpay integration)
     const handlePayment = async () => {
         setPaymentLoading(true);
 
         try {
+            // Load Razorpay SDK first
+            await loadRazorpaySDK();
+
             const response = await fetch(route('payment.createOrder'), {
                 method: 'POST',
                 headers: {
